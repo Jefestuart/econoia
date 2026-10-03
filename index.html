@@ -385,14 +385,23 @@ Desocupação PNAD ${D.desemprego[0]}: ${D.desemprego[1]}%. Meta de inflação: 
 mkctx();
 window._refresh=()=>{draw();rgen();mkctx();fxRender();fxc();tbS.innerHTML="<tr><th>Reunião</th><th>Selic %</th></tr>"+D.selic.slice().reverse().map(r=>`<tr><td>${r[0]}</td><td>${br(r[1])}</td></tr>`).join("");};
 let hist=[],busy=false;
-const sampler=async(turns)=>{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system:ctx,turns})});const j=await r.json().catch(()=>({}));if(!r.ok||j.error)throw{text:j.error||"Não consegui responder agora. Tente de novo."};return j};
+const sampler=async(turns,out)=>{
+ for(let t=0;t<3;t++){
+  let j={},ok=false;
+  try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system:ctx,turns})});j=await r.json().catch(()=>({retry:true}));ok=r.ok&&!j.error}catch(e){j={retry:true}}
+  if(ok)return j;
+  if(!j.retry||t===2)throw{text:j.error||"Não consegui responder agora. Tente de novo."};
+  out.textContent="Servidor da IA ocupado, tentando de novo...";
+  await new Promise(r=>setTimeout(r,2500*(t+1)));
+ }
+};
 function add(cls,t){const d=document.createElement("div");d.className="msg "+cls;d.textContent=t;log.appendChild(d);log.scrollTop=log.scrollHeight;return d}
 async function ask(text){
  if(!text.trim()||busy)return;
  busy=true;send.disabled=true;add("u",text);const out=add("a","Pensando...");
  hist.push({role:"user",content:text});
  const turns=hist.slice();
- try{const r=await sampler(turns);out.textContent=r.text;hist.push({role:"assistant",content:r.text})}
+ try{const r=await sampler(turns,out);out.textContent=r.text;hist.push({role:"assistant",content:r.text})}
  catch(e){hist.pop();out.textContent=e.text||"Não consegui responder agora. Tente de novo."}
  busy=false;send.disabled=false;
 }
