@@ -78,6 +78,24 @@ section{scroll-margin-top:56px}
 .fx{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
 .fx .c{font-size:.75rem;color:var(--muted)}.fx .c b{color:var(--fg);font-family:var(--mono)}
 .fx .p{font-family:var(--mono);font-size:1.2rem;font-variant-numeric:tabular-nums}
+
+.bf{background:#1d1d1d;color:#fff;margin-inline:-16px;margin-top:40px;margin-bottom:-48px;font-family:var(--body)}
+.bf-in{max-width:1300px;margin:0 auto}
+.bf-logo{font:700 clamp(2rem,5vw,2.6rem)/1 var(--body);letter-spacing:-.03em;padding:24px 16px 16px}
+.bf-logo span{color:var(--accent)}
+.bf-grid{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid #3a3a3a}
+.bf-col{display:flex;flex-direction:column;gap:14px;padding:22px 18px 28px;border-left:1px solid #3a3a3a;min-width:0}
+.bf-col:first-child{border-left:0}
+.bf-col h4{margin:0;font:500 .95rem var(--body);color:#9a9a9a}
+.bf a{color:#fff;text-decoration:none;font-weight:500;font-size:.95rem;cursor:pointer}
+.bf a:hover{text-decoration:underline}
+.bf-bot{display:grid;grid-template-columns:1fr 1.6fr;border-top:1px solid #3a3a3a}
+.bf-bot>div{padding:18px}
+.bf-right{border-left:1px solid #3a3a3a}
+.bf-legal{display:flex;flex-wrap:wrap;gap:12px 18px}
+.bf-right p{margin:14px 0 0;font-weight:500;font-size:.95rem}
+.bf-aviso{margin:0;padding:14px 18px 28px;border-top:1px solid #3a3a3a;color:#9a9a9a;font-size:.8rem}
+@media (max-width:760px){.bf-grid{grid-template-columns:repeat(2,1fr)}.bf-col:nth-child(odd){border-left:0}.bf-col{border-top:1px solid #3a3a3a}.bf-bot{grid-template-columns:1fr}.bf-right{border-left:0;border-top:1px solid #3a3a3a}}
 [hidden]{display:none!important}
 body{margin:0}
 </style>
@@ -90,6 +108,7 @@ body{margin:0}
   <button data-go="r">Programação R</button>
   <button data-go="dados">Dados</button>
   <button data-go="fx">Câmbio</button>
+  <button data-go="cr">Ouro e Cripto</button>
   <button data-go="graf">Gráficos</button>
   <button data-go="sim">Simuladores</button>
 </div>
@@ -107,6 +126,7 @@ body{margin:0}
     <button class="chip">Como a inflação de agosto ficou negativa?</button>
     <button class="chip">Por que o IGP-M oscila mais que o IPCA?</button>
     <button class="chip">Escreva em R uma regressão da Selic contra o IPCA</button>
+    <button class="chip">Vale a pena investir em ouro ou bitcoin?</button>
     <button class="chip">Desemprego baixo pressiona a inflação?</button>
   </div>
   <div id="log" aria-live="polite"><div class="msg a">Olá! Sou a EconoIA. Pergunte sobre Selic, IPCA, PIB, desemprego ou conceitos de economia.</div></div>
@@ -125,6 +145,18 @@ body{margin:0}
     <label for="fxd">Direção<select id="fxd"><option value="to">moeda → reais</option><option value="from">reais → moeda</option></select></label>
   </div>
   <div class="result" id="fxr">—</div>
+</section>
+<section class="grid2" id="p-cr">
+  <div class="card">
+    <h3>Ouro e commodities</h3>
+    <p class="src">Contratos futuros em dólar, convertidos pelo dólar PTAX · <span id="cmdate"></span></p>
+    <div class="tbl"><table id="tbC"></table></div>
+  </div>
+  <div class="card">
+    <h3>Mercado cripto</h3>
+    <p class="src">Preço em reais e variação em 24 horas · CoinGecko · <span id="crdate"></span></p>
+    <div class="tbl"><table id="tbK"></table></div>
+  </div>
 </section>
 <nav role="tablist">
   <button role="tab" id="t-graf" aria-selected="true" data-p="graf">Gráficos</button>
@@ -211,8 +243,25 @@ body{margin:0}
   <div class="card"><h3>IGP-M mensal · FGV</h3><div class="tbl"><table id="tbG"></table></div></div>
 </section>
 
-<footer>Fontes: Banco Central do Brasil (Copom/SGS), FGV IBRE (IGP-M) e IBGE (IPCA, PNAD Contínua, Contas Nacionais Trimestrais). Atualização automática a cada 30 minutos. <span id="upd2"></span> Não é recomendação de investimento.<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-weight:600;color:var(--fg)">© 2026 SantosCorp · EconoIA Brasil. Todos os direitos reservados.</div></footer>
+<p class="note" style="margin:0">Fontes: Banco Central do Brasil (Copom, SGS, PTAX), FGV IBRE (IGP-M), IBGE (IPCA, PNAD Contínua, Contas Nacionais), Yahoo Finance e CoinGecko. Atualização automática a cada 30 minutos. <span id="upd2"></span> Não é recomendação de investimento.</p>
 </div>
+<footer class="bf">
+ <div class="bf-in">
+  <div class="bf-logo">Econo<span>IA</span></div>
+  <div class="bf-grid">
+   <div class="bf-col"><a data-go="ia">Início</a><a data-go="ia">Pergunte à IA</a><a data-go="graf">Painel</a><a data-go="dados">Dados</a><a data-go="r">Laboratório R</a><a data-go="sim">Simuladores</a></div>
+   <div class="bf-col"><h4>Indicadores</h4><a data-go="graf">Selic</a><a data-go="graf">IPCA</a><a data-go="graf">IGP-M</a><a data-go="graf">PIB</a><a data-go="dados">Desemprego</a></div>
+   <div class="bf-col"><h4>Mercados</h4><a data-go="fx">Câmbio</a><a data-go="cr">Ouro e commodities</a><a data-go="cr">Cripto</a><a data-go="graf">Juros</a><a data-go="fx">Bolsa</a></div>
+   <div class="bf-col"><h4>Ferramentas</h4><a data-go="sim">Corrigir pela inflação</a><a data-go="sim">Selic × poupança</a><a data-go="sim">Equação de Fisher</a><a data-go="sim">Regra de Taylor</a><a data-go="r">Código em R</a></div>
+   <div class="bf-col"><h4>Fontes</h4><a href="https://www.bcb.gov.br" target="_blank" rel="noopener">Banco Central</a><a href="https://www.ibge.gov.br" target="_blank" rel="noopener">IBGE</a><a href="https://portalibre.fgv.br" target="_blank" rel="noopener">FGV IBRE</a><a href="https://www.coingecko.com" target="_blank" rel="noopener">CoinGecko</a><a href="https://github.com/Jefestuart/econoia" target="_blank" rel="noopener">Código aberto</a></div>
+  </div>
+  <div class="bf-bot">
+   <div class="bf-legal"><a href="#aviso" id="avisoBtn">Termos de uso</a><a href="#aviso">Aviso legal</a><a data-go="dados">Metodologia</a><a href="#aviso">Privacidade</a></div>
+   <div class="bf-right"><div class="bf-legal"><a data-go="ia">Sobre</a><a href="https://github.com/Jefestuart/econoia" target="_blank" rel="noopener">GitHub</a><a data-go="ia">Ajuda</a></div><p>© JesseCorp 2026 · EconoIA Brasil. Todos os direitos reservados.</p></div>
+  </div>
+  <p class="bf-aviso" id="aviso">As informações deste site têm caráter informativo e educacional e não constituem recomendação de investimento. Os dados vêm de fontes públicas e podem ter atraso. Este site não coleta dados pessoais.</p>
+ </div>
+</footer>
 
 <script>
 function tick(){const d=new Date();clk.textContent=d.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}).toUpperCase()+" · "+d.toLocaleTimeString("pt-BR")}tick();setInterval(tick,1000);
@@ -238,12 +287,22 @@ function renderTop(){
   ["PIB · IBGE",(pb[1]>=0?"+":"")+br(pb[1],1)+"%",`${pb[0]} · ${br(D.pibYoY[1],1)}% no ano`]
  ].map(k=>`<div class="kpi"><span class="lb">${k[0]}</span><span class="v">${k[1]}</span><span class="s">${k[2]}</span></div>`).join("");
  const fx=D.fx.filter(f=>["USD","EUR","GBP"].includes(f[0])).map(f=>[f[0]+"/BRL","R$ "+br(f[3],3),null]);
- const items=[...D.market.slice(0,1),...fx,...D.market.slice(1),["SELIC",br(s[1])+"%",null],["IPCA 12M",br(ip[2])+"%",null],["IGP-M 12M",br(ig[2])+"%",null]];
+ const gold=(D.commod||[]).filter(c=>c[0]==="Ouro").map(c=>["OURO","US$ "+br(c[2]),c[4]]);
+ const cry=(D.crypto||[]).filter(c=>["BTC","ETH","SOL"].includes(c[0])).map(c=>[c[0]+"/BRL","R$ "+br(c[2],0),c[4]]);
+ const items=[...D.market.slice(0,1),...fx,...gold,...cry,...D.market.slice(1),["SELIC",br(s[1])+"%",null],["IPCA 12M",br(ip[2])+"%",null],["IGP-M 12M",br(ig[2])+"%",null]];
  const row=items.map(m=>`<span class="tk"><b>${m[0]}</b>${m[1]?" "+m[1]:""} ${sign(m[2])}</span>`).join("");
  track.innerHTML=row+row;
  UPD=new Date(D.updated).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});
  upd.textContent="Atualizado em "+UPD+".";upd2.textContent="Última atualização: "+UPD+".";
  fxdate.textContent="Cotação de "+D.fx_data+".";
+ renderCr();
+}
+function renderCr(){
+ const cm=D.commod||[],cr=D.crypto||[];
+ cmdate.textContent=D.market_data||"";crdate.textContent=D.crypto_data||"";
+ tbC.innerHTML=cm.length?"<tr><th>Ativo</th><th>US$</th><th>R$</th><th>Dia</th></tr>"+cm.map(c=>`<tr><td>${c[0]} <span class="note">/${c[1]}</span></td><td>${br(c[2])}</td><td>${c[3]!=null?br(c[3]):"—"}</td><td>${sign(c[4])}</td></tr>`).join(""):'<tr><td class="note">Os preços chegam na próxima atualização do robô (a cada 30 min).</td></tr>';
+ const big=v=>v>=1e12?br(v/1e12,2)+" tri":v>=1e9?br(v/1e9,1)+" bi":"—";
+ tbK.innerHTML=cr.length?"<tr><th>Moeda</th><th>R$</th><th>US$</th><th>24h</th><th>Valor de mercado</th></tr>"+cr.map(c=>`<tr><td><b>${c[0]}</b> <span class="note">${c[1]}</span></td><td>${br(c[2],c[2]<10?4:2)}</td><td>${br(c[3],c[3]<10?4:2)}</td><td>${sign(c[4])}</td><td>US$ ${big(c[5]||0)}</td></tr>`).join(""):'<tr><td class="note">As cotações chegam na próxima atualização do robô (a cada 30 min).</td></tr>';
 }
 async function load(){
  try{const r=await fetch("data/data.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;return await r.json()}
@@ -370,7 +429,9 @@ function fxc(){const [c,n,,v]=FX[fxm.value];const unit=c==="JPY"?100:c==="ARS"?1
  fxr.textContent=fxd.value==="to"?`${br(x,2)} ${c} = R$ ${br(x*v/unit)}`:`R$ ${br(x)} = ${br(x/v*unit)} ${c}`}
 [fxv,fxm,fxd].forEach(e=>e.oninput=fxc);fxc();
 // atalhos
+document.querySelector(".bf").addEventListener("click",e=>{const a=e.target.closest("a[data-go]");if(!a)return;e.preventDefault();document.querySelector(".quick").onclick({target:document.querySelector(`.quick button[data-go="${a.dataset.go}"]`)||a})});
 document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;
+ if(g==="cr"){document.getElementById("p-cr").scrollIntoView({behavior:"smooth"});return}
  if(g==="fx"){document.getElementById("p-fx").scrollIntoView({behavior:"smooth"});return}
  if(g==="ia"){document.getElementById("p-ia").scrollIntoView({behavior:"smooth"});setTimeout(()=>q.focus({preventScroll:true}),400);return}
  show(g);document.querySelector("nav").scrollIntoView({behavior:"smooth"})};
@@ -381,7 +442,7 @@ Selic meta (Copom): ${D.selic.map(r=>r[0]+" "+r[1]+"%").join("; ")}.
 IPCA mensal e 12m: ${D.ipca.map(r=>r[0]+" "+r[1]+"% (12m "+r[2]+"%)").join("; ")}.
 IGP-M (FGV) mensal e 12m: ${D.igpm.map(r=>r[0]+" "+r[1]+"% (12m "+r[2]+"%)").join("; ")}.
 PIB trimestral (t/t-1): ${D.pibT.map(r=>r[0]+" "+r[1]+"%").join("; ")}. PIB ${D.pibYoY[0]} ${D.pibYoY[1]}% interanual. PIB anual: ${D.pibA.map(r=>r[0]+" "+r[1]+"%").join("; ")}.
-Desocupação PNAD ${D.desemprego[0]}: ${D.desemprego[1]}%. Meta de inflação: 3% (tolerância 1,5 p.p.). Câmbio (${D.fx_data}, R$ por unidade): ${D.fx.map(f=>f[0]+" "+f[3]).join("; ")} (JPY por 100, ARS por 1.000). Mercado (${D.market_data}): ${D.market.map(m=>m[0]+" "+m[1]+" "+m[2]+"%").join("; ")}. Juro real ex-post ≈ ${br(real)}%.`}
+Desocupação PNAD ${D.desemprego[0]}: ${D.desemprego[1]}%. Meta de inflação: 3% (tolerância 1,5 p.p.). Câmbio (${D.fx_data}, R$ por unidade): ${D.fx.map(f=>f[0]+" "+f[3]).join("; ")} (JPY por 100, ARS por 1.000). Mercado (${D.market_data}): ${D.market.map(m=>m[0]+" "+m[1]+" "+m[2]+"%").join("; ")}. Commodities: ${(D.commod||[]).map(c=>c[0]+" US$ "+c[2]+"/"+c[1]+" (R$ "+c[3]+", dia "+c[4]+"%)").join("; ")}. Cripto (${D.crypto_data}): ${(D.crypto||[]).map(c=>c[0]+" R$ "+c[2]+" (24h "+c[4]+"%)").join("; ")}. Juro real ex-post ≈ ${br(real)}%.`}
 mkctx();
 window._refresh=()=>{draw();rgen();mkctx();fxRender();fxc();tbS.innerHTML="<tr><th>Reunião</th><th>Selic %</th></tr>"+D.selic.slice().reverse().map(r=>`<tr><td>${r[0]}</td><td>${br(r[1])}</td></tr>`).join("");};
 let hist=[],busy=false;

@@ -1,4 +1,4 @@
-# EconoIA Brasil · SantosCorp
+# EconoIA Brasil · JesseCorp 2026
 
 Site de economia brasileira que se atualiza sozinho. Tudo é configurado pelo navegador, sem instalar nada.
 

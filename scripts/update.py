@@ -174,6 +174,43 @@ def _():
     data["market_data"] = NOW.strftime("%d/%m/%Y %H:%M") + " (Brasília)"
 
 
+
+# ---------- Commodities: ouro, prata, petróleo (Yahoo Finance) ----------
+@step("Ouro e commodities (Yahoo)")
+def _():
+    usd = next((f[3] for f in data["fx"] if f[0] == "USD"), None)
+    itens = [("Ouro", "GC=F", "onça-troy"), ("Prata", "SI=F", "onça-troy"), ("Petróleo Brent", "BZ=F", "barril")]
+    out = []
+    for nome, sym, unid in itens:
+        j = get("https://query1.finance.yahoo.com/v8/finance/chart/" + urllib.parse.quote(sym) + "?range=5d&interval=1d")
+        res = j["chart"]["result"][0]
+        p = float(res["meta"]["regularMarketPrice"])
+        closes = [c for c in res["indicators"]["quote"][0]["close"] if c]
+        prev = closes[-2] if len(closes) >= 2 else float(res["meta"]["chartPreviousClose"])
+        out.append([nome, unid, round(p, 2), round(p * usd, 2) if usd else None, round((p / prev - 1) * 100, 2)])
+    data["commod"] = out
+
+
+# ---------- Criptomoedas (CoinGecko, sem chave) ----------
+@step("Cripto (CoinGecko)")
+def _():
+    ids = [("bitcoin", "BTC", "Bitcoin"), ("ethereum", "ETH", "Ethereum"), ("solana", "SOL", "Solana"),
+           ("ripple", "XRP", "XRP"), ("binancecoin", "BNB", "BNB"), ("dogecoin", "DOGE", "Dogecoin"),
+           ("cardano", "ADA", "Cardano"), ("tether", "USDT", "Tether")]
+    j = get("https://api.coingecko.com/api/v3/simple/price?ids=" + ",".join(i[0] for i in ids) +
+            "&vs_currencies=brl,usd&include_24hr_change=true&include_market_cap=true")
+    out = []
+    for cid, sym, nome in ids:
+        c = j.get(cid)
+        if not c:
+            continue
+        out.append([sym, nome, c["brl"], c["usd"], round(c.get("brl_24h_change") or 0, 2), c.get("usd_market_cap")])
+    if not out:
+        raise ValueError("vazio")
+    data["crypto"] = out
+    data["crypto_data"] = NOW.strftime("%d/%m/%Y %H:%M") + " (Brasília)"
+
+
 data["updated"] = NOW.isoformat(timespec="minutes")
 json.dump(data, open(PATH, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("\n".join(log))
