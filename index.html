@@ -96,6 +96,27 @@ section{scroll-margin-top:56px}
 .bf-right p{margin:14px 0 0;font-weight:500;font-size:.95rem}
 .bf-aviso{margin:0;padding:14px 18px 28px;border-top:1px solid #3a3a3a;color:#9a9a9a;font-size:.8rem}
 @media (max-width:760px){.bf-grid{grid-template-columns:repeat(2,1fr)}.bf-col:nth-child(odd){border-left:0}.bf-col{border-top:1px solid #3a3a3a}.bf-bot{grid-template-columns:1fr}.bf-right{border-left:0;border-top:1px solid #3a3a3a}}
+
+.topnav{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-block:4px}
+.tn-logo{font:800 1.5rem var(--display);color:var(--fg);text-decoration:none;letter-spacing:-.02em}.tn-logo span{color:var(--accent)}
+.search{position:relative;flex:1 1 340px;display:flex;min-width:0}
+.search input{flex:1;min-width:0;border-radius:999px 0 0 999px;border:1px solid var(--line);background:var(--surface);padding:11px 18px;font-size:.95rem}
+.sbtn{border:0;border-radius:0 999px 999px 0;background:var(--accent);color:#000;padding:0 20px;cursor:pointer;display:flex;align-items:center}
+.sres{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:20;background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:6px;display:flex;flex-direction:column;max-height:70vh;overflow:auto;box-shadow:0 12px 40px #000a}
+.sr{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;text-align:left;background:none;border:0;color:var(--fg);padding:9px 10px;border-radius:8px;cursor:pointer;font:inherit}
+.sr:hover,.sr.act{background:var(--accent-soft)}
+.sk{grid-row:span 2;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);align-self:center;min-width:92px}
+.sd{font-size:.8rem;color:var(--muted);font-family:var(--mono)}
+.tn-links{display:flex;gap:16px;flex-wrap:wrap}.tn-links a{color:var(--muted);text-decoration:none;font-weight:600;font-size:.92rem}.tn-links a:hover,.tn-links a.tn-on{color:var(--accent)}
+.fund{display:flex;flex-direction:column;gap:14px}
+.fund-head h2{font-family:var(--display);font-weight:800;font-size:clamp(1.5rem,4vw,2rem);margin:0;color:var(--accent)}
+.chip.on{background:var(--accent);color:#000;border-color:var(--accent)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:14px;align-items:start}
+.topic{border-top:1px solid var(--line);padding:8px 0}
+.topic summary{cursor:pointer;font-weight:600;list-style-position:outside}
+.topic p{margin:8px 0;color:var(--muted);font-size:.9rem}
+.frm{display:block;background:#05090d;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:13px var(--mono);color:var(--accent);margin-bottom:8px;overflow-x:auto;white-space:nowrap}
+.topic.hl{background:var(--accent-soft);border-radius:8px;padding-inline:8px}
 [hidden]{display:none!important}
 body{margin:0}
 </style>
@@ -103,12 +124,22 @@ body{margin:0}
 
 <div class="ticker" aria-label="Cotações"><span class="lab" id="clk">--</span><div class="track" id="track"></div></div>
 <div class="wrap">
+<div class="topnav">
+  <a class="tn-logo" data-go="ia" href="#">Econo<span>IA</span></a>
+  <form class="search" id="sform" role="search">
+    <input id="sq" type="search" autocomplete="off" placeholder="Busque indicadores, moedas ou temas: regra de Taylor, IS-LM, Solow..." aria-label="Buscar no site">
+    <button type="submit" class="sbtn" aria-label="Buscar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+    <div class="sres" id="sres" role="listbox" hidden></div>
+  </form>
+  <nav class="tn-links"><a data-go="ia" href="#">Início</a><a data-go="fx" href="#">Mercados</a><a data-go="fund" href="#" class="tn-on">Fundamentos</a><a data-go="sim" href="#">Calculadoras</a></nav>
+</div>
 <div class="quick" aria-label="Atalhos">
   <button data-go="ia">Pergunte à IA</button>
   <button data-go="r">Programação R</button>
   <button data-go="dados">Dados</button>
   <button data-go="fx">Câmbio</button>
   <button data-go="cr">Ouro e Cripto</button>
+  <button data-go="fund">Fundamentos</button>
   <button data-go="graf">Gráficos</button>
   <button data-go="sim">Simuladores</button>
 </div>
@@ -158,6 +189,11 @@ body{margin:0}
     <div class="tbl"><table id="tbK"></table></div>
   </div>
 </section>
+<section id="p-fund" class="fund">
+  <div class="fund-head"><h2>Fundamentos da Economia</h2><p class="src">Os principais temas estudados na faculdade de economia, com fórmula, explicação e atalho para calcular ou perguntar à IA. Use a busca do topo para achar qualquer assunto.</p></div>
+  <div class="chips" id="fundChips"></div>
+  <div class="fgrid" id="fundGrid"></div>
+</section>
 <nav role="tablist">
   <button role="tab" id="t-graf" aria-selected="true" data-p="graf">Gráficos</button>
   <button role="tab" id="t-sim" aria-selected="false" data-p="sim">Simuladores</button>
@@ -202,7 +238,7 @@ body{margin:0}
     </div>
     <div class="result" id="fr">—</div><p class="note">Acima de ~5% o juro real é considerado contracionista para o Brasil.</p>
   </div>
-  <div class="card">
+  <div class="card" id="calc-taylor">
     <h3>Regra de Taylor</h3><p class="src">i = r* + π + 0,5(π − meta) + 0,5·hiato</p>
     <div class="form">
       <label for="tr">Juro neutro r* (%)<input id="tr" type="number" value="5" step="0.25"></label>
@@ -211,6 +247,42 @@ body{margin:0}
       <label for="th">Hiato do produto (%)<input id="th" type="number" value="0.5" step="0.25"></label>
     </div>
     <div class="result" id="tres">—</div><p class="note" id="tnote"></p>
+  </div>
+  <div class="card" id="calc-mult">
+    <h3>Multiplicador keynesiano</h3><p class="src">k = 1 / (1 − c)</p>
+    <div class="form">
+      <label for="mc">Propensão a consumir (c)<input id="mc" type="number" value="0.75" step="0.05" min="0" max="0.99"></label>
+      <label for="mg">Gasto autônomo (R$ bi)<input id="mg" type="number" value="100"></label>
+    </div>
+    <div class="result" id="mr">—</div><p class="note" id="mn"></p>
+  </div>
+  <div class="card" id="calc-elas">
+    <h3>Elasticidade-preço da demanda</h3><p class="src">Método do ponto médio · E = (ΔQ/Q̄) ÷ (ΔP/P̄)</p>
+    <div class="form">
+      <label for="ep0">Preço inicial<input id="ep0" type="number" value="10"></label>
+      <label for="ep1">Preço final<input id="ep1" type="number" value="12"></label>
+      <label for="eq0">Quantidade inicial<input id="eq0" type="number" value="100"></label>
+      <label for="eq1">Quantidade final<input id="eq1" type="number" value="80"></label>
+    </div>
+    <div class="result" id="er">—</div><p class="note" id="en"></p>
+  </div>
+  <div class="card" id="calc-vpl">
+    <h3>VPL e TIR</h3><p class="src">VPL = Σ FCₜ/(1+i)ᵗ − I₀</p>
+    <div class="form">
+      <label for="v0">Investimento inicial (R$)<input id="v0" type="number" value="10000"></label>
+      <label for="vi">Taxa de desconto (% ao período)<input id="vi" type="number" value="13.75" step="0.25"></label>
+      <label for="vf">Fluxos de caixa (separe por ;)<input id="vf" type="text" value="3000; 3500; 4000; 4500"></label>
+    </div>
+    <div class="result" id="vr">—</div><p class="note" id="vn"></p>
+  </div>
+  <div class="card" id="calc-okun">
+    <h3>Lei de Okun</h3><p class="src">Hiato ≈ −β(u − uₙ)</p>
+    <div class="form">
+      <label for="ou">Desemprego atual (%)<input id="ou" type="number" value="5.3" step="0.1"></label>
+      <label for="oun">Desemprego natural (%)<input id="oun" type="number" value="7.5" step="0.1"></label>
+      <label for="ob">Coeficiente β<input id="ob" type="number" value="2" step="0.1"></label>
+    </div>
+    <div class="result" id="or">—</div><p class="note" id="on"></p>
   </div>
 </section>
 
@@ -252,7 +324,7 @@ body{margin:0}
    <div class="bf-col"><a data-go="ia">Início</a><a data-go="ia">Pergunte à IA</a><a data-go="graf">Painel</a><a data-go="dados">Dados</a><a data-go="r">Laboratório R</a><a data-go="sim">Simuladores</a></div>
    <div class="bf-col"><h4>Indicadores</h4><a data-go="graf">Selic</a><a data-go="graf">IPCA</a><a data-go="graf">IGP-M</a><a data-go="graf">PIB</a><a data-go="dados">Desemprego</a></div>
    <div class="bf-col"><h4>Mercados</h4><a data-go="fx">Câmbio</a><a data-go="cr">Ouro e commodities</a><a data-go="cr">Cripto</a><a data-go="graf">Juros</a><a data-go="fx">Bolsa</a></div>
-   <div class="bf-col"><h4>Ferramentas</h4><a data-go="sim">Corrigir pela inflação</a><a data-go="sim">Selic × poupança</a><a data-go="sim">Equação de Fisher</a><a data-go="sim">Regra de Taylor</a><a data-go="r">Código em R</a></div>
+   <div class="bf-col"><h4>Ferramentas</h4><a data-go="sim">Corrigir pela inflação</a><a data-go="sim">Selic × poupança</a><a data-go="sim">Equação de Fisher</a><a data-go="sim">Regra de Taylor</a><a data-go="r">Código em R</a><a data-go="fund">Fundamentos</a></div>
    <div class="bf-col"><h4>Fontes</h4><a href="https://www.bcb.gov.br" target="_blank" rel="noopener">Banco Central</a><a href="https://www.ibge.gov.br" target="_blank" rel="noopener">IBGE</a><a href="https://portalibre.fgv.br" target="_blank" rel="noopener">FGV IBRE</a><a href="https://www.coingecko.com" target="_blank" rel="noopener">CoinGecko</a><a href="https://finance.yahoo.com" target="_blank" rel="noopener">Yahoo Finance</a></div>
   </div>
   <div class="bf-bot">
@@ -431,6 +503,7 @@ function fxc(){const [c,n,,v]=FX[fxm.value];const unit=c==="JPY"?100:c==="ARS"?1
 // atalhos
 document.querySelector(".bf").addEventListener("click",e=>{const a=e.target.closest("a[data-go]");if(!a)return;e.preventDefault();document.querySelector(".quick").onclick({target:document.querySelector(`.quick button[data-go="${a.dataset.go}"]`)||a})});
 document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;
+ if(g==="fund"){document.getElementById("p-fund").scrollIntoView({behavior:"smooth"});return}
  if(g==="cr"){document.getElementById("p-cr").scrollIntoView({behavior:"smooth"});return}
  if(g==="fx"){document.getElementById("p-fx").scrollIntoView({behavior:"smooth"});return}
  if(g==="ia"){document.getElementById("p-ia").scrollIntoView({behavior:"smooth"});setTimeout(()=>q.focus({preventScroll:true}),400);return}
@@ -471,5 +544,172 @@ q.onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();askf.request
 chips.onclick=e=>{if(e.target.matches(".chip")){ask(e.target.textContent)}};
 
 }
+</script>
+<script>
+// ===================== Fundamentos da Economia + Busca =====================
+const DISC=[
+ ["micro","Microeconomia"],["macro","Macroeconomia"],["mon","Economia Monetária"],["int","Economia Internacional"],
+ ["cresc","Crescimento e Desenvolvimento"],["setor","Setor Público"],["fin","Finanças e Matemática Financeira"],
+ ["ecm","Econometria e Estatística"],["mat","Matemática para Economistas"],["hist","História do Pensamento Econômico"],["br","Economia Brasileira"]
+];
+const TOPICS=[
+ // Microeconomia
+ ["micro","Oferta e demanda","Preço e quantidade de equilíbrio surgem onde a quantidade que os consumidores querem comprar iguala a que os produtores querem vender.","Qd(P) = Qs(P)","equilibrio mercado preco"],
+ ["micro","Elasticidade-preço da demanda","Mede quanto a quantidade demandada reage a uma variação de preço. |E|>1 é elástica, |E|<1 é inelástica.","E = (ΔQ/Q) ÷ (ΔP/P)","elasticidade calculo","elas"],
+ ["micro","Utilidade e escolha do consumidor","O consumidor maximiza utilidade sujeito à restrição orçamentária. No ótimo, a taxa marginal de substituição iguala a razão de preços.","TMS = UMgx/UMgy = Px/Py","utilidade preferencias curva indiferenca"],
+ ["micro","Custos de produção","Custo total = fixo + variável. A empresa em concorrência produz onde o preço iguala o custo marginal.","P = CMg  ·  CT = CF + CV","custo marginal medio"],
+ ["micro","Função de produção Cobb-Douglas","Relaciona produto com capital e trabalho. Os expoentes medem a participação de cada fator na renda.","Y = A·K^α·L^(1−α)","cobb douglas producao"],
+ ["micro","Estruturas de mercado","Concorrência perfeita, monopólio, oligopólio e concorrência monopolística. O monopolista produz onde receita marginal iguala custo marginal.","Monopólio: RMg = CMg","monopolio oligopolio concorrencia"],
+ ["micro","Teoria dos jogos","Estuda decisões estratégicas. No equilíbrio de Nash, ninguém ganha mudando sozinho de estratégia. Exemplo clássico: dilema do prisioneiro.","Nash: melhor resposta mútua","nash jogos dilema prisioneiro"],
+ ["micro","Excedente e bem-estar","Excedente do consumidor é o que ele estava disposto a pagar além do preço; do produtor, o que recebe acima do custo. Impostos geram peso morto.","EC = ∫(Pd − P)dQ","excedente peso morto bem-estar"],
+ ["micro","Externalidades e bens públicos","Quando a ação de um agente afeta terceiros sem preço, o mercado falha. Soluções: imposto de Pigou, Teorema de Coase.","Imposto pigouviano = dano marginal","externalidade coase pigou falha mercado"],
+ // Macro
+ ["macro","PIB e contas nacionais","Valor de todos os bens e serviços finais produzidos no país. Pela ótica da despesa, soma consumo, investimento, gastos do governo e exportações líquidas.","Y = C + I + G + (X − M)","pib contas nacionais produto"],
+ ["macro","Multiplicador keynesiano","Um gasto autônomo gera renda maior que ele mesmo, porque parte da renda vira novo consumo. Quanto maior a propensão a consumir, maior o multiplicador.","k = 1 / (1 − c)","multiplicador keynes propensao consumir","mult"],
+ ["macro","Modelo IS-LM","IS: equilíbrio no mercado de bens (juros × renda). LM: equilíbrio no mercado monetário. O cruzamento dá juros e renda de equilíbrio.","IS: Y = C(Y−T)+I(i)+G  ·  LM: M/P = L(i,Y)","is lm hicks"],
+ ["macro","Curva de Phillips","Relação entre inflação e desemprego. Na versão aumentada por expectativas, só há trade-off no curto prazo.","π = πᵉ − β(u − uₙ)","phillips inflacao desemprego nairu"],
+ ["macro","Lei de Okun","Cada ponto de desemprego acima do natural está associado a uma perda de produto em relação ao potencial.","(Y − Y*)/Y* = −β(u − uₙ)","okun desemprego hiato","okun"],
+ ["macro","Oferta e demanda agregadas (OA-DA)","A demanda agregada cai com o nível de preços; a oferta agregada de curto prazo sobe. Choques deslocam as curvas.","DA: Y = f(P, G, M)","oferta agregada demanda agregada choque"],
+ ["macro","Inflação e índices de preço","Inflação é o aumento generalizado de preços. No Brasil, o IPCA (IBGE) é o índice oficial da meta; o IGP-M (FGV) reajusta aluguéis.","π = (Pₜ / Pₜ₋₁) − 1","inflacao ipca igpm indice"],
+ ["macro","Desemprego","Taxa de desocupação = desocupados ÷ força de trabalho. Tipos: friccional, estrutural e cíclico.","u = D / (O + D)","desemprego pnad desocupacao"],
+ ["macro","Hiato do produto","Diferença entre o PIB efetivo e o potencial. Hiato positivo pressiona a inflação; negativo indica ociosidade.","h = (Y − Y*) / Y*","hiato produto potencial"],
+ // Monetária
+ ["mon","Regra de Taylor","Sugere o juro básico a partir do juro neutro, da inflação, do desvio da meta e do hiato do produto. Usada para avaliar se a Selic está apertada ou frouxa.","i = r* + π + 0,5(π − π*) + 0,5·h","taylor regra juros selic calculo","sim"],
+ ["mon","Equação de Fisher","Separa juro nominal em juro real e inflação. Base para calcular o juro real da economia.","(1 + i) = (1 + r)(1 + π)","fisher juro real nominal","sim"],
+ ["mon","Teoria quantitativa da moeda","Moeda vezes velocidade é igual a preços vezes produto. Com V e Y estáveis, mais moeda vira mais inflação.","M·V = P·Y","quantitativa moeda friedman"],
+ ["mon","Multiplicador monetário","Bancos emprestam parte dos depósitos, multiplicando a base monetária em meios de pagamento.","m = 1 / (c + r(1 − c))","multiplicador bancario base monetaria compulsorio"],
+ ["mon","Regime de metas de inflação","O Banco Central persegue uma meta (3% no Brasil, com tolerância de 1,5 p.p.) usando a Selic como instrumento principal.","Meta: π* = 3% ± 1,5 p.p.","metas inflacao copom banco central"],
+ ["mon","Selic e Copom","A Selic é a taxa básica de juros, definida pelo Copom a cada 45 dias. Afeta crédito, câmbio, consumo e, com defasagem, a inflação.","Selic ↑ → crédito ↓ → demanda ↓ → π ↓","selic copom juros"],
+ // Internacional
+ ["int","Balanço de pagamentos","Registra as transações com o exterior: transações correntes, conta capital e conta financeira.","TC + KC + KF + erros = 0","balanco pagamentos transacoes correntes"],
+ ["int","Câmbio real e PPC","A paridade do poder de compra diz que o câmbio tende a igualar o poder de compra entre países.","e = P / P*  ·  q = e·P*/P","cambio real ppc paridade poder compra"],
+ ["int","Paridade descoberta de juros","Diferença de juros entre países deve refletir a depreciação esperada da moeda.","i − i* ≈ Δeᵉ","paridade juros cambio"],
+ ["int","Vantagens comparativas (Ricardo)","Países ganham ao se especializar no que produzem com menor custo de oportunidade, mesmo sem vantagem absoluta.","Custo de oportunidade relativo","ricardo vantagem comparativa comercio"],
+ ["int","Modelo Mundell-Fleming","IS-LM para economia aberta. Com câmbio flutuante e capital livre, a política monetária é eficaz e a fiscal, pouco.","IS-LM-BP","mundell fleming economia aberta"],
+ // Crescimento
+ ["cresc","Modelo de Solow","Crescimento de longo prazo vem do progresso tecnológico. Poupança maior eleva o nível de renda, mas não a taxa de crescimento no estado estacionário.","Δk = s·f(k) − (n + δ)k","solow crescimento estado estacionario"],
+ ["cresc","Contabilidade do crescimento","Decompõe o crescimento do PIB em capital, trabalho e produtividade total dos fatores (resíduo de Solow).","gY = gA + α·gK + (1−α)·gL","produtividade ptf residuo solow"],
+ ["cresc","Desigualdade e índice de Gini","O Gini vai de 0 (igualdade total) a 1 (um só tem tudo). O Brasil está entre os países mais desiguais.","G = A / (A + B) na curva de Lorenz","gini desigualdade lorenz"],
+ ["cresc","Desenvolvimento e estruturalismo (Cepal)","Prebisch e Furtado: a deterioração dos termos de troca prende a periferia à exportação de produtos primários.","Termos de troca = Px / Pm","cepal furtado prebisch desenvolvimento"],
+ // Setor público
+ ["setor","Resultado primário e dívida pública","A dívida/PIB cai quando o superávit primário supera a diferença entre juros reais e crescimento.","Δb = (r − g)·b − s","divida publica primario fiscal"],
+ ["setor","Curva de Laffer","Acima de certa alíquota, aumentar impostos reduz a arrecadação, porque desestimula a atividade.","Arrecadação = t · Base(t)","laffer impostos arrecadacao"],
+ ["setor","Tributação e incidência","Quem paga de fato o imposto depende das elasticidades: o lado menos elástico arca com mais.","Incidência ∝ 1/elasticidade","imposto incidencia tributacao"],
+ // Finanças
+ ["fin","Valor presente líquido (VPL)","Traz fluxos futuros a valor de hoje. Projeto com VPL positivo cria valor.","VPL = Σ FCₜ / (1 + i)ᵗ − I₀","vpl valor presente fluxo caixa","vpl"],
+ ["fin","Juros compostos","O valor cresce sobre o valor já acumulado. Base de toda a matemática financeira.","M = C·(1 + i)ⁿ","juros compostos montante"],
+ ["fin","TIR (taxa interna de retorno)","Taxa que zera o VPL. Compara-se com o custo do capital.","Σ FCₜ / (1 + TIR)ᵗ = I₀","tir taxa interna retorno"],
+ ["fin","CAPM","Retorno esperado de um ativo = taxa livre de risco + beta × prêmio de mercado.","E(R) = Rf + β(Rm − Rf)","capm beta risco retorno"],
+ ["fin","Risco e diversificação (Markowitz)","Combinar ativos pouco correlacionados reduz o risco da carteira sem reduzir o retorno esperado.","σ²p = Σ wᵢwⱼσᵢⱼ","markowitz carteira diversificacao"],
+ // Econometria
+ ["ecm","Regressão linear (MQO)","Estima a relação entre variáveis minimizando a soma dos erros ao quadrado.","β̂ = (X'X)⁻¹X'y","regressao mqo ols minimos quadrados","r"],
+ ["ecm","Testes de hipótese e p-valor","Testa se um efeito é estatisticamente diferente de zero. p-valor < 0,05 costuma indicar significância.","t = β̂ / ep(β̂)","teste hipotese p valor significancia"],
+ ["ecm","Séries temporais e estacionariedade","Séries econômicas costumam ter tendência. Testes como Dickey-Fuller verificam raiz unitária.","yₜ = ρyₜ₋₁ + εₜ","series temporais estacionaria dickey fuller","r"],
+ ["ecm","Modelos ARIMA","Combinam autorregressão, diferenciação e médias móveis para previsão de séries como inflação.","ARIMA(p, d, q)","arima previsao box jenkins","r"],
+ ["ecm","Correlação e causalidade","Correlação mede associação linear; não prova causa. Variáveis omitidas e causalidade reversa enganam.","ρ = cov(X,Y) / (σx·σy)","correlacao causalidade","r"],
+ // Matemática
+ ["mat","Derivadas e otimização","A derivada mede a taxa de variação. Máximos e mínimos acontecem onde a derivada é zero.","f'(x) = 0  ·  f''(x) < 0 → máximo","derivada otimizacao calculo"],
+ ["mat","Lagrangiano","Otimiza com restrição, como utilidade sujeita ao orçamento. O multiplicador λ é o valor-sombra da restrição.","ℒ = f(x) − λ[g(x) − c]","lagrange otimizacao restrita"],
+ ["mat","Álgebra matricial e Leontief","A matriz insumo-produto mostra quanto cada setor usa dos outros. Base da análise de impactos.","x = (I − A)⁻¹ d","matriz leontief insumo produto"],
+ // História do pensamento
+ ["hist","Adam Smith e os clássicos","A mão invisível: a busca do interesse próprio, em mercados competitivos, gera bem-estar coletivo. Divisão do trabalho eleva a produtividade.","A Riqueza das Nações (1776)","smith classicos mao invisivel ricardo"],
+ ["hist","Marx","Teoria do valor-trabalho, mais-valia e a dinâmica de acumulação e crise do capitalismo.","Mais-valia = valor produzido − salário","marx mais valia capital"],
+ ["hist","Keynes","A demanda efetiva determina a renda no curto prazo. Em recessões, o governo deve gastar para compensar a falta de demanda privada.","Teoria Geral (1936)","keynes demanda efetiva"],
+ ["hist","Monetarismo e expectativas racionais","Friedman: inflação é sempre um fenômeno monetário. Lucas: agentes antecipam políticas, o que limita seus efeitos.","Crítica de Lucas","friedman lucas monetarismo expectativas"],
+ ["hist","Escola Austríaca e neoclássicos","Marginalismo (Jevons, Menger, Walras): valor vem da utilidade marginal. Hayek: preços como sinais de informação.","Equilíbrio geral de Walras","austriaca hayek walras marginalismo"],
+ // Brasil
+ ["br","Plano Real (1994)","Acabou com a hiperinflação usando a URV como transição para a nova moeda, junto com âncora cambial e ajuste fiscal.","URV → Real (jul/1994)","plano real urv hiperinflacao"],
+ ["br","Tripé macroeconômico","Desde 1999: metas de inflação, câmbio flutuante e meta de superávit primário.","Metas + câmbio flutuante + primário","tripe macroeconomico"],
+ ["br","Milagre econômico e década perdida","Crescimento acelerado de 1968–73, seguido pela crise da dívida e inflação alta nos anos 1980.","PIB ~10% a.a. (1968–73)","milagre economico decada perdida"],
+ ["br","Arcabouço fiscal","Regra fiscal de 2023 que limita o crescimento das despesas a uma parcela do crescimento da receita, com metas de resultado primário.","Despesa cresce 70% da receita (0,6%–2,5% real)","arcabouco fiscal regra"],
+];
+const SITE=[
+ ["Pergunte à IA","Chat que explica economia com os dados do painel","ia","chat pergunta ia gemini"],
+ ["Selic","Taxa básica de juros do Banco Central","graf","selic juros copom"],["IPCA","Inflação oficial do IBGE","graf","ipca inflacao"],
+ ["IGP-M","Índice da FGV usado em aluguéis","graf","igpm aluguel fgv"],["PIB","Crescimento da economia","graf","pib crescimento"],
+ ["Desemprego","Taxa de desocupação da PNAD Contínua","dados","desemprego pnad"],
+ ["Câmbio","Dólar, euro, libra e outras moedas em reais","fx","dolar euro libra cambio iene"],
+ ["Conversor de moedas","Converta reais para outras moedas","fx","conversor converter moeda"],
+ ["Ouro e commodities","Ouro, prata e petróleo","cr","ouro prata petroleo commodities"],
+ ["Cripto","Bitcoin, Ethereum e outras","cr","bitcoin btc ethereum cripto criptomoeda"],
+ ["Bolsa","Ibovespa e ações","fx","ibovespa bolsa acoes petr4 vale3"],
+ ["Simuladores","Inflação, Selic × poupança, Fisher, Taylor, multiplicador, elasticidade, VPL","sim","simulador calculadora calcular"],
+ ["Laboratório R","Código R pronto com os dados","r","r codigo programacao regressao"],
+ ["Tabelas","Séries de Selic, IPCA e IGP-M","dados","tabela dados series"],
+ ["Fundamentos da Economia","Assuntos estudados na faculdade de economia","fund","fundamentos faculdade materia disciplina"],
+];
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function go(dest){
+ if(dest==="fund"){document.getElementById("p-fund").scrollIntoView({behavior:"smooth"});return}
+ const b=document.querySelector(`.quick button[data-go="${dest}"]`);if(b)b.click();
+}
+// ---- render Fundamentos ----
+(function(){
+ const box=document.getElementById("fundGrid"),chips=document.getElementById("fundChips");
+ chips.innerHTML=`<button class="chip on" data-d="all">Todas</button>`+DISC.map(([k,n])=>`<button class="chip" data-d="${k}">${n}</button>`).join("");
+ function render(d){
+  box.innerHTML=DISC.filter(([k])=>d==="all"||k===d).map(([k,n])=>{
+   const ts=TOPICS.filter(t=>t[0]===k);
+   return `<div class="card fcard" id="disc-${k}"><h3>${n}</h3><p class="src">${ts.length} temas</p>`+ts.map((t,i)=>`<details class="topic" id="t-${k}-${i}"><summary>${esc(t[1])}</summary><p>${esc(t[2])}</p><code class="frm">${esc(t[3])}</code><div class="chips">${t[5]?`<button class="chip" data-calc="${t[5]}">${t[5]==="r"?"Abrir no Laboratório R":"Calcular"}</button>`:""}<button class="chip" data-ask="${esc(t[1])}">Pergunte à IA</button></div></details>`).join("")+`</div>`;
+  }).join("");
+ }
+ render("all");
+ chips.onclick=e=>{const b=e.target.closest("button");if(!b)return;chips.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on",c===b));render(b.dataset.d)};
+ box.onclick=e=>{
+  const c=e.target.closest("[data-calc]"),a=e.target.closest("[data-ask]");
+  if(c){const v=c.dataset.calc;if(v==="r")go("r");else{go("sim");const id={sim:"calc-taylor",mult:"calc-mult",elas:"calc-elas",vpl:"calc-vpl",okun:"calc-okun"}[v];setTimeout(()=>document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"center"}),350)}}
+  if(a){go("ia");setTimeout(()=>{q.value="Explique "+a.dataset.ask+" de forma didática, com a fórmula, a intuição e um exemplo com dados do Brasil.";askf.requestSubmit()},450)}
+ };
+})();
+// ---- busca ----
+(function(){
+ const inp=document.getElementById("sq"),res=document.getElementById("sres"),form=document.getElementById("sform");
+ let items=[],sel=-1;
+ function search(t){
+  const n=norm(t.trim());if(!n){res.hidden=true;return}
+  const words=n.split(/\s+/);
+  const score=txt=>{const h=norm(txt);return words.every(w=>h.includes(w))?(h.startsWith(n)?3:1):0};
+  const a=SITE.map(s=>({kind:"Site",t:s[0],d:s[1],act:()=>go(s[2]),sc:score(s[0]+" "+s[3])*2+score(s[1])}));
+  const b=TOPICS.map((t,i)=>({kind:DISC.find(d=>d[0]===t[0])[1],t:t[1],d:t[3],act:()=>openTopic(t),sc:score(t[1])*2+score(t[4]+" "+t[2])}));
+  items=[...a,...b].filter(x=>x.sc>0).sort((x,y)=>y.sc-x.sc).slice(0,8);
+  items.push({kind:"IA",t:`Perguntar à IA: “${t.trim()}”`,d:"Resposta com os dados do painel",act:()=>{go("ia");setTimeout(()=>{q.value=t.trim();askf.requestSubmit()},450)}});
+  sel=-1;
+  res.innerHTML=items.map((x,i)=>`<button type="button" class="sr" data-i="${i}" role="option"><span class="sk">${esc(x.kind)}</span><b>${esc(x.t)}</b><span class="sd">${esc(x.d)}</span></button>`).join("");
+  res.hidden=false;
+ }
+ function openTopic(t){
+  const k=t[0],i=TOPICS.filter(x=>x[0]===k).indexOf(t);
+  document.querySelector('#fundChips [data-d="all"]').click();
+  const el=document.getElementById(`t-${k}-${i}`);if(el){el.open=true;el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.add("hl");setTimeout(()=>el.classList.remove("hl"),1800)}
+ }
+ function pick(i){const x=items[i];if(!x)return;res.hidden=true;inp.blur();x.act()}
+ inp.oninput=()=>search(inp.value);
+ inp.onfocus=()=>{if(inp.value)search(inp.value)};
+ inp.onkeydown=e=>{
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();sel=(sel+(e.key==="ArrowDown"?1:-1)+items.length)%items.length;res.querySelectorAll(".sr").forEach((b,i)=>b.classList.toggle("act",i===sel))}
+  if(e.key==="Escape"){res.hidden=true}
+ };
+ form.onsubmit=e=>{e.preventDefault();if(!inp.value.trim())return;if(res.hidden)search(inp.value);pick(sel>=0?sel:0)};
+ res.onclick=e=>{const b=e.target.closest(".sr");if(b)pick(+b.dataset.i)};
+ document.addEventListener("click",e=>{if(!e.target.closest(".search"))res.hidden=true});
+ document.addEventListener("keydown",e=>{if(e.key==="/"&&document.activeElement.tagName!=="INPUT"&&document.activeElement.tagName!=="TEXTAREA"){e.preventDefault();inp.focus()}});
+ document.querySelectorAll(".topnav a[data-go]").forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.go)});
+})();
+// ---- novas calculadoras ----
+(function(){
+ const f=(n,d=2)=>n.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+ const $=id=>document.getElementById(id);
+ function mult(){const c=+$("mc").value,g=+$("mg").value;if(c>=1){$("mr").textContent="c precisa ser menor que 1";return}const k=1/(1-c);$("mr").textContent="k = "+f(k);$("mn").textContent=`Um gasto de R$ ${f(g,0)} bi gera R$ ${f(g*k,1)} bi de renda.`}
+ ["mc","mg"].forEach(i=>$(i).oninput=mult);mult();
+ function elas(){const p0=+$("ep0").value,p1=+$("ep1").value,q0=+$("eq0").value,q1=+$("eq1").value;const pm=(p0+p1)/2,qm=(q0+q1)/2;const E=((q1-q0)/qm)/((p1-p0)/pm);if(!isFinite(E)){$("er").textContent="—";return}$("er").textContent="E = "+f(E);$("en").textContent=Math.abs(E)>1?"Demanda elástica: o consumidor reage bastante ao preço.":Math.abs(E)<1?"Demanda inelástica: o consumidor reage pouco ao preço.":"Elasticidade unitária."}
+ ["ep0","ep1","eq0","eq1"].forEach(i=>$(i).oninput=elas);elas();
+ function vpl(){const i=+$("vi").value/100,I0=+$("v0").value,fc=$("vf").value.split(/[;\s]+/).map(Number).filter(x=>!isNaN(x));let v=-I0;fc.forEach((x,t)=>v+=x/Math.pow(1+i,t+1));$("vr").textContent="VPL = R$ "+f(v);
+  let lo=-0.99,hi=10,tir=null;const npv=r=>fc.reduce((s,x,t)=>s+x/Math.pow(1+r,t+1),-I0);if(npv(lo)*npv(hi)<0){for(let k=0;k<100;k++){const m=(lo+hi)/2;if(npv(lo)*npv(m)<=0)hi=m;else lo=m}tir=(lo+hi)/2}
+  $("vn").textContent=(v>0?"Projeto cria valor.":"Projeto não se paga a essa taxa.")+(tir!=null?` TIR ≈ ${f(tir*100)}% ao período.`:"")}
+ ["vi","v0","vf"].forEach(i=>$(i).oninput=vpl);vpl();
+ function okun(){const u=+$("ou").value,un=+$("oun").value,b=+$("ob").value;const h=-b*(u-un);$("or").textContent="Hiato ≈ "+f(h)+"%";$("on").textContent=h<0?"Economia produzindo abaixo do potencial.":"Economia acima do potencial: pressão inflacionária."}
+ ["ou","oun","ob"].forEach(i=>$(i).oninput=okun);okun();
+})();
 </script>
 </body></html>
