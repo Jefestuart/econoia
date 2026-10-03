@@ -3,7 +3,8 @@
 export default async (req) => {
   if (req.method !== "POST") return new Response("Use POST", { status: 405 });
   const key = Netlify.env.get("GEMINI_API_KEY");
-  const model = Netlify.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
+  // Tenta o modelo configurado e, se o Google tiver aposentado, os próximos da lista.
+  const models = [Netlify.env.get("GEMINI_MODEL"), "gemini-3.8-flash", "gemini-flash-latest"].filter(Boolean);
   if (!key) return json({ error: "Chave do Gemini não configurada no Netlify (GEMINI_API_KEY)." }, 500);
 
   let body;
@@ -13,16 +14,23 @@ export default async (req) => {
     .map(t => ({ role: t.role === "assistant" ? "model" : "user", parts: [{ text: String(t.content || "").slice(0, 4000) }] }));
   if (!turns.length || turns[turns.length - 1].role !== "user") return json({ error: "Faça uma pergunta." }, 400);
 
-  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: turns,
-      generationConfig: { temperature: 0.4, maxOutputTokens: 1500 },
-    }),
+  const payload = JSON.stringify({
+    systemInstruction: { parts: [{ text: system }] },
+    contents: turns,
+    generationConfig: { temperature: 0.4, maxOutputTokens: 1500 },
   });
-  const j = await r.json().catch(() => ({}));
+  let r, j = {};
+  for (const model of models) {
+    r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: payload,
+    });
+    j = await r.json().catch(() => ({}));
+    if (r.ok) break;
+    const m = (j.error?.message || "").toLowerCase();
+    if (!(r.status === 404 || m.includes("no longer available") || m.includes("not found"))) break;
+  }
   if (!r.ok) {
     const msg = r.status === 429 ? "Limite gratuito do Gemini atingido. Tente em alguns minutos." : (j.error?.message || "Erro no Gemini.");
     return json({ error: msg }, r.status);

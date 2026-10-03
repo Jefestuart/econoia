@@ -43,7 +43,7 @@ Pronto. O site fica em `https://econoia.netlify.app`.
 
 ## Como funciona depois de pronto
 - A cada 30 minutos, o GitHub roda o robô e salva os dados novos. O site busca esses dados sozinho, e quem estiver com a página aberta vê a atualização em até 5 minutos.
-- O chat usa o Gemini, que é gratuito até um limite diário. Se o modelo `gemini-2.5-flash` deixar de existir, crie no Netlify a variável `GEMINI_MODEL` com o nome do modelo novo.
+- O chat usa o Gemini, que é gratuito até um limite diário. Se o modelo `gemini-3.8-flash` deixar de existir, crie no Netlify a variável `GEMINI_MODEL` com o nome do modelo novo.
 - Se uma fonte falhar, o site mantém o último valor bom.
 - O GitHub pode atrasar o robô alguns minutos quando está sobrecarregado. Isso é normal.
 
