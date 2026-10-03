@@ -347,6 +347,7 @@ body{margin:0}
       <option value="ts">Série temporal ts() e autocorrelação (acf)</option>
     </select></label>
   </div>
+  <form class="ask" id="rgenf" style="margin:0 0 12px"><textarea id="rq" placeholder="Ou peça em português: ex.: faça uma regressão do IPCA 12m contra a Selic e mostre um gráfico" aria-label="Pedir análise em português"></textarea><button class="btn" id="rgo">Gerar e rodar</button></form>
   <pre class="code" id="rcode" tabindex="0" contenteditable="plaintext-only" spellcheck="false" autocapitalize="off" aria-label="Código R (editável)"></pre>
   <div class="chips" style="margin-top:12px">
     <button class="btn" id="rrun">▶ Rodar aqui</button>
@@ -589,6 +590,18 @@ rexp.onclick=async()=>{if(!ultimoR.code)return;rexp.disabled=true;rexpt.hidden=f
  const pergunta=`Rodei este código R com os dados do painel:\n${ultimoR.code.split("df <- data.frame")[1]?"df <- data.frame"+ultimoR.code.split("df <- data.frame")[1]:ultimoR.code}\n\nSaída:\n${ultimoR.out.slice(0,3500)}\n\nExplique em português simples, para um estudante de economia, o que o resultado mostra (números principais, significância, R² quando houver) e quais cuidados ter na interpretação. Se deu erro, explique a causa e como corrigir.`;
  try{const r=await sampler([{role:"user",content:pergunta}],rexpt);rexpt.textContent=r.text}catch(e){rexpt.textContent=e.text||"Não consegui explicar agora. Tente de novo."}
  rexp.disabled=false};
+rgenf.onsubmit=async e=>{e.preventDefault();const pedido=rq.value.trim();if(!pedido)return;
+ rgo.disabled=true;rout.hidden=false;rexpt.hidden=true;rimg.innerHTML="";rtxt.textContent="A EconoIA está escrevendo o código R...";
+ const p=`Escreva APENAS código R (sem explicações fora do código, sem markdown) para: ${pedido}
+Já existe no ambiente um data.frame chamado df com estas colunas mensais: mes (Date), ipca (IPCA mensal %), ipca12 (IPCA 12 meses %), igpm (IGP-M mensal %), igpm12 (IGP-M 12 meses %), selic (Selic meta % a.a.). Não recrie nem baixe dados; use df. Comentários em português. Pode usar pacotes do CRAN com library(); prefira R base ou ggplot2. Para gráficos ggplot, use print(). Imprima os resultados principais.`;
+ try{const r=await sampler([{role:"user",content:p}],rtxt);
+  let cod=String(r.text||"").replace(/^[\s\S]*?```(?:r|R)?\s*\n/,"").replace(/```[\s\S]*$/,"").trim();
+  if(!cod)throw{text:"A IA não devolveu código. Tente reformular o pedido."};
+  rcode.textContent=dados+"\n# Pedido: "+pedido.replace(/\n/g," ")+"\n"+cod+"\n";
+  rgo.disabled=false;rrun.click();return;
+ }catch(err){rtxt.textContent=err.text||"Não consegui gerar o código agora. Tente de novo."}
+ rgo.disabled=false};
+rq.onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();rgenf.requestSubmit()}};
 rcopy.onclick=async()=>{try{await navigator.clipboard.writeText(rcode.textContent);rcopy.textContent="Copiado!"}catch(e){const r=document.createRange();r.selectNodeContents(rcode);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);rcopy.textContent="Texto selecionado: use Cmd+C"}setTimeout(()=>rcopy.textContent="Copiar código",2500)};
 // câmbio
 let FX=D.fx;
