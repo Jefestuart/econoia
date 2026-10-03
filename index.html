@@ -58,7 +58,7 @@ footer{font-size:.8rem;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .ticker{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin-inline:-16px;margin-top:-24px;background:#000;color:#e8eef3;overflow:hidden;border-top:1px solid #1f2b36;font-family:var(--mono);font-size:.85rem;border-bottom:2px solid var(--accent)}
 .ticker .lab{position:absolute;left:0;top:0;bottom:0;z-index:1;display:flex;align-items:center;padding:0 12px;background:var(--accent);color:#000;font-weight:600;font-size:.72rem;letter-spacing:.08em}
-.track{display:flex;width:max-content;animation:roll 60s linear infinite;padding:8px 0 8px 210px}
+.track{display:flex;width:max-content;animation:roll 60s linear infinite;padding:8px 0;padding-left:var(--labw,210px)}
 .ticker:hover .track{animation-play-state:paused}
 .tk{white-space:nowrap;padding:0 22px;border-right:1px solid #2a3743}
 .tk b{font-weight:600;margin-right:4px}
@@ -123,6 +123,28 @@ section{scroll-margin-top:56px}
 .topic.hl{background:var(--accent-soft);border-radius:8px;padding-inline:8px}
 [hidden]{display:none!important}
 body{margin:0}
+.news{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.news h2{font:600 .72rem var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 6px}
+.news ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.news li{border-top:1px solid var(--line);padding:7px 0}.news li:first-child{border-top:0}
+.news a{color:var(--fg);text-decoration:none;font-size:.86rem;line-height:1.35;display:block}
+.news a:hover{color:var(--accent)}
+.news small{display:block;font-size:.72rem;color:var(--muted);margin-top:2px}
+.hrow{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+@media (max-width:900px){
+  .hrow{grid-template-columns:1fr}
+  .news{order:-1;padding:8px 12px}
+  .news h2{display:none}
+  .news li{display:none;border:0;padding:0}
+  .news li.on{display:block;animation:nfade .4s}
+  .news a{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
+@keyframes nfade{from{opacity:0}to{opacity:1}}
+@media (max-width:760px){
+  .ticker{font-size:.78rem}
+  .ticker .lab{font-size:.68rem;padding:0 8px;letter-spacing:.04em}
+  .track{padding:7px 0}
+}
 </style>
 </head><body>
 
@@ -147,10 +169,13 @@ body{margin:0}
   <button data-go="graf">Gráficos</button>
   <button data-go="sim">Simuladores</button>
 </div>
+<div class="hrow">
 <header>
   <h1>Econo<span>IA</span> Brasil</h1>
   <p>Painel da economia brasileira com dados do Banco Central e do IBGE, simuladores e uma IA que explica os números. <span id="upd">Carregando dados…</span></p>
 </header>
+<aside class="news" id="news" aria-label="Últimas notícias" hidden><h2>Últimas notícias</h2><ul id="newsl"></ul></aside>
+</div>
 
 <section id="p-ia" class="card iahero">
   <h2>Pergunte à EconoIA</h2>
@@ -340,7 +365,26 @@ body{margin:0}
 </footer>
 
 <script>
-function tick(){const d=new Date();clk.textContent=d.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}).replace(/\./g,"").toUpperCase()+" · "+d.toLocaleTimeString("pt-BR")}tick();setInterval(tick,1000);
+const mobi=matchMedia("(max-width:760px)");let labW=0;
+function tick(){const d=new Date();
+ clk.textContent=mobi.matches
+  ? d.toLocaleDateString("pt-BR",{weekday:"short"}).replace(/\./g,"").toUpperCase()+" "+d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})+" · "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
+  : d.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}).replace(/\./g,"").toUpperCase()+" · "+d.toLocaleTimeString("pt-BR");
+ const w=clk.offsetWidth+6;if(w!==labW){labW=w;document.querySelector(".track").style.setProperty("--labw",w+"px")}}
+tick();setInterval(tick,1000);mobi.addEventListener?.("change",tick);
+(async function noticias(){
+ const box=document.getElementById("news"),ul=document.getElementById("newsl");
+ const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+ const ago=t=>{if(!t)return"";const m=Math.max(1,Math.round((Date.now()-t)/60000));return m<60?`há ${m} min`:m<1440?`há ${Math.round(m/60)} h`:`há ${Math.round(m/1440)} d`};
+ let timer;
+ async function carrega(){try{const r=await fetch("/api/news");if(!r.ok)return;const {noticias=[]}=await r.json();
+  if(!noticias.length)return;
+  ul.innerHTML=noticias.map(n=>`<li><a href="${esc(n.link)}" target="_blank" rel="noopener noreferrer">${esc(n.titulo)}<small>${esc(n.fonte)}${n.data?" · "+ago(n.data):""}</small></a></li>`).join("");
+  box.hidden=false;const lis=[...ul.children];let i=0;lis[0].classList.add("on");
+  clearInterval(timer);timer=setInterval(()=>{lis[i].classList.remove("on");i=(i+1)%lis.length;lis[i].classList.add("on")},6000);
+ }catch{}}
+ carrega();setInterval(carrega,20*60*1000);
+})();
 let D;
 const br=(n,d=2)=>n.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
 const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
