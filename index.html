@@ -154,6 +154,9 @@ body{margin:0}
 .wc b{font-weight:500;color:var(--muted)}.wc span{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .wc.me b,.wc.me span{color:var(--accent);font-weight:600}
 @media (max-width:900px){.side{order:-1}#wclk{grid-template-columns:repeat(4,1fr)}.wc{flex-direction:column;align-items:center;gap:0;font-size:.75rem;border:0}}
+.rout{margin-top:14px}#rtxt{max-height:320px;white-space:pre-wrap}
+#rimg canvas{display:block;max-width:100%;height:auto;margin-top:10px;border-radius:8px;background:#fff}
+#rcode[contenteditable]:focus{outline:2px solid var(--accent)}
 </style>
 </head><body>
 
@@ -344,12 +347,17 @@ body{margin:0}
       <option value="ts">Série temporal ts() e autocorrelação (acf)</option>
     </select></label>
   </div>
-  <pre class="code" id="rcode" tabindex="0"></pre>
+  <pre class="code" id="rcode" tabindex="0" contenteditable="plaintext-only" spellcheck="false" autocapitalize="off" aria-label="Código R (editável)"></pre>
   <div class="chips" style="margin-top:12px">
-    <button class="btn" id="rcopy">Copiar código</button>
+    <button class="btn" id="rrun">▶ Rodar aqui</button>
+    <button class="chip" id="rcopy">Copiar código</button>
     <a class="chip" href="https://posit.cloud" target="_blank" rel="noopener">Abrir Posit Cloud</a>
     <a class="chip" href="https://colab.research.google.com/#create=true&language=r" target="_blank" rel="noopener">Abrir Colab com R</a>
   </div>
+  <div class="rout" id="rout" hidden><pre class="code" id="rtxt"></pre><div id="rimg"></div>
+    <div class="chips" style="margin-top:10px"><button class="btn" id="rexp">💡 Explique o resultado</button></div>
+    <div class="msg a" id="rexpt" hidden style="max-width:100%;margin-top:10px"></div></div>
+  <p class="note">Novo: o código roda aqui mesmo, no seu navegador (webR), e os pacotes como o ggplot2 são instalados sozinhos. Você pode editar o código antes de rodar. Na primeira vez o R leva alguns segundos para carregar.</p>
   <p class="note" id="rmsg">No Colab, se abrir em Python, vá em Ambiente de execução → Alterar tipo → R. Pacotes extras: o código instala o ggplot2 sozinho se faltar.</p>
 </section>
 <section id="p-dados" class="grid2" hidden>
@@ -556,6 +564,31 @@ pacf(ipca_ts, main = "Autocorrelação parcial do IPCA")`
 };
 function rgen(){rcode.textContent=dados+"\n"+R_[ra.value]+"\n"}
 ra.onchange=rgen;rgen();
+// ---- R no navegador (webR) ----
+let webR=null;
+async function getR(){if(!webR){const {WebR}=await import("https://webr.r-wasm.org/latest/webr.mjs");const w=new WebR();await w.init();webR=w}return webR}
+let ultimoR={code:"",out:""};
+rrun.onclick=async()=>{
+ const code=rcode.innerText;rrun.disabled=true;rout.hidden=false;rexpt.hidden=true;rimg.innerHTML="";
+ rtxt.textContent=webR?"Rodando...":"Carregando o R no navegador (só na primeira vez, alguns segundos)...";
+ try{const R=await getR();
+  const base=new Set(["stats","graphics","grDevices","utils","datasets","methods","base"]);
+  const pk=[...new Set([...code.matchAll(/(?:library|require)\(\s*["']?([\w.]+)/g)].map(m=>m[1]))].filter(x=>!base.has(x));
+  if(pk.length){rtxt.textContent="Instalando pacotes: "+pk.join(", ")+"...";await R.installPackages(pk,{quiet:true})}
+  rtxt.textContent="Rodando...";
+  const sh=await new R.Shelter();
+  try{const res=await sh.captureR(code,{withAutoprint:true,captureStreams:true,captureConditions:false,captureGraphics:{width:720,height:450}});
+   const txt=res.output.map(o=>o.data).join("\n").trim();
+   rtxt.textContent=txt||"(sem saída de texto)";
+   res.images.forEach(im=>{const c=document.createElement("canvas");c.width=im.width;c.height=im.height;c.getContext("2d").drawImage(im,0,0);rimg.appendChild(c)});
+   ultimoR={code,out:txt+(res.images.length?`\n[${res.images.length} gráfico(s) gerado(s)]`:"")};
+  }finally{sh.purge()}
+ }catch(e){rtxt.textContent="Erro: "+(e&&e.message||e);ultimoR={code,out:"Erro: "+(e&&e.message||e)}}
+ rrun.disabled=false};
+rexp.onclick=async()=>{if(!ultimoR.code)return;rexp.disabled=true;rexpt.hidden=false;rexpt.textContent="Analisando o resultado...";
+ const pergunta=`Rodei este código R com os dados do painel:\n${ultimoR.code.split("df <- data.frame")[1]?"df <- data.frame"+ultimoR.code.split("df <- data.frame")[1]:ultimoR.code}\n\nSaída:\n${ultimoR.out.slice(0,3500)}\n\nExplique em português simples, para um estudante de economia, o que o resultado mostra (números principais, significância, R² quando houver) e quais cuidados ter na interpretação. Se deu erro, explique a causa e como corrigir.`;
+ try{const r=await sampler([{role:"user",content:pergunta}],rexpt);rexpt.textContent=r.text}catch(e){rexpt.textContent=e.text||"Não consegui explicar agora. Tente de novo."}
+ rexp.disabled=false};
 rcopy.onclick=async()=>{try{await navigator.clipboard.writeText(rcode.textContent);rcopy.textContent="Copiado!"}catch(e){const r=document.createRange();r.selectNodeContents(rcode);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);rcopy.textContent="Texto selecionado: use Cmd+C"}setTimeout(()=>rcopy.textContent="Copiar código",2500)};
 // câmbio
 let FX=D.fx;
