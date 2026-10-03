@@ -27,6 +27,19 @@ header p{margin:6px 0 0;color:var(--muted);max-width:62ch}
 .kpi .lb{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
 .kpi .v{font-family:var(--mono);font-size:1.7rem;font-weight:500;font-variant-numeric:tabular-nums}
 .kpi .s{font-size:.8rem;color:var(--muted)}
+.kpi .fo{font-size:.72rem;color:var(--muted);border-top:1px solid var(--line);margin-top:8px;padding-top:6px}
+.kpi .fo a,.mlink{color:var(--accent)}
+header .tag{font-family:var(--display);font-weight:700;font-size:clamp(1.05rem,3vw,1.35rem);color:var(--fg);margin:4px 0 0}
+.rdemo{border:2px solid var(--gold);display:grid;gap:12px}
+.rdemo h2{font-family:var(--display);font-weight:800;font-size:clamp(1.3rem,4vw,1.7rem);margin:0;color:var(--gold)}
+.rdemo pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto;font:.82rem/1.5 var(--mono);margin:0}
+.rdemo .btn{background:var(--gold);justify-self:start}
+.pq{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.pq h2{grid-column:1/-1;font-family:var(--display);margin:0}
+.pq button{text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer}
+.pq button:hover{border-color:var(--accent)}
+.pq b{display:block;color:var(--accent);margin-bottom:4px}
+.met dt{font-weight:700;margin-top:10px}.met dd{margin:2px 0 0;color:var(--muted)}
 .up{color:var(--red)}.dn{color:var(--accent)}
 nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
 nav button{font:600 .95rem var(--body);background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:10px 14px;cursor:pointer}
@@ -184,8 +197,9 @@ body{margin:0}
 <div class="hrow">
 <div class="hleft">
 <header>
-  <h1>Econo<span>IA</span> Brasil</h1>
-  <p>Painel da economia brasileira com dados do Banco Central e do IBGE, simuladores e uma IA que explica os números. <span id="upd">Carregando dados…</span></p>
+  <h1>Econo<span>IA</span></h1>
+  <p class="tag">Um laboratório de Economia, Dados e Inteligência Artificial do Brasil.</p>
+  <p>Consulte dados econômicos reais, entenda os modelos, faça simulações, converse com a IA e execute análises em R — tudo em um só lugar. <span id="upd">Carregando dados…</span></p>
 </header>
 <section id="p-ia" class="card iahero">
   <h2>Pergunte à EconoIA</h2>
@@ -211,6 +225,23 @@ body{margin:0}
 </div>
 
 <section class="kpis" id="kpis" aria-label="Indicadores principais"></section>
+
+<section class="card rdemo" aria-label="Laboratório R">
+  <h2>Laboratório R</h2>
+  <p style="margin:0">Peça uma análise em português: a IA escreve o código R com os dados deste painel, já prontos para rodar. Exemplo:</p>
+  <pre id="rdemo"># Os dados do IPCA e da Selic já vêm carregados
+modelo &lt;- lm(ipca_12m ~ selic, data = dados)
+summary(modelo)   # a Selic explica a inflação?</pre>
+  <button class="btn go" data-go="r">Abrir o Laboratório R</button>
+</section>
+
+<section class="pq" aria-label="Para quem é">
+  <h2>Para quem é</h2>
+  <button class="go" data-go="fund"><b>Para estudantes</b>Aprenda economia usando dados reais.</button>
+  <button class="go" data-go="r"><b>Para pesquisadores</b>Explore dados e reproduza análises em R.</button>
+  <button class="go" data-go="sim"><b>Para professores</b>Use simulações e experimentos em sala de aula.</button>
+  <button class="go" data-go="ia"><b>Para curiosos</b>Entenda o que está acontecendo na economia brasileira.</button>
+</section>
 
 <section class="card" id="p-fx">
   <h3>Câmbio · quanto vale em reais</h3>
@@ -367,6 +398,19 @@ body{margin:0}
   <div class="card"><h3>IGP-M mensal · FGV</h3><div class="tbl"><table id="tbG"></table></div></div>
 </section>
 
+<section class="card met" id="metodologia">
+  <h3>Metodologia</h3>
+  <p class="src">Como cada indicador da página inicial é obtido e calculado.</p>
+  <dl>
+    <dt>Selic meta</dt><dd>Meta definida pelo Copom, série do Banco Central (SGS). A data é a da última reunião que alterou ou manteve a taxa.</dd>
+    <dt>IPCA 12 meses</dt><dd>Inflação oficial do IBGE. O acumulado em 12 meses multiplica as variações mensais: (1+m₁)×…×(1+m₁₂)−1.</dd>
+    <dt>Juro real ex-post</dt><dd>Cálculo da EconoIA: (1 + Selic) ÷ (1 + IPCA 12 meses) − 1. Usa a inflação passada, não a esperada.</dd>
+    <dt>IGP-M 12 meses</dt><dd>Índice da FGV IBRE, mais sensível a preços no atacado e ao câmbio. Acumulado calculado como no IPCA.</dd>
+    <dt>Desocupação</dt><dd>Taxa da PNAD Contínua (IBGE), média móvel de três meses.</dd>
+    <dt>PIB</dt><dd>Contas Nacionais Trimestrais (IBGE): variação contra o trimestre anterior, com ajuste sazonal, e contra o mesmo trimestre do ano anterior.</dd>
+  </dl>
+  <p class="note" style="margin:0">Os dados são atualizados automaticamente a partir das fontes oficiais; a data de cada número vem da própria fonte.</p>
+</section>
 <p class="note" style="margin:0">Fontes: Banco Central do Brasil (Copom, SGS, PTAX), FGV IBRE (IGP-M), IBGE (IPCA, PNAD Contínua, Contas Nacionais), Yahoo Finance e CoinGecko. Atualização automática a cada 30 minutos. <span id="upd2"></span> Não é recomendação de investimento.</p>
 </div>
 <footer class="bf">
@@ -426,13 +470,13 @@ function renderTop(){
  SEL=s[1];real=((1+s[1]/100)/(1+ip[2]/100)-1)*100;
  const dsel=s[1]-sp[1];
  kpis.innerHTML=[
-  ["Selic meta · BCB",br(s[1])+"%",`${dsel?`<span class="${dsel<0?"dn":"up"}">${dsel<0?"▼":"▲"} ${br(Math.abs(dsel))} p.p.</span> `:""}desde ${D.selic_data}`],
-  ["IPCA 12 meses · IBGE",br(ip[2])+"%",`${ip[0]} · mês ${br(ip[1])}%`],
-  ["Juro real ex-post",br(real)+"%","Selic deflacionada pelo IPCA"],
-  ["IGP-M 12 meses · FGV",br(ig[2])+"%",`${ig[0]} · mês ${br(ig[1])}%`],
-  ["Desocupação · PNAD",br(D.desemprego[1],1)+"%",D.desemprego[0]],
-  ["PIB · IBGE",(pb[1]>=0?"+":"")+br(pb[1],1)+"%",`${pb[0]} · ${br(D.pibYoY[1],1)}% no ano`]
- ].map(k=>`<div class="kpi"><span class="lb">${k[0]}</span><span class="v">${k[1]}</span><span class="s">${k[2]}</span></div>`).join("");
+  ["Selic meta",br(s[1])+"%",`${dsel?`<span class="${dsel<0?"dn":"up"}">${dsel<0?"▼":"▲"} ${br(Math.abs(dsel))} p.p.</span>`:"mantida"}`,"Banco Central",`Última decisão do Copom: ${D.selic_data}`],
+  ["IPCA 12 meses",br(ip[2])+"%",`mês ${br(ip[1])}%`,"IBGE",`Última divulgação: ${ip[0]}`],
+  ["Juro real ex-post",br(real)+"%","Selic deflacionada pelo IPCA","cálculo EconoIA com BCB e IBGE",`Com IPCA de ${ip[0]}`],
+  ["IGP-M 12 meses",br(ig[2])+"%",`mês ${br(ig[1])}%`,"FGV IBRE",`Última divulgação: ${ig[0]}`],
+  ["Desocupação",br(D.desemprego[1],1)+"%","PNAD Contínua","IBGE",`Período: ${D.desemprego[0]}`],
+  ["PIB",(pb[1]>=0?"+":"")+br(pb[1],1)+"%",`${br(D.pibYoY[1],1)}% sobre o mesmo trimestre de ${(+("20"+pb[0].slice(-2)))-1}`,"IBGE",`Último dado: ${pb[0]}`]
+ ].map(k=>`<div class="kpi"><span class="lb">${k[0]}</span><span class="v">${k[1]}</span><span class="s">${k[2]}</span><span class="fo">Fonte: ${k[3]}<br>${k[4]}<br><a href="#metodologia">Ver metodologia</a></span></div>`).join("");
  const fx=D.fx.filter(f=>["USD","EUR","GBP"].includes(f[0])).map(f=>[f[0]+"/BRL","R$ "+br(f[3],3),null]);
  const gold=(D.commod||[]).filter(c=>c[0]==="Ouro").map(c=>["OURO","US$ "+br(c[2]),c[4]]);
  const cry=(D.crypto||[]).filter(c=>["BTC","ETH","SOL"].includes(c[0])).map(c=>[c[0]+"/BRL","R$ "+br(c[2],0),c[4]]);
@@ -613,6 +657,7 @@ function fxc(){const [c,n,,v]=FX[fxm.value];const unit=c==="JPY"?100:c==="ARS"?1
  fxr.textContent=fxd.value==="to"?`${br(x,2)} ${c} = R$ ${br(x*v/unit)}`:`R$ ${br(x)} = ${br(x/v*unit)} ${c}`}
 [fxv,fxm,fxd].forEach(e=>e.oninput=fxc);fxc();
 // atalhos
+document.addEventListener("click",e=>{const b=e.target.closest("button.go");if(!b)return;document.querySelector(".quick").onclick({target:b})});
 document.querySelector(".bf").addEventListener("click",e=>{const a=e.target.closest("a[data-go]");if(!a)return;e.preventDefault();document.querySelector(".quick").onclick({target:document.querySelector(`.quick button[data-go="${a.dataset.go}"]`)||a})});
 document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;
  if(g==="fund"){document.getElementById("p-fund").scrollIntoView({behavior:"smooth"});return}
