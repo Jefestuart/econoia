@@ -133,7 +133,7 @@ body{margin:0}
 .hrow{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
 @media (max-width:900px){
   .hrow{grid-template-columns:1fr}
-  .news{order:-1;padding:8px 12px}
+  .news{padding:8px 12px}
   .news h2{display:none}
   .news li{display:none;border:0;padding:0}
   .news li.on{display:block;animation:nfade .4s}
@@ -145,6 +145,15 @@ body{margin:0}
   .ticker .lab{font-size:.68rem;padding:0 8px;letter-spacing:.04em}
   .track{padding:7px 0}
 }
+.hleft{display:flex;flex-direction:column;gap:20px;min-width:0}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.wclk{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.wclk h2{font:600 .72rem var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 6px}
+#wclk{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+.wc{display:flex;justify-content:space-between;gap:6px;font-size:.84rem;padding:3px 0;border-bottom:1px solid var(--line)}
+.wc b{font-weight:500;color:var(--muted)}.wc span{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wc.me b,.wc.me span{color:var(--accent);font-weight:600}
+@media (max-width:900px){.side{order:-1}#wclk{grid-template-columns:repeat(4,1fr)}.wc{flex-direction:column;align-items:center;gap:0;font-size:.75rem;border:0}}
 </style>
 </head><body>
 
@@ -170,13 +179,11 @@ body{margin:0}
   <button data-go="sim">Simuladores</button>
 </div>
 <div class="hrow">
+<div class="hleft">
 <header>
   <h1>Econo<span>IA</span> Brasil</h1>
   <p>Painel da economia brasileira com dados do Banco Central e do IBGE, simuladores e uma IA que explica os números. <span id="upd">Carregando dados…</span></p>
 </header>
-<aside class="news" id="news" aria-label="Últimas notícias" hidden><h2>Últimas notícias</h2><ul id="newsl"></ul></aside>
-</div>
-
 <section id="p-ia" class="card iahero">
   <h2>Pergunte à EconoIA</h2>
   <p class="src">A IA responde com base nos dados atualizados deste painel.</p>
@@ -193,6 +200,13 @@ body{margin:0}
   <form class="ask" id="askf"><textarea id="q" placeholder="Ex.: o que acontece com o câmbio se a Selic cair?"></textarea><button class="btn" id="send">Enviar</button></form>
   
 </section>
+</div>
+<aside class="side">
+<div class="wclk" aria-label="Horário nas praças financeiras"><h2>Horário no mundo</h2><div id="wclk"></div></div>
+<div class="news" id="news" aria-label="Últimas notícias" hidden><h2>Últimas notícias</h2><ul id="newsl"></ul></div>
+</aside>
+</div>
+
 <section class="kpis" id="kpis" aria-label="Indicadores principais"></section>
 
 <section class="card" id="p-fx">
@@ -372,6 +386,10 @@ function tick(){const d=new Date();
   : d.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}).replace(/\./g,"").toUpperCase()+" · "+d.toLocaleTimeString("pt-BR");
  const w=clk.offsetWidth+6;if(w!==labW){labW=w;document.querySelector(".track").style.setProperty("--labw",w+"px")}}
 tick();setInterval(tick,1000);mobi.addEventListener?.("change",tick);
+const ZONAS=[["Acre","America/Rio_Branco"],["São Paulo","America/Sao_Paulo"],["Nova York","America/New_York"],["Londres","Europe/London"],["Tel Aviv","Asia/Jerusalem"],["Dubai","Asia/Dubai"],["Sydney","Australia/Sydney"],["Tóquio","Asia/Tokyo"]];
+const wck=document.getElementById("wclk");wck.innerHTML=ZONAS.map(([n],i)=>`<div class="wc${i?"":" me"}"><b>${n}</b><span>--:--</span></div>`).join("");
+function relogios(){const d=new Date();[...wck.children].forEach((el,i)=>{el.lastChild.textContent=d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:ZONAS[i][1]})})}
+relogios();setInterval(relogios,15000);
 (async function noticias(){
  const box=document.getElementById("news"),ul=document.getElementById("newsl");
  const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
