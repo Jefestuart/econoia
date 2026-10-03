@@ -336,7 +336,7 @@ body{margin:0}
 </footer>
 
 <script>
-function tick(){const d=new Date();clk.textContent=d.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}).toUpperCase()+" · "+d.toLocaleTimeString("pt-BR")}tick();setInterval(tick,1000);
+function tick(){const d=new Date();clk.textContent=d.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}).replace(/\./g,"").toUpperCase()+" · "+d.toLocaleTimeString("pt-BR")}tick();setInterval(tick,1000);
 let D;
 const br=(n,d=2)=>n.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
 const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
