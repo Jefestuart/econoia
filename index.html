@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>EconoIA Brasil</title>
+<meta name="description" content="Economia brasileira em tempo real: Selic, IPCA, IGP-M, PIB, câmbio e bolsa, com IA que explica os números.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* Layout: painel de bancada econômica — cabeçalho, faixa de indicadores, abas (Gráficos · Simuladores · Pergunte à IA) */
+:root{
+  --bg:#000000; --surface:#0d1319; --fg:#e8eef3; --muted:#8fa3b3; --line:#1f2b36;
+  --accent:#6cc4f5; --accent-soft:#12324a; --gold:#e0b84a; --red:#ec7a6f; color-scheme:dark;
+  --display:"Fraunces",Georgia,serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.55;padding-inline:16px;padding-block:24px 48px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+header h1{font-family:var(--display);font-weight:800;font-size:clamp(2rem,6vw,3.2rem);margin:0;letter-spacing:-.02em;text-wrap:balance}
+header h1 span{color:var(--accent)}
+header p{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.kpi .lb{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.kpi .v{font-family:var(--mono);font-size:1.7rem;font-weight:500;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.up{color:var(--red)}.dn{color:var(--accent)}
+nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+nav button{font:600 .95rem var(--body);background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:10px 14px;cursor:pointer}
+nav button[aria-selected="true"]{color:var(--fg);border-color:var(--accent)}
+nav button:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.card h3{font-family:var(--display);font-weight:600;font-size:1.15rem;margin:0 0 2px}
+.card .src{font-size:.75rem;color:var(--muted);margin:0 0 10px}
+.chartbox{position:relative;height:240px}
+label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted)}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px}
+.result{font-family:var(--mono);font-size:1.4rem;font-variant-numeric:tabular-nums}
+.note{font-size:.82rem;color:var(--muted)}
+.btn{font:600 .95rem var(--body);background:var(--accent);color:var(--bg);border:0;border-radius:8px;padding:10px 16px;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:.85rem var(--body);background:var(--accent-soft);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+#log{display:flex;flex-direction:column;gap:12px;min-height:120px;max-height:460px;overflow-y:auto;padding:4px}
+.msg{padding:10px 14px;border-radius:10px;max-width:85%;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.u{align-self:flex-end;background:var(--accent-soft)}
+.msg.a{align-self:flex-start;background:var(--bg);border:1px solid var(--line)}
+.ask{display:flex;gap:8px;margin-top:12px}.ask textarea{flex:1;min-width:0;resize:vertical;min-height:46px}
+table{border-collapse:collapse;width:100%;font-size:.88rem;font-variant-numeric:tabular-nums}
+td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}td:first-child,th:first-child{text-align:left}
+.tbl{overflow-x:auto}
+footer{font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.ticker{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin-inline:-16px;margin-top:-24px;background:#000;color:#e8eef3;overflow:hidden;border-top:1px solid #1f2b36;font-family:var(--mono);font-size:.85rem;border-bottom:2px solid var(--accent)}
+.ticker .lab{position:absolute;left:0;top:0;bottom:0;z-index:1;display:flex;align-items:center;padding:0 12px;background:var(--accent);color:#000;font-weight:600;font-size:.72rem;letter-spacing:.08em}
+.track{display:flex;width:max-content;animation:roll 60s linear infinite;padding:8px 0 8px 210px}
+.ticker:hover .track{animation-play-state:paused}
+.tk{white-space:nowrap;padding:0 22px;border-right:1px solid #2a3743}
+.tk b{font-weight:600;margin-right:4px}
+.tu{color:#5fd68a}.td{color:#ff7b72}
+@keyframes roll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.track{animation:none}.ticker{overflow-x:auto}}
+.iahero{border:2px solid var(--accent);padding:20px;box-shadow:0 0 0 6px var(--accent-soft)}
+.iahero h2{font-family:var(--display);font-weight:800;font-size:clamp(1.4rem,4vw,1.9rem);margin:0 0 2px;color:var(--accent)}
+.iahero #log{max-height:380px}
+.iahero .ask textarea{font-size:1.05rem;min-height:56px}
+.iahero .btn{padding:12px 22px;font-size:1rem}
+.code{background:#05090d;color:#d6e6f2;border:1px solid var(--line);border-radius:8px;padding:14px;font:13px/1.55 var(--mono);overflow-x:auto;white-space:pre;max-height:420px;margin:0}
+a.chip{text-decoration:none;display:inline-flex;align-items:center}
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.quick button{font:600 .9rem var(--body);color:var(--fg);background:var(--surface);border:1px solid var(--accent);border-radius:999px;padding:9px 16px;cursor:pointer}
+.quick button:hover{background:var(--accent);color:#000}
+.quick button:first-child{background:var(--accent);color:#000}
+.quick button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+section{scroll-margin-top:56px}
+.fxgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.fx{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.fx .c{font-size:.75rem;color:var(--muted)}.fx .c b{color:var(--fg);font-family:var(--mono)}
+.fx .p{font-family:var(--mono);font-size:1.2rem;font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+body{margin:0}
+</style>
+</head><body>
+
+<div class="ticker" aria-label="Cotações"><span class="lab" id="clk">--</span><div class="track" id="track"></div></div>
+<div class="wrap">
+<div class="quick" aria-label="Atalhos">
+  <button data-go="ia">Pergunte à IA</button>
+  <button data-go="r">Programação R</button>
+  <button data-go="dados">Dados</button>
+  <button data-go="fx">Câmbio</button>
+  <button data-go="graf">Gráficos</button>
+  <button data-go="sim">Simuladores</button>
+</div>
+<header>
+  <h1>Econo<span>IA</span> Brasil</h1>
+  <p>Painel da economia brasileira com dados do Banco Central e do IBGE, simuladores e uma IA que explica os números. <span id="upd">Carregando dados…</span></p>
+</header>
+
+<section id="p-ia" class="card iahero">
+  <h2>Pergunte à EconoIA</h2>
+  <p class="src">A IA responde com base nos dados atualizados deste painel.</p>
+  <div class="chips" id="chips">
+    <button class="chip">Por que o Copom está cortando a Selic?</button>
+    <button class="chip">O juro real atual é alto? Explique.</button>
+    <button class="chip">Como a inflação de agosto ficou negativa?</button>
+    <button class="chip">Por que o IGP-M oscila mais que o IPCA?</button>
+    <button class="chip">Escreva em R uma regressão da Selic contra o IPCA</button>
+    <button class="chip">Desemprego baixo pressiona a inflação?</button>
+  </div>
+  <div id="log" aria-live="polite"><div class="msg a">Olá! Sou a EconoIA. Pergunte sobre Selic, IPCA, PIB, desemprego ou conceitos de economia.</div></div>
+  <form class="ask" id="askf"><textarea id="q" placeholder="Ex.: o que acontece com o câmbio se a Selic cair?"></textarea><button class="btn" id="send">Enviar</button></form>
+  
+</section>
+<section class="kpis" id="kpis" aria-label="Indicadores principais"></section>
+
+<section class="card" id="p-fx">
+  <h3>Câmbio · quanto vale em reais</h3>
+  <p class="src"><span id="fxdate"></span> * Moedas marcadas são estimativas pela taxa cruzada com o dólar.</p>
+  <div class="fxgrid" id="fxg"></div>
+  <div class="form" style="margin-top:14px">
+    <label for="fxv">Valor<input id="fxv" type="number" value="100" min="0"></label>
+    <label for="fxm">Moeda<select id="fxm"></select></label>
+    <label for="fxd">Direção<select id="fxd"><option value="to">moeda → reais</option><option value="from">reais → moeda</option></select></label>
+  </div>
+  <div class="result" id="fxr">—</div>
+</section>
+<nav role="tablist">
+  <button role="tab" id="t-graf" aria-selected="true" data-p="graf">Gráficos</button>
+  <button role="tab" id="t-sim" aria-selected="false" data-p="sim">Simuladores</button>
+  <button role="tab" id="t-r" aria-selected="false" data-p="r">Laboratório R</button>
+  <button role="tab" id="t-dados" aria-selected="false" data-p="dados">Tabelas</button>
+</nav>
+
+<section id="p-graf" class="grid2">
+  <div class="card"><h3>Taxa Selic meta</h3><p class="src">% a.a. · decisões do Copom · Banco Central</p><div class="chartbox"><canvas id="cSelic"></canvas></div></div>
+  <div class="card"><h3>IPCA</h3><p class="src">variação mensal (barras) e acumulado 12 meses (linha), % · IBGE</p><div class="chartbox"><canvas id="cIpca"></canvas></div></div>
+  <div class="card"><h3>IGP-M</h3><p class="src">variação mensal (barras) e acumulado 12 meses (linha), % · FGV IBRE</p><div class="chartbox"><canvas id="cIgp"></canvas></div></div>
+  <div class="card"><h3>IPCA × IGP-M</h3><p class="src">acumulado 12 meses, % · IBGE e FGV</p><div class="chartbox"><canvas id="cCmp"></canvas></div></div>
+  <div class="card"><h3>PIB trimestral</h3><p class="src">% contra o trimestre anterior, com ajuste sazonal · IBGE/Contas Nacionais</p><div class="chartbox"><canvas id="cPib"></canvas></div></div>
+  <div class="card"><h3>PIB anual</h3><p class="src">crescimento real, % · IBGE</p><div class="chartbox"><canvas id="cPibA"></canvas></div></div>
+</section>
+
+<section id="p-sim" class="grid2" hidden>
+  <div class="card">
+    <h3>Corrigir valor pela inflação</h3><p class="src">IPCA ou IGP-M (o IGP-M é usado em aluguéis)</p>
+    <div class="form">
+      <label for="cv">Valor (R$)<input id="cv" type="number" value="1000" min="0"></label>
+      <label for="cx">Índice<select id="cx"><option value="ipca">IPCA</option><option value="igpm">IGP-M</option></select></label>
+      <label for="ci">De<select id="ci"></select></label>
+      <label for="cf">Até<select id="cf"></select></label>
+    </div>
+    <div class="result" id="cr">—</div><p class="note" id="cn"></p>
+  </div>
+  <div class="card">
+    <h3>Rendimento na Selic vs. poupança</h3><p class="src">estimativa simples, sem IR e com taxa constante</p>
+    <div class="form">
+      <label for="rv">Aporte (R$)<input id="rv" type="number" value="5000" min="0"></label>
+      <label for="rm">Meses<input id="rm" type="number" value="12" min="1" max="120"></label>
+      <label for="rs">Selic (% a.a.)<input id="rs" type="number" value="13.75" step="0.25"></label>
+    </div>
+    <div class="result" id="rr">—</div><p class="note" id="rn"></p>
+  </div>
+  <div class="card">
+    <h3>Equação de Fisher</h3><p class="src">juro real = (1+nominal)/(1+inflação) − 1</p>
+    <div class="form">
+      <label for="fn">Juro nominal (%)<input id="fn" type="number" value="13.75" step="0.25"></label>
+      <label for="fi">Inflação esperada (%)<input id="fi" type="number" value="4.22" step="0.1"></label>
+    </div>
+    <div class="result" id="fr">—</div><p class="note">Acima de ~5% o juro real é considerado contracionista para o Brasil.</p>
+  </div>
+  <div class="card">
+    <h3>Regra de Taylor</h3><p class="src">i = r* + π + 0,5(π − meta) + 0,5·hiato</p>
+    <div class="form">
+      <label for="tr">Juro neutro r* (%)<input id="tr" type="number" value="5" step="0.25"></label>
+      <label for="tp">Inflação (%)<input id="tp" type="number" value="4.22" step="0.1"></label>
+      <label for="tm">Meta (%)<input id="tm" type="number" value="3" step="0.25"></label>
+      <label for="th">Hiato do produto (%)<input id="th" type="number" value="0.5" step="0.25"></label>
+    </div>
+    <div class="result" id="tres">—</div><p class="note" id="tnote"></p>
+  </div>
+</section>
+
+
+<section id="p-r" class="card" hidden>
+  <h3>Laboratório R</h3>
+  <p class="src">Escolha uma análise e copie o código R, já com os dados do painel. Cole no Posit Cloud ou no Google Colab (ambiente R) e rode, tudo no navegador.</p>
+  <div class="form">
+    <label for="ra">Análise<select id="ra">
+      <option value="desc">Estatísticas descritivas do IPCA e IGP-M</option>
+      <option value="graf">Gráfico: Selic × IPCA 12 meses (ggplot2)</option>
+      <option value="reg">Regressão: IPCA 12m sobre Selic (lm)</option>
+      <option value="cor">Correlação IPCA × IGP-M e teste</option>
+      <option value="mm">Média móvel de 3 meses do IPCA</option>
+      <option value="acum">Inflação acumulada e juro real</option>
+      <option value="ts">Série temporal ts() e autocorrelação (acf)</option>
+    </select></label>
+  </div>
+  <pre class="code" id="rcode" tabindex="0"></pre>
+  <div class="chips" style="margin-top:12px">
+    <button class="btn" id="rcopy">Copiar código</button>
+    <a class="chip" href="https://posit.cloud" target="_blank" rel="noopener">Abrir Posit Cloud</a>
+    <a class="chip" href="https://colab.research.google.com/#create=true&language=r" target="_blank" rel="noopener">Abrir Colab com R</a>
+  </div>
+  <p class="note" id="rmsg">No Colab, se abrir em Python, vá em Ambiente de execução → Alterar tipo → R. Pacotes extras: o código instala o ggplot2 sozinho se faltar.</p>
+</section>
+<section id="p-dados" class="grid2" hidden>
+  <div class="card"><h3>Selic · Copom</h3><div class="tbl"><table id="tbS"></table></div></div>
+  <div class="card"><h3>IPCA mensal</h3><div class="tbl"><table id="tbI"></table></div></div>
+  <div class="card"><h3>IGP-M mensal · FGV</h3><div class="tbl"><table id="tbG"></table></div></div>
+</section>
+
+<footer>Fontes: Banco Central do Brasil (Copom/SGS), FGV IBRE (IGP-M) e IBGE (IPCA, PNAD Contínua, Contas Nacionais Trimestrais). Atualização automática a cada 30 minutos. <span id="upd2"></span> Não é recomendação de investimento.<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-weight:600;color:var(--fg)">© 2026 SantosCorp · EconoIA Brasil. Todos os direitos reservados.</div></footer>
+</div>
+
+<script>
+function tick(){const d=new Date();clk.textContent=d.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}).toUpperCase()+" · "+d.toLocaleTimeString("pt-BR")}tick();setInterval(tick,1000);
+let D;
+const br=(n,d=2)=>n.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+// ---------- dados: lidos de data/data.json (o robô do GitHub atualiza a cada 30 min) ----------
+const MES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+let SEL=0,real=0,UPD="";
+function sign(c){return c==null?"":`<span class="${c>=0?"tu":"td"}">${c>=0?"▲":"▼"} ${br(Math.abs(c))}%</span>`}
+function renderTop(){
+ const L=a=>a[a.length-1],P=a=>a[a.length-2];
+ const s=L(D.selic),sp=P(D.selic)||s,ip=L(D.ipca),ig=L(D.igpm),pb=L(D.pibT);
+ SEL=s[1];real=((1+s[1]/100)/(1+ip[2]/100)-1)*100;
+ const dsel=s[1]-sp[1];
+ kpis.innerHTML=[
+  ["Selic meta · BCB",br(s[1])+"%",`${dsel?`<span class="${dsel<0?"dn":"up"}">${dsel<0?"▼":"▲"} ${br(Math.abs(dsel))} p.p.</span> `:""}desde ${D.selic_data}`],
+  ["IPCA 12 meses · IBGE",br(ip[2])+"%",`${ip[0]} · mês ${br(ip[1])}%`],
+  ["Juro real ex-post",br(real)+"%","Selic deflacionada pelo IPCA"],
+  ["IGP-M 12 meses · FGV",br(ig[2])+"%",`${ig[0]} · mês ${br(ig[1])}%`],
+  ["Desocupação · PNAD",br(D.desemprego[1],1)+"%",D.desemprego[0]],
+  ["PIB · IBGE",(pb[1]>=0?"+":"")+br(pb[1],1)+"%",`${pb[0]} · ${br(D.pibYoY[1],1)}% no ano`]
+ ].map(k=>`<div class="kpi"><span class="lb">${k[0]}</span><span class="v">${k[1]}</span><span class="s">${k[2]}</span></div>`).join("");
+ const fx=D.fx.filter(f=>["USD","EUR","GBP"].includes(f[0])).map(f=>[f[0]+"/BRL","R$ "+br(f[3],3),null]);
+ const items=[...D.market.slice(0,1),...fx,...D.market.slice(1),["SELIC",br(s[1])+"%",null],["IPCA 12M",br(ip[2])+"%",null],["IGP-M 12M",br(ig[2])+"%",null]];
+ const row=items.map(m=>`<span class="tk"><b>${m[0]}</b>${m[1]?" "+m[1]:""} ${sign(m[2])}</span>`).join("");
+ track.innerHTML=row+row;
+ UPD=new Date(D.updated).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});
+ upd.textContent="Atualizado em "+UPD+".";upd2.textContent="Última atualização: "+UPD+".";
+ fxdate.textContent="Cotação de "+D.fx_data+".";
+}
+async function load(){
+ try{const r=await fetch("data/data.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;return await r.json()}
+ catch(e){const r=await fetch("data/local.json");return r.json()}
+}
+let started=false;
+async function boot(){
+ try{D=await load()}catch(e){upd.textContent="Não consegui carregar os dados. Recarregue a página.";return}
+ renderTop();
+ if(!started){started=true;rs.value=SEL;fn.value=SEL;fi.value=D.ipca.at(-1)[2];tp.value=D.ipca.at(-1)[2];main()}
+ else{try{window._refresh()}catch(e){}}
+}
+boot();
+setInterval(boot,5*60*1000);
+
+function main(){
+// tabs
+const tabs=[...document.querySelectorAll("nav button")];
+function show(p){tabs.forEach(t=>{const on=t.dataset.p===p;t.setAttribute("aria-selected",on);document.getElementById("p-"+t.dataset.p).hidden=!on});try{localStorage.setItem("tab",p)}catch(e){}}
+tabs.forEach(t=>t.onclick=()=>show(t.dataset.p));
+let saved=location.hash.slice(1)||(()=>{try{return localStorage.getItem("tab")}catch(e){return null}})();if(saved&&tabs.some(t=>t.dataset.p===saved))show(saved);
+
+// charts
+let charts=[];
+function draw(){
+ charts.forEach(c=>c.destroy());charts=[];
+ if(!window.Chart)return;
+ const fg=css("--muted"),ln=css("--line"),ac=css("--accent"),gd=css("--gold"),rd=css("--red");
+ Chart.defaults.color=fg;Chart.defaults.font.family="IBM Plex Sans, system-ui";Chart.defaults.borderColor=ln;
+ const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:ln}}}};
+ charts.push(new Chart(cSelic,{type:"line",data:{labels:D.selic.map(r=>r[0]),datasets:[{data:D.selic.map(r=>r[1]),borderColor:ac,backgroundColor:ac+"22",fill:true,stepped:true,pointRadius:3}]},options:{...base,scales:{...base.scales,y:{...base.scales.y,suggestedMin:Math.min(...D.selic.map(r=>r[1]))-0.5,suggestedMax:Math.max(...D.selic.map(r=>r[1]))+0.5}}}}));
+ charts.push(new Chart(cIpca,{data:{labels:D.ipca.map(r=>r[0]),datasets:[{type:"bar",label:"Mensal",data:D.ipca.map(r=>r[1]),backgroundColor:D.ipca.map(r=>r[1]<0?ac:gd)},{type:"line",label:"12 meses",data:D.ipca.map(r=>r[2]),borderColor:rd,pointRadius:0,tension:.3}]},options:{...base,plugins:{legend:{display:true,labels:{boxWidth:12}}}}}));
+ charts.push(new Chart(cIgp,{data:{labels:D.igpm.map(r=>r[0]),datasets:[{type:"bar",label:"Mensal",data:D.igpm.map(r=>r[1]),backgroundColor:D.igpm.map(r=>r[1]<0?ac:gd)},{type:"line",label:"12 meses",data:D.igpm.map(r=>r[2]),borderColor:rd,pointRadius:0,tension:.3}]},options:{...base,plugins:{legend:{display:true,labels:{boxWidth:12}}}}}));
+ charts.push(new Chart(cCmp,{type:"line",data:{labels:D.igpm.map(r=>r[0]),datasets:[{label:"IPCA",data:D.igpm.map(r=>(D.ipca.find(x=>x[0]===r[0])||[])[2]??null),borderColor:rd,pointRadius:0,tension:.3},{label:"IGP-M",data:D.igpm.map(r=>r[2]),borderColor:ac,pointRadius:0,tension:.3}]},options:{...base,plugins:{legend:{display:true,labels:{boxWidth:12}}}}}));
+ charts.push(new Chart(cPib,{type:"bar",data:{labels:D.pibT.map(r=>r[0]),datasets:[{data:D.pibT.map(r=>r[1]),backgroundColor:ac}]},options:base}));
+ charts.push(new Chart(cPibA,{type:"bar",data:{labels:D.pibA.map(r=>r[0]),datasets:[{data:D.pibA.map(r=>r[1]),backgroundColor:gd}]},options:base}));
+}
+draw();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+// tables
+tbS.innerHTML="<tr><th>Reunião</th><th>Selic %</th></tr>"+D.selic.slice().reverse().map(r=>`<tr><td>${r[0]}</td><td>${br(r[1])}</td></tr>`).join("");
+tbI.innerHTML="<tr><th>Mês</th><th>Mensal %</th><th>12m %</th></tr>"+D.ipca.slice().reverse().map(r=>`<tr><td>${r[0]}</td><td>${br(r[1])}</td><td>${br(r[2])}</td></tr>`).join("");
+
+tbG.innerHTML="<tr><th>Mês</th><th>Mensal %</th><th>12m %</th></tr>"+D.igpm.slice().reverse().map(r=>`<tr><td>${r[0]}</td><td>${br(r[1])}</td><td>${br(r[2])}</td></tr>`).join("");
+// sim: inflação
+function fill(){const S=D[cx.value];ci.innerHTML=cf.innerHTML="";S.forEach((r,i)=>{ci.add(new Option(r[0],i));cf.add(new Option(r[0],i))});ci.value=0;cf.value=S.length-1;corr()}
+function corr(){const S=D[cx.value],n=cx.value==="ipca"?"IPCA":"IGP-M";let a=+ci.value,b=+cf.value;if(a>b)[a,b]=[b,a];let f=1;for(let i=a;i<=b;i++)f*=1+S[i][1]/100;cr.textContent="R$ "+br(+cv.value*f);cn.textContent=`${n} acumulado de ${S[a][0]} a ${S[b][0]}: ${br((f-1)*100)}%`}
+cx.onchange=fill;fill();
+[cv,ci,cf].forEach(e=>e.oninput=corr);corr();
+// sim: rendimento
+function rend(){const v=+rv.value,m=+rm.value,s=+rs.value/100;const sel=v*Math.pow(1+s,m/12);const pm=s>0.085?0.005+0.0017:0.7*s/12;const pou=v*Math.pow(1+pm,m);rr.textContent="R$ "+br(sel);rn.textContent=`Poupança no mesmo período: R$ ${br(pou)} · diferença R$ ${br(sel-pou)} (antes do IR sobre a renda fixa)`}
+[rv,rm,rs].forEach(e=>e.oninput=rend);rend();
+// fisher
+function fis(){fr.textContent=br(((1+fn.value/100)/(1+fi.value/100)-1)*100)+"% real"}[fn,fi].forEach(e=>e.oninput=fis);fis();
+// taylor
+function tay(){const p=+tp.value,i=+tr.value+p+.5*(p-+tm.value)+.5*+th.value;tres.textContent=br(i)+"% a.a.";tnote.textContent=`Selic atual ${br(SEL)}% está ${br(Math.abs(SEL-i))} p.p. ${SEL>i?"acima":"abaixo"} do que a regra sugere.`}[tr,tp,tm,th].forEach(e=>e.oninput=tay);tay();
+
+
+// Laboratório R
+const meses=D.ipca.map(r=>r[0]);
+const selM=meses.map(m=>{const ord=x=>{const[a,b]=x.split("/");return +b*12+["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"].indexOf(a)};let v=null;D.selic.forEach(r=>{if(ord(r[0])<=ord(m))v=r[1]});return v});
+const igM=meses.map(m=>{const f=D.igpm.find(r=>r[0]===m);return f?f:[0,"NA","NA"]});
+const START=(()=>{const[a,y]=meses[0].split("/");return `20${y}-${String(MES.indexOf(a)+1).padStart(2,"0")}-01`})();
+const vec=a=>"c("+a.join(", ")+")";
+const dados=`# Dados: EconoIA Brasil (BCB, IBGE, FGV) — ${meses[0]} a ${meses[meses.length-1]}
+mes   <- seq(as.Date("${START}"), by = "month", length.out = ${meses.length})
+ipca  <- ${vec(D.ipca.map(r=>r[1]))}   # IPCA mensal (%)
+ipca12 <- ${vec(D.ipca.map(r=>r[2]))}  # IPCA acumulado 12 meses (%)
+igpm  <- ${vec(igM.map(r=>r[1]))}   # IGP-M mensal (%)
+igpm12 <- ${vec(igM.map(r=>r[2]))}  # IGP-M acumulado 12 meses (%)
+selic <- ${vec(selM)}  # Selic meta vigente no mês (% a.a.)
+df <- data.frame(mes, ipca, ipca12, igpm, igpm12, selic)
+`;
+const R_={
+desc:`summary(df[, c("ipca", "igpm")])
+cat("Desvio-padrão IPCA:", round(sd(df$ipca), 3), "\\n")
+cat("Desvio-padrão IGP-M:", round(sd(df$igpm), 3), "\\n")
+cat("O IGP-M oscila", round(sd(df$igpm) / sd(df$ipca), 1), "vezes mais que o IPCA\\n")
+boxplot(df$ipca, df$igpm, names = c("IPCA", "IGP-M"), main = "Variação mensal (%)")`,
+graf:`if (!require(ggplot2)) install.packages("ggplot2"); library(ggplot2)
+ggplot(df, aes(x = mes)) +
+  geom_step(aes(y = selic, colour = "Selic (% a.a.)"), linewidth = 1) +
+  geom_line(aes(y = ipca12, colour = "IPCA 12m (%)"), linewidth = 1) +
+  labs(title = "Selic x IPCA acumulado em 12 meses", x = NULL, y = "%", colour = NULL) +
+  theme_minimal()`,
+reg:`modelo <- lm(ipca12 ~ selic, data = df)
+summary(modelo)
+# Atenção: amostra curta e séries com tendência; trate como exercício, não como prova de causalidade.
+plot(df$selic, df$ipca12, pch = 19, xlab = "Selic (% a.a.)", ylab = "IPCA 12m (%)")
+abline(modelo, col = "red", lwd = 2)`,
+cor:`cor(df$ipca, df$igpm)
+cor.test(df$ipca, df$igpm)               # Pearson
+cor.test(df$ipca, df$igpm, method = "spearman")
+plot(df$ipca, df$igpm, pch = 19, xlab = "IPCA mensal (%)", ylab = "IGP-M mensal (%)")`,
+mm:`df$mm3 <- stats::filter(df$ipca, rep(1/3, 3), sides = 1)
+plot(df$mes, df$ipca, type = "h", lwd = 6, col = "grey70", xlab = NULL, ylab = "%", main = "IPCA mensal e média móvel de 3 meses")
+lines(df$mes, df$mm3, col = "blue", lwd = 2)
+print(df[, c("mes", "ipca", "mm3")])`,
+acum:`acum <- prod(1 + df$ipca / 100) - 1
+cat("IPCA acumulado no período:", round(acum * 100, 2), "%\\n")
+selic_atual <- tail(df$selic, 1); infl12 <- tail(df$ipca12, 1)
+juro_real <- ((1 + selic_atual/100) / (1 + infl12/100) - 1) * 100
+cat("Juro real ex-post (Fisher):", round(juro_real, 2), "% a.a.\\n")
+df$real <- ((1 + df$selic/100) / (1 + df$ipca12/100) - 1) * 100
+plot(df$mes, df$real, type = "l", lwd = 2, ylab = "% a.a.", main = "Juro real ex-post")`,
+ts:`ipca_ts <- ts(df$ipca, start = c(as.numeric(format(df$mes[1], "%Y")), as.numeric(format(df$mes[1], "%m"))), frequency = 12)
+print(ipca_ts)
+plot(ipca_ts, main = "IPCA mensal (ts)", ylab = "%")
+acf(ipca_ts, main = "Autocorrelação do IPCA")
+pacf(ipca_ts, main = "Autocorrelação parcial do IPCA")`
+};
+function rgen(){rcode.textContent=dados+"\n"+R_[ra.value]+"\n"}
+ra.onchange=rgen;rgen();
+rcopy.onclick=async()=>{try{await navigator.clipboard.writeText(rcode.textContent);rcopy.textContent="Copiado!"}catch(e){const r=document.createRange();r.selectNodeContents(rcode);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);rcopy.textContent="Texto selecionado: use Cmd+C"}setTimeout(()=>rcopy.textContent="Copiar código",2500)};
+// câmbio
+let FX=D.fx;
+const dec=v=>v<1?3:2;
+function fxRender(){FX=D.fx;fxg.innerHTML=FX.map(([c,n,f,v,ok])=>`<div class="fx"><span class="c">${f} <b>${c}</b> · ${n}${ok?"":" *"}</span><span class="p">R$ ${br(v,dec(v))}</span></div>`).join("");}
+fxRender();
+FX.forEach(([c,n],i)=>fxm.add(new Option(c+" · "+n,i)));
+function fxc(){const [c,n,,v]=FX[fxm.value];const unit=c==="JPY"?100:c==="ARS"?1000:1;const x=+fxv.value;
+ fxr.textContent=fxd.value==="to"?`${br(x,2)} ${c} = R$ ${br(x*v/unit)}`:`R$ ${br(x)} = ${br(x/v*unit)} ${c}`}
+[fxv,fxm,fxd].forEach(e=>e.oninput=fxc);fxc();
+// atalhos
+document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;
+ if(g==="fx"){document.getElementById("p-fx").scrollIntoView({behavior:"smooth"});return}
+ if(g==="ia"){document.getElementById("p-ia").scrollIntoView({behavior:"smooth"});setTimeout(()=>q.focus({preventScroll:true}),400);return}
+ show(g);document.querySelector("nav").scrollIntoView({behavior:"smooth"})};
+// IA
+let ctx;function mkctx(){ctx=`Você é a EconoIA, assistente de economia brasileira. Responda em português do Brasil, de forma clara e didática, em até 3 parágrafos curtos, sem markdown. Use os dados abaixo quando relevante e diga quando algo não está nos dados. Não dê recomendação de investimento personalizada. Se pedirem código, escreva em R (ou Python se pedirem), com os dados como vetores, e explique cada parte em poucas linhas.
+DADOS (atualizados em ${UPD}):
+Selic meta (Copom): ${D.selic.map(r=>r[0]+" "+r[1]+"%").join("; ")}.
+IPCA mensal e 12m: ${D.ipca.map(r=>r[0]+" "+r[1]+"% (12m "+r[2]+"%)").join("; ")}.
+IGP-M (FGV) mensal e 12m: ${D.igpm.map(r=>r[0]+" "+r[1]+"% (12m "+r[2]+"%)").join("; ")}.
+PIB trimestral (t/t-1): ${D.pibT.map(r=>r[0]+" "+r[1]+"%").join("; ")}. PIB ${D.pibYoY[0]} ${D.pibYoY[1]}% interanual. PIB anual: ${D.pibA.map(r=>r[0]+" "+r[1]+"%").join("; ")}.
+Desocupação PNAD ${D.desemprego[0]}: ${D.desemprego[1]}%. Meta de inflação: 3% (tolerância 1,5 p.p.). Câmbio (${D.fx_data}, R$ por unidade): ${D.fx.map(f=>f[0]+" "+f[3]).join("; ")} (JPY por 100, ARS por 1.000). Mercado (${D.market_data}): ${D.market.map(m=>m[0]+" "+m[1]+" "+m[2]+"%").join("; ")}. Juro real ex-post ≈ ${br(real)}%.`}
+mkctx();
+window._refresh=()=>{draw();rgen();mkctx();fxRender();fxc();tbS.innerHTML="<tr><th>Reunião</th><th>Selic %</th></tr>"+D.selic.slice().reverse().map(r=>`<tr><td>${r[0]}</td><td>${br(r[1])}</td></tr>`).join("");};
+let hist=[],busy=false;
+const sampler=async(turns)=>{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system:ctx,turns})});const j=await r.json().catch(()=>({}));if(!r.ok||j.error)throw{text:j.error||"Não consegui responder agora. Tente de novo."};return j};
+function add(cls,t){const d=document.createElement("div");d.className="msg "+cls;d.textContent=t;log.appendChild(d);log.scrollTop=log.scrollHeight;return d}
+async function ask(text){
+ if(!text.trim()||busy)return;
+ busy=true;send.disabled=true;add("u",text);const out=add("a","Pensando...");
+ hist.push({role:"user",content:text});
+ const turns=hist.slice();
+ try{const r=await sampler(turns);out.textContent=r.text;hist.push({role:"assistant",content:r.text})}
+ catch(e){hist.pop();out.textContent=e.text||"Não consegui responder agora. Tente de novo."}
+ busy=false;send.disabled=false;
+}
+askf.onsubmit=e=>{e.preventDefault();const t=q.value;q.value="";ask(t)};
+q.onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();askf.requestSubmit()}};
+chips.onclick=e=>{if(e.target.matches(".chip")){ask(e.target.textContent)}};
+
+}
+</script>
+</body></html>

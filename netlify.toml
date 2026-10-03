@@ -1,0 +1,20 @@
+[build]
+  publish = "."
+  # Não refaz o deploy quando só os dados mudaram (o robô muda a cada 30 min)
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)data'"
+
+[functions]
+  directory = "netlify/functions"
+
+# Os dados vêm direto do GitHub, sempre a versão mais nova.
+# Usuário do GitHub: Jefestuart
+[[redirects]]
+  from = "/data/data.json"
+  to = "https://raw.githubusercontent.com/Jefestuart/econoia/main/data/data.json"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
