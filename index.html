@@ -4,6 +4,7 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#000000">
 <meta name="description" content="Economia brasileira em tempo real: Selic, IPCA, IGP-M, PIB, câmbio e bolsa, com IA que explica os números.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -868,5 +869,11 @@ function go(dest){
  function okun(){const u=+$("ou").value,un=+$("oun").value,b=+$("ob").value;const h=-b*(u-un);$("or").textContent="Hiato ≈ "+f(h)+"%";$("on").textContent=h<0?"Economia produzindo abaixo do potencial.":"Economia acima do potencial: pressão inflacionária."}
  ["ou","oun","ob"].forEach(i=>$(i).oninput=okun);okun();
 })();
+</script>
+<script>
+/* PWA: registra o service worker para o app ser instalável e abrir offline */
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("/service-worker.js"));
+}
 </script>
 </body></html>
