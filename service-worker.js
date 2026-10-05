@@ -3,7 +3,7 @@
 // rápido e funcionar offline. Já os dados ao vivo e as chamadas de IA vão
 // SEMPRE à rede primeiro (nunca servir economia/IA desatualizada do cache).
 
-const CACHE = "econoia-v4";
+const CACHE = "econoia-v5";
 
 // Arquivos da casca do app que valem guardar para abrir offline.
 const SHELL = [
@@ -43,6 +43,7 @@ self.addEventListener("fetch", (event) => {
   // Dados ao vivo e funções (IA/Gemini, IBGE, BCB): rede primeiro, cache como
   // último recurso se estiver offline.
   const aoVivo =
+    url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/.netlify/functions/") ||
     url.pathname.startsWith("/data/");
 
