@@ -3,7 +3,7 @@
 // rápido e funcionar offline. Já os dados ao vivo e as chamadas de IA vão
 // SEMPRE à rede primeiro (nunca servir economia/IA desatualizada do cache).
 
-const CACHE = "econoia-v3";
+const CACHE = "econoia-v4";
 
 // Arquivos da casca do app que valem guardar para abrir offline.
 const SHELL = [
@@ -59,7 +59,21 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Resto (a casca): cache primeiro, rede como reserva.
+  // Páginas HTML: rede primeiro (sempre a versão nova), cache só offline.
+  if (req.mode === "navigate" || url.pathname === "/" || url.pathname.endsWith(".html")) {
+    event.respondWith(
+      fetch(req)
+        .then((resp) => {
+          const copia = resp.clone();
+          caches.open(CACHE).then((c) => c.put(req, copia));
+          return resp;
+        })
+        .catch(() => caches.match(req).then((r) => r || caches.match("/")))
+    );
+    return;
+  }
+
+  // Resto (ícones, manifesto): cache primeiro, rede como reserva.
   event.respondWith(
     caches.match(req).then((cached) => cached || fetch(req))
   );
