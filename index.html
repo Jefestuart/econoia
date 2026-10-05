@@ -177,7 +177,7 @@ body{margin:0}
 <div class="ticker" aria-label="Cotações"><span class="lab" id="clk">--</span><div class="track" id="track"></div></div>
 <div class="wrap">
 <div class="topnav">
-  <a class="tn-logo" href="https://econoia.com.br/" onclick="event.preventDefault();location.reload()">Econo<span>IA</span></a>
+  <a class="tn-logo" href="https://econoia.com.br/" onclick="event.preventDefault();try{localStorage.removeItem('tab')}catch(e){};history.scrollRestoration='manual';location.replace(location.pathname)">Econo<span>IA</span></a>
   <form class="search" id="sform" role="search">
     <input id="sq" type="search" autocomplete="off" placeholder="Busque indicadores, moedas ou temas: regra de Taylor, IS-LM, Solow..." aria-label="Buscar no site">
     <button type="submit" class="sbtn" aria-label="Buscar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
