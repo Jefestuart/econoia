@@ -246,7 +246,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
 
 <section class="card" id="p-fx">
   <h3>Câmbio · quanto vale em reais</h3>
-  <p class="src"><span id="fxdate"></span> * Moedas marcadas são estimativas pela taxa cruzada com o dólar.</p>
+  <p class="src"><span id="fxdate"></span> Fonte de cada moeda indicada no cartão (PTAX/BCB ou AwesomeAPI). * Cotação não atualizada nesta rodada.</p>
   <div class="fxgrid" id="fxg"></div>
   <div class="form" style="margin-top:14px">
     <label for="fxv">Valor<input id="fxv" type="number" value="100" min="0"></label>
@@ -651,7 +651,7 @@ rcopy.onclick=async()=>{try{await navigator.clipboard.writeText(rcode.textConten
 // câmbio
 let FX=D.fx;
 const dec=v=>v<1?3:2;
-function fxRender(){FX=D.fx;fxg.innerHTML=FX.map(([c,n,f,v,ok])=>`<div class="fx"><span class="c">${f} <b>${c}</b> · ${n}${ok?"":" *"}</span><span class="p">R$ ${br(v,dec(v))}</span></div>`).join("");}
+function fxRender(){FX=D.fx;fxg.innerHTML=FX.map(([c,n,f,v,ok,fo])=>`<div class="fx"><span class="c">${f} <b>${c}</b> · ${n}${ok?"":" *"}</span><span class="p">R$ ${br(v,dec(v))}</span><span class="c">Fonte: ${fo||"PTAX/BCB"}</span></div>`).join("");}
 fxRender();
 FX.forEach(([c,n],i)=>fxm.add(new Option(c+" · "+n,i)));
 function fxc(){const [c,n,,v]=FX[fxm.value];const unit=c==="JPY"?100:c==="ARS"?1000:1;const x=+fxv.value;

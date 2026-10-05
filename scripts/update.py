@@ -122,7 +122,25 @@ def _():
     ini = (NOW - datetime.timedelta(days=10)).strftime("%m-%d-%Y")
     fim = NOW.strftime("%m-%d-%Y")
     novo, data_ref = [], None
+    AWESOME = ("CNY", "MXN", "ARS")  # fora da PTAX: vêm da AwesomeAPI
+    aw = {}
+    try:
+        aw = get("https://economia.awesomeapi.com.br/json/last/" + ",".join(c + "-BRL" for c in AWESOME))
+    except Exception as e:  # noqa
+        log.append(f"     AwesomeAPI indisponível: {e}")
     for item in data["fx"]:
+        if item[0] in AWESOME:
+            code = item[0]
+            unit = 1000 if code == "ARS" else 1
+            q = aw.get(code + "BRL")
+            if q:
+                item = [code, item[1], item[2], round(float(q["bid"]) * unit, 4), 1, "AwesomeAPI"]
+            else:
+                log.append(f"     moeda {code} mantida (AwesomeAPI sem dado)")
+                item = (item + [None, None])[:5] + ["AwesomeAPI"]
+                item[4] = 0
+            novo.append(item)
+            continue
         code, unit = item[0], (100 if item[0] == "JPY" else 1000 if item[0] == "ARS" else 1)
         try:
             url = ("https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/"
@@ -130,7 +148,7 @@ def _():
                    f"?@moeda='{code}'&@dataInicial='{ini}'&@dataFinalCotacao='{fim}'&$format=json")
             v = get(url)["value"]
             last = v[-1]
-            item = [code, item[1], item[2], round(float(last["cotacaoVenda"]) * unit, 4), 1]
+            item = [code, item[1], item[2], round(float(last["cotacaoVenda"]) * unit, 4), 1, "PTAX/BCB"]
             data_ref = last["dataHoraCotacao"][:16]
         except Exception as e:  # noqa
             log.append(f"     moeda {code} mantida: {e}")
