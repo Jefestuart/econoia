@@ -128,6 +128,12 @@ def _():
         aw = get("https://economia.awesomeapi.com.br/json/last/" + ",".join(c + "-BRL" for c in AWESOME))
     except Exception as e:  # noqa
         log.append(f"     AwesomeAPI indisponível: {e}")
+    er = {}
+    if not all(c + "BRL" in aw for c in AWESOME):
+        try:
+            er = get("https://open.er-api.com/v6/latest/BRL").get("rates", {})
+        except Exception as e:  # noqa
+            log.append(f"     ExchangeRate-API indisponível: {e}")
     for item in data["fx"]:
         if item[0] in AWESOME:
             code = item[0]
@@ -135,6 +141,8 @@ def _():
             q = aw.get(code + "BRL")
             if q:
                 item = [code, item[1], item[2], round(float(q["bid"]) * unit, 4), 1, "AwesomeAPI"]
+            elif er.get(code):
+                item = [code, item[1], item[2], round(unit / float(er[code]), 4), 1, "ExchangeRate-API"]
             else:
                 log.append(f"     moeda {code} mantida (AwesomeAPI sem dado)")
                 item = (item + [None, None])[:5] + ["AwesomeAPI"]
