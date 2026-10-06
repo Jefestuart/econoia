@@ -56,6 +56,19 @@ input,select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1
 .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px}
 .result{font-family:var(--mono);font-size:1.4rem;font-variant-numeric:tabular-nums}
 .note{font-size:.82rem;color:var(--muted)}
+.futuro{margin-top:12px;display:grid;gap:12px}
+.futuro .fhead h2{font-family:var(--display);font-weight:800;font-size:clamp(1.3rem,4vw,1.7rem);margin:0}
+.futuro .fhead p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+.futuro .fsel{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.futuro .fsel select{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:inherit;min-width:240px}
+.futuro .fdesc{font-size:.85rem;color:var(--muted)}
+.fgrid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.fgrid3 .card h3{font-size:1rem}
+.frase{font-size:1rem;line-height:1.55;margin:0;padding:12px 14px;border-left:3px solid var(--accent);background:var(--surface);border-radius:0 8px 8px 0}
+.fcode .segs{margin:0 0 8px}
+.fcode .acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.fout{margin-top:8px}.fout img,.fout canvas{max-width:100%;height:auto;background:#fff;border-radius:6px;margin-top:6px}
+.flinks{display:flex;flex-wrap:wrap;gap:10px}.flinks a{text-decoration:none}
 .prevbanner{display:grid;grid-template-columns:auto 1fr auto;gap:6px 22px;align-items:center;margin-top:12px;padding:14px 18px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;color:inherit;text-decoration:none}
 .prevbanner:hover{border-color:var(--accent)}
 .prevbanner .lb{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);grid-column:1/-1}
@@ -266,6 +279,25 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
 
 <section class="kpis" id="kpis" aria-label="Indicadores principais"></section>
 <a class="prevbanner" id="prevBanner" href="#var-sarima" hidden></a>
+<section class="futuro" id="futuro" aria-label="Prever o futuro" hidden>
+  <div class="card">
+   <div class="fhead"><h2>Prever o futuro</h2><p>O que o passado consegue (e não consegue) dizer sobre o que vem por aí. Escolha um indicador e veja a história, o padrão que se repete e a previsão com a faixa de incerteza.</p></div>
+   <div class="fsel" style="margin-top:12px"><label for="fInd" class="note">Indicador</label><select id="fInd"></select><span class="fdesc" id="fDesc"></span></div>
+  </div>
+  <div class="fgrid3">
+   <div class="card"><h3>1. O passado</h3><p class="src" id="fSrc1"></p><div class="chartbox"><canvas id="cF1" aria-label="Série histórica e tendência"></canvas></div></div>
+   <div class="card"><h3>2. O padrão que se repete</h3><p class="src" id="fSrc2"></p><div class="chartbox"><canvas id="cF2" aria-label="Efeito médio de cada mês do ano"></canvas></div></div>
+   <div class="card"><h3>3. O futuro provável</h3><p class="src" id="fSrc3"></p><div class="chartbox"><canvas id="cF3" aria-label="Previsão para os próximos 12 meses"></canvas></div></div>
+  </div>
+  <p class="frase" id="fFrase"></p>
+  <div class="card fcode"><h3>Faça você mesmo</h3><p class="src">O mesmo estudo em código, com os dados já carregados. Rode aqui no navegador, sem instalar nada, ou copie para o seu computador.</p>
+   <div class="segs" role="group" aria-label="Linguagem"><button data-l="r" aria-pressed="true">R</button><button data-l="py" aria-pressed="false">Python</button></div>
+   <pre class="code" id="fCode" tabindex="0" contenteditable="plaintext-only" spellcheck="false" autocapitalize="off" aria-label="Código (editável)"></pre>
+   <div class="acoes"><button class="btn" id="fRun">Rodar aqui</button><button class="btn alt" id="fCopy">Copiar código</button></div>
+   <div class="fout" id="fOut" hidden><pre class="code" id="fTxt"></pre><div id="fImg"></div></div>
+  </div>
+  <div class="flinks"><a class="btn alt" href="#aprender">Aprenda passo a passo</a><a class="btn alt" href="#var-sarima">Ver os modelos VAR e SARIMA</a></div>
+</section>
 
 <section class="card rdemo" aria-label="Laboratório R">
   <h2>Laboratório R</h2>
@@ -696,6 +728,143 @@ window.drawPrev=function(){
  drawIrf();
 };
 loadModelos();
+
+// ---------- Prever o futuro (data/series.json, gerado por scripts/series.py) ----------
+let SR=null,fCharts=[],fLang="r",pyodide=null;
+const MESES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const rotM=k=>{const[a,m]=k.split("-");return MESES[+m-1]+"/"+a.slice(2)};
+const fmtV=(v,u)=>{const d=Math.abs(v)>=1000?0:Math.abs(v)>=100?1:2,n=br(v,d);if(u.startsWith("%"))return n+"%";if(u==="R$")return "R$ "+n;const m=u.match(/^(US\$)(.*)$/);if(m)return "US$ "+n+(m[2]?" "+m[2].trim():"");return n+(u.startsWith("índice")?"":" "+u)};
+const unCurta=u=>u.startsWith("%")?"%":u;
+async function loadSeries(){
+ try{const r=await fetch("data/series.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;SR=await r.json()}catch(e){return}
+ const ids=SR.ordem.filter(id=>SR.series[id].analise);if(!ids.length)return;
+ fInd.innerHTML=SR.temas.map(t=>{const op=ids.filter(id=>SR.series[id].tema===t);return op.length?`<optgroup label="${t}">${op.map(id=>`<option value="${id}">${SR.series[id].nome}</option>`).join("")}</optgroup>`:""}).join("");
+ fInd.value=ids.includes("ipca")?"ipca":ids[0];fInd.onchange=()=>{fOut.hidden=true;drawFuturo()};
+ futuro.hidden=false;drawFuturo();
+}
+function codigoR(id,s){
+ const a=s.analise,d=s.dados.slice(-180),[ano,mes]=d[0][0].split("-").map(Number),o=a.modelo.match(/\d+/g).map(Number);
+ const tr={"a própria série":"x <- serie","variação mês a mês":"x <- diff(serie)            # variação mês a mês","variação % mês a mês":"x <- 100 * diff(log(serie))  # variação % mês a mês"}[a.modelado_como];
+ const volta={"a própria série":"nivel <- prev$pred","variação mês a mês":"nivel <- tail(serie, 1) + cumsum(prev$pred)","variação % mês a mês":"nivel <- tail(serie, 1) * exp(cumsum(prev$pred) / 100)"}[a.modelado_como];
+ return `# ${s.nome} (${s.unidade}) · fonte: ${s.fonte}
+# Os últimos ${d.length} meses já estão aqui. No seu computador, dá para baixar direto
+# do Banco Central com o pacote rbcb ou do FRED com o pacote fredr.
+valores <- c(${d.map(r=>r[1]).join(", ")})
+serie <- ts(valores, start = c(${ano}, ${mes}), frequency = 12)
+
+# 1. O passado: a série e a tendência (média móvel de 12 meses)
+plot(serie, main = "${s.nome}", ylab = "${s.unidade}", col = "grey40")
+lines(stats::filter(serie, rep(1/12, 12), sides = 2), col = "red", lwd = 2)
+
+# 2. O padrão que se repete: quanto cada mês fica acima ou abaixo da média
+${tr}
+efeito_mes <- tapply(x, cycle(x), mean) - mean(x)
+names(efeito_mes) <- month.abb
+round(efeito_mes, 3)
+# Teste: as diferenças entre os meses são reais ou acaso? (p < 0,05 = padrão real)
+summary(aov(as.numeric(x) ~ factor(cycle(x))))
+
+# 3. O futuro provável: ${a.modelo}, escolhido pelo critério de Akaike
+modelo <- arima(x, order = c(${o[0]}, 0, ${o[2]}), seasonal = list(order = c(${o[3]}, 0, ${o[5]}), period = 12))
+modelo
+prev <- predict(modelo, n.ahead = 12)
+${volta}
+round(nivel, 3)   # previsão para os próximos 12 meses
+`}
+function codigoPy(id,s){
+ const a=s.analise,d=s.dados.slice(-180),o=a.modelo.match(/\d+/g).map(Number);
+ const tr={"a própria série":"x = serie","variação mês a mês":"x = serie.diff().dropna()            # variação mês a mês","variação % mês a mês":"x = (100 * np.log(serie).diff()).dropna()  # variação % mês a mês"}[a.modelado_como];
+ const volta={"a própria série":"nivel = prev","variação mês a mês":"nivel = serie.iloc[-1] + prev.cumsum()","variação % mês a mês":"nivel = serie.iloc[-1] * np.exp(prev.cumsum() / 100)"}[a.modelado_como];
+ return `# ${s.nome} (${s.unidade}) · fonte: ${s.fonte}
+# Os últimos ${d.length} meses já estão aqui. No seu computador, dá para baixar direto
+# do Banco Central com a biblioteca python-bcb ou do FRED com pandas-datareader.
+import numpy as np, pandas as pd, matplotlib.pyplot as plt
+from scipy import stats
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+
+valores = [${d.map(r=>r[1]).join(", ")}]
+serie = pd.Series(valores, index=pd.period_range("${d[0][0]}", periods=len(valores), freq="M"))
+
+# 1. O passado: a série e a tendência (média móvel de 12 meses)
+ax = serie.plot(color="grey", title="${s.nome}", ylabel="${s.unidade}")
+serie.rolling(12, center=True).mean().plot(ax=ax, color="red", linewidth=2)
+plt.show()
+
+# 2. O padrão que se repete: quanto cada mês fica acima ou abaixo da média
+${tr}
+efeito_mes = x.groupby(x.index.month).mean() - x.mean()
+print(efeito_mes.round(3))
+# Teste: as diferenças entre os meses são reais ou acaso? (p < 0,05 = padrão real)
+print("p-valor:", round(stats.f_oneway(*[g.values for _, g in x.groupby(x.index.month)]).pvalue, 4))
+
+# 3. O futuro provável: ${a.modelo}, escolhido pelo critério de Akaike
+modelo = SARIMAX(x, order=(${o[0]}, 0, ${o[2]}), seasonal_order=(${o[3]}, 0, ${o[5]}, 12), trend="c").fit(disp=False)
+print(modelo.summary().tables[1])
+prev = modelo.get_forecast(12).predicted_mean
+${volta}
+print(nivel.round(3))   # previsão para os próximos 12 meses
+`}
+function setCode(){const s=SR.series[fInd.value];fCode.textContent=fLang==="r"?codigoR(fInd.value,s):codigoPy(fInd.value,s)}
+document.querySelectorAll(".fcode .segs button").forEach(b=>b.onclick=()=>{fLang=b.dataset.l;document.querySelectorAll(".fcode .segs button").forEach(x=>x.setAttribute("aria-pressed",x===b));fOut.hidden=true;setCode()});
+fCopy.onclick=async()=>{try{await navigator.clipboard.writeText(fCode.innerText);fCopy.textContent="Copiado!"}catch(e){fCopy.textContent="Selecione e use Cmd+C"}setTimeout(()=>fCopy.textContent="Copiar código",2000)};
+async function getPy(){if(!pyodide){await loadJs("https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js");pyodide=await loadPyodide();await pyodide.loadPackage(["numpy","pandas","matplotlib","scipy","statsmodels"])}return pyodide}
+fRun.onclick=async()=>{
+ const code=fCode.innerText;fRun.disabled=true;fOut.hidden=false;fImg.innerHTML="";
+ try{
+  if(fLang==="r"){
+   fTxt.textContent=webR?"Rodando...":"Carregando o R no navegador (só na primeira vez, alguns segundos)...";
+   const R=await getR(),sh=await new R.Shelter();
+   try{const res=await sh.captureR(code,{withAutoprint:true,captureStreams:true,captureConditions:false,captureGraphics:{width:720,height:420}});
+    fTxt.textContent=res.output.map(o=>o.data).join("\n").trim()||"(sem saída de texto)";
+    res.images.forEach(im=>{const c=document.createElement("canvas");c.width=im.width;c.height=im.height;c.getContext("2d").drawImage(im,0,0);fImg.appendChild(c)});
+   }finally{sh.purge()}
+  }else{
+   fTxt.textContent=pyodide?"Rodando...":"Carregando o Python no navegador (só na primeira vez, pode levar meio minuto)...";
+   const py=await getPy();let saida="";
+   py.setStdout({batched:t=>saida+=t+"\n"});py.setStderr({batched:t=>saida+=t+"\n"});
+   await py.runPythonAsync(`import matplotlib\nmatplotlib.use("Agg")\nimport matplotlib.pyplot as plt\nplt.close("all")\n_figs=[]\nplt.show=lambda *a,**k:_figs.append(plt.gcf()) or plt.figure()`);
+   await py.runPythonAsync(code);
+   const imgs=py.runPython(`import io,base64\n_out=[]\nfor f in _figs+[plt.figure(n) for n in plt.get_fignums() if plt.figure(n) not in _figs and plt.figure(n).axes]:\n    b=io.BytesIO();f.savefig(b,format="png",dpi=90,bbox_inches="tight");_out.append(base64.b64encode(b.getvalue()).decode())\n_out`).toJs();
+   fTxt.textContent=saida.split("\n").filter(l=>!/font cache/.test(l)).join("\n").trim()||"(sem saída de texto)";
+   imgs.forEach(b=>{const i=document.createElement("img");i.src="data:image/png;base64,"+b;i.alt="Gráfico gerado pelo código";fImg.appendChild(i)});
+  }
+ }catch(e){fTxt.textContent="Erro: "+(e&&e.message||e)}
+ fRun.disabled=false};
+window.drawFuturo=function(){
+ fCharts.forEach(c=>c.destroy());fCharts=[];
+ if(!SR||!window.Chart||futuro.hidden)return;
+ const id=fInd.value,s=SR.series[id],a=s.analise;if(!a)return;
+ const ac=css("--accent"),gd=css("--gold"),ln=css("--line"),rd=css("--red"),u=s.unidade;
+ fDesc.textContent=s.descricao;
+ const d=s.dados.slice(-180),mm=d.map((_,i)=>i>=11?d.slice(i-11,i+1).reduce((t,r)=>t+r[1],0)/12:null);
+ const opt={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7}},y:{grid:{color:ln}}}};
+ fSrc1.textContent=`${u} · ${rotM(d[0][0])} a ${rotM(d[d.length-1][0])} · linha vermelha: média dos últimos 12 meses`;
+ fCharts.push(new Chart(cF1,{type:"line",data:{labels:d.map(r=>rotM(r[0])),datasets:[{label:s.nome,data:d.map(r=>r[1]),borderColor:gd,borderWidth:1.2,pointRadius:0},{label:"Tendência (12 meses)",data:mm,borderColor:rd,borderWidth:2,pointRadius:0}]},options:{...opt,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`${i.dataset.label}: ${fmtV(i.raw,u)}`}}}}}));
+ const ef=a.sazonal_efeito,sig=a.sazonal_p<0.05,uv=a.modelado_como==="a própria série"?unCurta(u):a.modelado_como==="variação % mês a mês"?"p.p. de variação %":"variação ("+unCurta(u)+")";
+ fSrc2.textContent=`Quanto cada mês fica acima ou abaixo da média (${a.modelado_como}). ${sig?"Padrão estatisticamente significativo":"Sem padrão claro: as diferenças podem ser acaso"} (p = ${a.sazonal_p<0.001?"< 0,001":br(a.sazonal_p,3)}).`;
+ fCharts.push(new Chart(cF2,{type:"bar",data:{labels:MESES,datasets:[{data:ef,backgroundColor:ef.map(v=>sig?(v>=0?gd:ac):ln)}]},options:{...opt,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`${i.raw>=0?"+":""}${br(i.raw,3)} ${uv}`}}}}}));
+ const h=s.dados.slice(-36),p=a.previsao,nH=h.length,pad=x=>[...Array(nH-1).fill(null),h[nH-1][1],...x];
+ fSrc3.textContent=`${a.modelo} sobre ${a.modelado_como} · faixa de 80% de chance`;
+ fCharts.push(new Chart(cF3,{type:"line",data:{labels:[...h.map(r=>rotM(r[0])),...p.map(r=>rotM(r[0]))],datasets:[
+  {label:"80% sup.",data:pad(p.map(r=>r[3])),borderWidth:0,pointRadius:0,backgroundColor:ac+"38",fill:"+1"},
+  {label:"80% inf.",data:pad(p.map(r=>r[2])),borderWidth:0,pointRadius:0,fill:false},
+  {label:"Previsão",data:pad(p.map(r=>r[1])),borderColor:ac,borderDash:[5,4],pointRadius:0,fill:false},
+  {label:"Realizado",data:[...h.map(r=>r[1]),...p.map(()=>null)],borderColor:gd,pointRadius:0,fill:false}]},
+  options:{...opt,plugins:{legend:{display:false},tooltip:{filter:i=>i.raw!==null,callbacks:{label:i=>`${i.dataset.label}: ${fmtV(i.raw,u)}`}}}}}));
+ // frase automática
+ const iMax=ef.indexOf(Math.max(...ef)),iMin=ef.indexOf(Math.min(...ef)),ult=s.dados[s.dados.length-1],f12=p[11];
+ const MESL=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+ const proprio=a.modelado_como==="a própria série";
+ const saz=!sig?`Não há um padrão claro por mês do ano: as variações parecem mais ligadas a cada momento do que ao calendário.`
+  :proprio?`Nos últimos anos, <b>${MESL[iMax]}</b> costuma ficar acima da média e <b>${MESL[iMin]}</b>, abaixo: um padrão que se repete todo ano.`
+  :`Nos últimos anos, <b>${MESL[iMax]}</b> costuma ter a maior alta em relação ao mês anterior e <b>${MESL[iMin]}</b>, a maior queda: um padrão que se repete todo ano.`;
+ const acum=u==="% no mês"?` Somando os próximos 12 meses, a previsão é de <b>${br((p.reduce((t,r)=>t*(1+r[1]/100),1)-1)*100,1)}%</b>.`:"";
+ fFrase.innerHTML=`<b>${s.nome}</b> está em <b>${fmtV(ult[1],u)}</b>${u.startsWith("índice")?" ("+u+")":""} em ${rotM(ult[0])}. ${saz} Para ${rotM(f12[0])}, o modelo indica cerca de <b>${fmtV(f12[1],u)}</b>, com 80% de chance de ficar entre ${fmtV(f12[2],u)} e ${fmtV(f12[3],u)}.${acum} Quanto mais longe, mais larga a faixa: o passado ajuda, mas não garante o futuro.`;
+ setCode();
+};
+loadSeries();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>drawFuturo());
+new MutationObserver(()=>drawFuturo()).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>drawPrev());
 new MutationObserver(()=>drawPrev()).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);

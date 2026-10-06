@@ -10,6 +10,8 @@ import io
 import json
 import os
 import sys
+import time
+import urllib.error
 import urllib.request
 
 import numpy as np
@@ -55,7 +57,7 @@ CATALOGO = [
     S("selic_efetiva", "Selic efetiva", "Juros", 4189, "% ao ano", "Taxa média de fato praticada nas operações entre bancos com títulos públicos.", modelar="dif"),
     S("cdi", "CDI", "Juros", 4389, "% ao ano", "Taxa dos empréstimos entre bancos. Referência de CDBs e fundos de renda fixa.", transf="media", modelar="dif"),
     S("tr", "TR", "Juros", 7811, "% no mês", "Taxa Referencial. Compõe o rendimento da poupança e do FGTS."),
-    S("poupanca", "Poupança", "Juros", 195, "% no mês", "Rendimento mensal da caderneta de poupança.", transf="media"),
+    S("poupanca", "Poupança", "Juros", 25, "% no mês", "Rendimento mensal da caderneta de poupança (regra atual, depósitos desde maio de 2012).", transf="media"),
     # ---------------- Câmbio e setor externo
     S("dolar", "Dólar", "Câmbio e setor externo", 3698, "R$", "Dólar comercial PTAX de venda, média do mês.", modelar="logdif"),
     S("euro", "Euro", "Câmbio e setor externo", 21620, "R$", "Euro PTAX de venda, média do mês.", transf="media", modelar="logdif"),
@@ -64,8 +66,8 @@ CATALOGO = [
     S("transacoes", "Transações correntes", "Câmbio e setor externo", 22701, "US$ milhões no mês", "Saldo do Brasil com o exterior em bens, serviços e rendas. Negativo = o país gasta mais do que recebe."),
     # ---------------- Atividade
     S("ibcbr", "IBC-Br", "Atividade", 24364, "índice (2002 = 100)", "Prévia mensal do PIB feita pelo Banco Central, com ajuste sazonal.", modelar="logdif"),
-    S("pim", "Produção industrial", "Atividade", 21859, "índice (2022 = 100)", "Produção da indústria geral (IBGE/PIM-PF), com ajuste sazonal.", modelar="logdif"),
-    S("varejo", "Vendas no varejo", "Atividade", 1455, "índice (2022 = 100)", "Volume de vendas do comércio varejista restrito (IBGE/PMC), com ajuste sazonal.", modelar="logdif"),
+    S("pim", "Produção industrial", "Atividade", 21859, "índice (2022 = 100)", "Produção da indústria geral (IBGE/PIM-PF), sem ajuste sazonal: dá para ver o efeito de férias e feriados.", modelar="logdif"),
+    S("varejo", "Vendas no varejo", "Atividade", 1455, "índice (2022 = 100)", "Volume de vendas do comércio varejista restrito (IBGE/PMC), sem ajuste sazonal: dá para ver o pico de dezembro.", modelar="logdif"),
     # ---------------- Trabalho e renda
     S("desemprego", "Desemprego", "Trabalho e renda", 24369, "% da força de trabalho", "Taxa de desocupação da PNAD Contínua (IBGE), em trimestres móveis.", modelar="dif"),
     S("salario_minimo", "Salário mínimo", "Trabalho e renda", 1619, "R$", "Valor nominal do salário mínimo nacional.", modelar="logdif", prever=False),
@@ -77,7 +79,6 @@ CATALOGO = [
     F("fed", "Juro do Fed", "FEDFUNDS", "% ao ano", "Taxa básica dos Estados Unidos, que influencia o dólar e o fluxo de capital no mundo todo."),
     F("treasury10", "Treasury 10 anos", "GS10", "% ao ano", "Juro do título de 10 anos do governo americano. Referência de risco para o mundo."),
     F("bce", "Juro do BCE", "ECBMRRFR", "% ao ano", "Taxa principal de refinanciamento do Banco Central Europeu.", transf="media"),
-    F("desemprego_euro", "Desemprego zona do euro", "LRHUTTTTEZM156S", "% da força de trabalho", "Taxa de desemprego harmonizada da zona do euro (OCDE)."),
     F("minerio", "Minério de ferro", "PIORECRUSDM", "US$/tonelada", "Preço internacional do minério de ferro, principal produto da Vale (FMI).", modelar="logdif"),
     F("brent", "Petróleo Brent", "POILBREUSDM", "US$/barril", "Preço do petróleo de referência internacional (FMI).", modelar="logdif"),
 ]
@@ -87,10 +88,21 @@ FONTES = {"sgs": "Banco Central (SGS {c})", "fred": "FRED/Fed de St. Louis ({c})
 
 # ======================================================================= download
 
-def _get(url, timeout=60):
-    req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read().decode("utf-8")
+def _get(url, timeout=60, tentativas=5):
+    """Busca com novas tentativas: o Banco Central recusa (429/5xx) quando recebe pedidos demais seguidos."""
+    for i in range(tentativas):
+        time.sleep(0.4)
+        try:
+            req = urllib.request.Request(url, headers=UA)
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.read().decode("utf-8")
+        except urllib.error.HTTPError as e:
+            if e.code == 404 or i == tentativas - 1 or (e.code < 500 and e.code != 429):
+                raise
+        except (urllib.error.URLError, TimeoutError):
+            if i == tentativas - 1:
+                raise
+        time.sleep(3 * (i + 1))
 
 
 def baixar_sgs(codigo):
@@ -109,6 +121,8 @@ def baixar_sgs(codigo):
                 dados = []
             else:
                 raise
+        except json.JSONDecodeError:
+            dados = []  # o SGS às vezes responde texto/HTML num bloco vazio
         for d in dados:
             try:
                 pontos[datetime.datetime.strptime(d["data"], "%d/%m/%Y").date()] = float(d["valor"])
@@ -227,24 +241,30 @@ def main(saida="data/series.json"):
             anterior = json.load(open(saida, encoding="utf-8")).get("series", {})
         except Exception:  # noqa: BLE001
             anterior = {}
-    series, falhas = {}, []
+    series, falhas = {}, {}
     for cfg in CATALOGO:
         try:
             series[cfg["id"]] = processar(cfg, rng)
             s = series[cfg["id"]]
             print(f"OK   {cfg['id']:<20} {len(s['dados']):>4} meses  último {s['dados'][-1]}")
         except Exception as e:  # noqa: BLE001 - uma série ruim não derruba as outras
-            falhas.append(cfg["id"])
+            falhas[cfg["id"]] = f"{type(e).__name__}: {e}"[:200]
             print(f"ERRO {cfg['id']:<20} {type(e).__name__}: {e}")
             if cfg["id"] in anterior:
                 series[cfg["id"]] = anterior[cfg["id"]]
+            continue
+        # série que parou de ser atualizada há mais de 8 meses não entra
+        ult = datetime.date.fromisoformat(series[cfg["id"]]["dados"][-1][0] + "-01")
+        if (datetime.date.today() - ult).days > 250:
+            falhas[cfg["id"]] = f"desatualizada: último dado {ult:%Y-%m}"
+            del series[cfg["id"]]
     temas = list(dict.fromkeys(c["tema"] for c in CATALOGO))
     out = {"atualizado": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="minutes"),
            "temas": temas, "ordem": [c["id"] for c in CATALOGO if c["id"] in series],
            "series": series, "falhas": falhas}
     with open(saida, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
-    print(f"\n{len(series)} séries salvas, {len(falhas)} falhas: {falhas}")
+    print(f"\n{len(series)} séries salvas, {len(falhas)} falhas: {list(falhas)}")
 
 
 if __name__ == "__main__":

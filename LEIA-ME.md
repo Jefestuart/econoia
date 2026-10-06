@@ -29,3 +29,6 @@ Resultado em `data/modelos.json`. Testes com dados simulados em `tests/test_mode
 ## Testes
 - `npm test`: chat (proteção e limites), notícias e entrega de dados
 - `python -m unittest discover -s tests -p "test_*.py"`: SARIMA, VAR, impulso-resposta, Granger e backtest
+
+## Catálogo de indicadores e "Prever o futuro"
+`scripts/series.py` baixa cerca de 40 séries mensais (Banco Central/SGS e FRED) desde 2003 e, para cada uma, mede a sazonalidade (efeito médio de cada mês e teste F) e faz uma previsão SARIMA de 12 meses com faixa de 80%. O resultado (`data/series.json`) alimenta o módulo **Prever o futuro** da página inicial, que também gera o código equivalente em **R** e **Python**, executável no navegador (WebR e Pyodide). Testes em `tests/test_series.py`.
