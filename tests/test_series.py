@@ -10,6 +10,8 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 import series as S  # noqa: E402
 
+BAIXAR_SGS = S.baixar_sgs  # original, antes de os testes trocarem por versões falsas
+
 D = datetime.date
 
 
@@ -88,6 +90,14 @@ class TestProcessar(unittest.TestCase):
             {"VALDATA": "2020-01-01T00:00:00-03:00", "VALVALOR": 0.61, "NIVNOME": "Estados"},
             {"VALDATA": "2021-01-01T00:00:00-03:00", "VALVALOR": 0.53, "NIVNOME": ""}]})
         self.assertEqual(S.baixar_ipea("X"), {D(2020, 1, 1): 0.52, D(2021, 1, 1): 0.53})
+
+    def test_sgs_nao_salva_serie_cortada(self):
+        """Se o SGS devolve lixo num bloco de anos, a série inteira falha (e a versão anterior é mantida)."""
+        respostas = iter(['[{"data":"01/01/2003","valor":"1"}]'] + ["<html>erro</html>"] * 50)
+        S._get = lambda url, **k: next(respostas)
+        S.time.sleep = lambda s: None
+        with self.assertRaises(ValueError):
+            BAIXAR_SGS(999)
 
     def test_catalogo_sem_ids_repetidos_e_com_campos(self):
         ids = [c["id"] for c in S.CATALOGO]

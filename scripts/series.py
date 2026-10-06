@@ -123,15 +123,22 @@ def baixar_sgs(codigo):
         fim = min(datetime.date(ini.year + 5, 1, 1) - datetime.timedelta(days=1), hoje)
         url = (f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo}/dados?formato=json"
                f"&dataInicial={ini:%d/%m/%Y}&dataFinal={fim:%d/%m/%Y}")
-        try:
-            dados = json.loads(_get(url))
-        except urllib.error.HTTPError as e:
-            if e.code == 404:  # bloco sem dados (série começa depois)
-                dados = []
-            else:
+        dados = None
+        for tentativa in range(4):
+            try:
+                dados = json.loads(_get(url))
+                break
+            except urllib.error.HTTPError as e:
+                if e.code == 404:  # bloco sem dados (série começa depois)
+                    dados = []
+                    break
                 raise
-        except json.JSONDecodeError:
-            dados = []  # o SGS às vezes responde texto/HTML num bloco vazio
+            except json.JSONDecodeError:
+                # o SGS às vezes responde uma página de erro no lugar do JSON: tenta de novo,
+                # e se persistir, falha (para manter a versão anterior em vez de salvar a série cortada)
+                time.sleep(5 * (tentativa + 1))
+        if dados is None:
+            raise ValueError(f"resposta inválida do SGS no bloco {ini:%Y}-{fim:%Y}")
         for d in dados:
             try:
                 pontos[datetime.datetime.strptime(d["data"], "%d/%m/%Y").date()] = float(d["valor"])
@@ -173,10 +180,11 @@ def baixar_ipea(codigo):
 def ipea_descobrir(termo):
     """Acha no catálogo do Ipeadata a série ativa e anual mais recente cujo nome contém o termo
     (usado para o Gini, que tem várias versões ao longo das pesquisas do IBGE)."""
-    url = (f"{IPEA}/Metadados?$filter=contains(SERNOME,'{termo}')"
-           "&$select=SERCODIGO,SERNOME,PERNOME,SERSTATUS,SERMINDATA,SERMAXDATA,FNTSIGLA")
-    cands = [m for m in json.loads(_get(url.replace(" ", "%20")))["value"]
-             if (m.get("PERNOME") or "").lower().startswith("anual") and m.get("SERSTATUS") == "A"]
+    # baixa o catálogo inteiro e filtra aqui: não depende da sintaxe de filtro da API
+    catalogo = json.loads(_get(f"{IPEA}/Metadados", timeout=180))["value"]
+    cands = [m for m in catalogo if termo.lower() in (m.get("SERNOME") or "").lower()
+             and (m.get("PERNOME") or "").lower().startswith("anual") and m.get("SERSTATUS") == "A"]
+    print(f"     {termo}: {len(cands)} séries candidatas no Ipeadata")
     for m in sorted(cands, key=lambda m: (m.get("SERMAXDATA") or "", -len(m.get("SERNOME") or "")), reverse=True):
         try:
             pontos = baixar_ipea(m["SERCODIGO"])
