@@ -56,6 +56,27 @@ input,select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1
 .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px}
 .result{font-family:var(--mono);font-size:1.4rem;font-variant-numeric:tabular-nums}
 .note{font-size:.82rem;color:var(--muted)}
+.trilha{display:grid;gap:14px}
+.trilha .tnav{display:flex;flex-wrap:wrap;gap:6px}
+.trilha .tnav a{font-size:.82rem;padding:4px 12px;border:1px solid var(--line);border-radius:99px;color:inherit;text-decoration:none}
+.trilha .tnav a.feita{border-color:var(--accent);color:var(--accent)}
+.licao h3{font-family:var(--display);font-size:1.25rem;margin:0 0 4px}
+.licao .num{font:600 .75rem var(--mono);color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.licao p.txt{margin:.4em 0 .8em;line-height:1.6;max-width:72ch}
+.licao .ctrl{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:6px 0 10px;font-size:.9rem}
+.licao .ctrl input[type=range]{width:200px;accent-color:var(--accent)}
+.licao .ctrl label{display:flex;gap:6px;align-items:center}
+.licao .resultado{font-size:.95rem;margin:8px 0}
+.quiz{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.quiz p{margin:0 0 6px;font-weight:600}
+.quiz button{display:block;width:100%;text-align:left;font:inherit;font-size:.9rem;margin:4px 0;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:none;color:inherit;cursor:pointer}
+.quiz button.certo{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.quiz button.errado{border-color:var(--red)}
+.quiz .fb{font-size:.88rem;margin-top:6px}
+.licao details{margin-top:10px;font-size:.88rem}.licao details summary{cursor:pointer;color:var(--accent)}
+.desafio{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:8px 0}
+.desafio label{display:flex;flex-direction:column;font-size:.8rem;color:var(--muted);gap:2px}
+.desafio input{font:inherit;padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
 .futuro{margin-top:12px;display:grid;gap:12px}
 .futuro .fhead h2{font-family:var(--display);font-weight:800;font-size:clamp(1.3rem,4vw,1.7rem);margin:0}
 .futuro .fhead p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
@@ -492,6 +513,12 @@ summary(modelo)   # a Selic explica a inflação?</pre>
    </details>
   </div>
 </section>
+<section id="p-learn" class="trilha" hidden>
+  <div class="card"><h3 style="font-family:var(--display);font-size:1.4rem;margin:0">Aprenda séries temporais</h3>
+   <p class="txt" style="margin:.4em 0">Seis lições curtas, com dados reais do Brasil, para entender como economistas usam o passado para pensar o futuro. Mexa nos controles, observe os gráficos e responda a pergunta de cada lição. Não precisa saber matemática.</p>
+   <nav class="tnav" id="tNav" aria-label="Lições"></nav></div>
+  <div id="tLicoes" class="trilha"></div>
+</section>
 <section id="p-dados" class="grid2" hidden>
   <div class="card"><h3>Selic · Copom</h3><div class="tbl"><table id="tbS"></table></div></div>
   <div class="card"><h3>IPCA mensal</h3><div class="tbl"><table id="tbI"></table></div></div>
@@ -862,9 +889,157 @@ window.drawFuturo=function(){
  fFrase.innerHTML=`<b>${s.nome}</b> está em <b>${fmtV(ult[1],u)}</b>${u.startsWith("índice")?" ("+u+")":""} em ${rotM(ult[0])}. ${saz} Para ${rotM(f12[0])}, o modelo indica cerca de <b>${fmtV(f12[1],u)}</b>, com 80% de chance de ficar entre ${fmtV(f12[2],u)} e ${fmtV(f12[3],u)}.${acum} Quanto mais longe, mais larga a faixa: o passado ajuda, mas não garante o futuro.`;
  setCode();
 };
+
+// ---------- Trilha: aprenda séries temporais (usa data/series.json e data/modelos.json) ----------
+let tCharts={},trilhaOk=false;
+const tDone=(()=>{try{return JSON.parse(localStorage.getItem("trilha")||"{}")}catch(e){return{}}})();
+const tSave=()=>{try{localStorage.setItem("trilha",JSON.stringify(tDone))}catch(e){}};
+function tChart(id,cfg){if(tCharts[id])tCharts[id].destroy();tCharts[id]=new Chart(document.getElementById(id),cfg);return tCharts[id]}
+const tBase=()=>({responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7}},y:{grid:{color:css("--line")}}}});
+function tSerie(ids){for(const id of ids){const s=SR&&SR.series[id];if(s)return s}return null}
+function mediaMovel(v,k){return v.map((_,i)=>i>=k-1?v.slice(i-k+1,i+1).reduce((a,b)=>a+b,0)/k:null)}
+function correl(a,b){const n=a.length,ma=a.reduce((x,y)=>x+y,0)/n,mb=b.reduce((x,y)=>x+y,0)/n;let sab=0,saa=0,sbb=0;for(let i=0;i<n;i++){sab+=(a[i]-ma)*(b[i]-mb);saa+=(a[i]-ma)**2;sbb+=(b[i]-mb)**2}return sab/Math.sqrt(saa*sbb)}
+function ols(X,y){const k=X[0].length,A=Array.from({length:k},()=>Array(k+1).fill(0));
+ for(let r=0;r<X.length;r++)for(let i=0;i<k;i++){A[i][k]+=X[r][i]*y[r];for(let j=0;j<k;j++)A[i][j]+=X[r][i]*X[r][j]}
+ for(let c=0;c<k;c++){let p=c;for(let r=c+1;r<k;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];
+  for(let r=0;r<k;r++)if(r!==c){const f=A[r][c]/A[c][c];for(let j=c;j<=k;j++)A[r][j]-=f*A[c][j]}}
+ return A.map((r,i)=>r[k]/r[i])}
+function arFit(x,p){const X=[],y=[];for(let t=p;t<x.length;t++){X.push([1,...Array.from({length:p},(_,i)=>x[t-1-i])]);y.push(x[t])}const b=ols(X,y);
+ const fit=X.map(r=>r.reduce((s,v,i)=>s+v*b[i],0)),my=y.reduce((a,c)=>a+c,0)/y.length,ssr=y.reduce((s,v,i)=>s+(v-fit[i])**2,0),sst=y.reduce((s,v)=>s+(v-my)**2,0);return{b,r2:1-ssr/sst}}
+function quiz(id,pergunta,ops,certa,explica){return `<div class="quiz" data-q="${id}"><p>${pergunta}</p>${ops.map((o,i)=>`<button data-i="${i}">${o}</button>`).join("")}<div class="fb" hidden></div></div>`+
+ `<template data-quiz="${id}" data-certa="${certa}">${explica}</template>`}
+function ligaQuiz(){document.querySelectorAll("#tLicoes .quiz").forEach(q=>{const id=q.dataset.q,t=document.querySelector(`template[data-quiz="${id}"]`),certa=+t.dataset.certa;
+ q.querySelectorAll("button").forEach(b=>b.onclick=()=>{const ok=+b.dataset.i===certa;q.querySelectorAll("button").forEach(x=>x.classList.remove("certo","errado"));b.classList.add(ok?"certo":"errado");
+  const fb=q.querySelector(".fb");fb.hidden=false;fb.innerHTML=(ok?"<b>Isso mesmo!</b> ":"<b>Quase.</b> ")+t.innerHTML;if(ok){tDone[id]=1;tSave();tNavRender()}})})}
+const LICOES=[["l1","O que é uma série temporal"],["l2","Tendência, sazonalidade e ruído"],["l3","O passado prevê o futuro?"],["l4","Nível ou variação?"],["l5","Monte seu modelo"],["l6","Desafie os modelos"]];
+function tNavRender(){tNav.innerHTML=LICOES.map(([id,t],i)=>`<a href="#aprender" data-l="${id}" class="${tDone[id]?"feita":""}">${tDone[id]?"✓ ":""}${i+1}. ${t}</a>`).join("");
+ tNav.querySelectorAll("a").forEach(a=>a.onclick=e=>{e.preventDefault();document.getElementById("lic_"+a.dataset.l).scrollIntoView({behavior:"smooth"})})}
+function initTrilha(){
+ if(!SR){tLicoes.innerHTML='<div class="card note">Carregando os dados...</div>';setTimeout(()=>{if(SR)initTrilha()},800);return}
+ if(trilhaOk){setTimeout(desenhaTrilha,0);return}trilhaOk=true;
+ const juros=tSerie(["selic","selic_efetiva","cdi"]);
+ tLicoes.innerHTML=`
+ <div class="card licao" id="lic_l1"><span class="num">Lição 1</span><h3>O que é uma série temporal</h3>
+  <p class="txt">Uma série temporal é um mesmo número medido várias vezes, em intervalos regulares. Abaixo está a inflação (IPCA) de cada mês desde 2003. Mês a mês ela sobe e desce bastante, e isso esconde o movimento mais amplo. A <b>média móvel</b> resolve: cada ponto passa a ser a média dos últimos meses. Arraste o controle e veja o "ruído" sumir.</p>
+  <div class="ctrl"><label>Média dos últimos <input type="range" id="t1k" min="1" max="24" value="1"> <b id="t1v">1 mês</b></label></div>
+  <div class="chartbox"><canvas id="ct1"></canvas></div>
+  ${quiz("l1","Com a média de 12 meses, por que a linha fica tão mais suave?",["Porque o IBGE corrige os números antigos","Porque altas e quedas de meses diferentes se compensam na média","Porque a inflação parou de variar"],1,"Ao somar vários meses, os sobes e desces se anulam em parte, e sobra a tendência. É a mesma ideia do “IPCA acumulado em 12 meses” do noticiário.")}
+  <details><summary>Como fazer em R e Python</summary><pre class="code">R:      stats::filter(ipca, rep(1/12, 12), sides = 1)
+Python: ipca.rolling(12).mean()</pre></details></div>
+
+ <div class="card licao" id="lic_l2"><span class="num">Lição 2</span><h3>Tendência, sazonalidade e ruído</h3>
+  <p class="txt">Toda série pode ser separada em três camadas: a <b>tendência</b> (o movimento lento), a <b>sazonalidade</b> (o que se repete todo ano no mesmo mês, como os reajustes de escola em fevereiro) e o <b>ruído</b> (o que sobra: surpresas de cada mês). Ligue e desligue as camadas do IPCA.</p>
+  <div class="ctrl"><label><input type="checkbox" id="t2o" checked> IPCA original</label><label><input type="checkbox" id="t2t" checked> Tendência</label><label><input type="checkbox" id="t2s"> Sazonalidade</label><label><input type="checkbox" id="t2r"> Ruído</label></div>
+  <div class="chartbox"><canvas id="ct2"></canvas></div><p class="resultado" id="t2res"></p>
+  ${quiz("l2","Se a sazonalidade de fevereiro é a mais alta do ano, o que isso quer dizer?",["Que fevereiro de todo ano tende a ter inflação acima da média","Que a inflação vai subir para sempre a partir de fevereiro","Que fevereiro é o mês mais caro só neste ano"],0,"Sazonalidade é um padrão que se repete ano após ano no mesmo mês. Não diz nada sobre a tendência, que é a outra camada.")}
+  <details><summary>Como fazer em R e Python</summary><pre class="code">R:      plot(decompose(ts(ipca, frequency = 12)))
+Python: from statsmodels.tsa.seasonal import seasonal_decompose
+        seasonal_decompose(ipca, period=12).plot()</pre></details></div>
+
+ <div class="card licao" id="lic_l3"><span class="num">Lição 3</span><h3>O passado prevê o futuro?</h3>
+  <p class="txt">Cada ponto do gráfico é um mês: na horizontal, o valor de <i>k</i> meses antes; na vertical, o valor do mês. Se os pontos formam uma linha inclinada, o passado ajuda a prever o presente. Isso se chama <b>autocorrelação</b>, e vai de −1 a 1. Compare a inflação com a variação do dólar.</p>
+  <div class="ctrl"><label>Série <select id="t3s"><option value="ipca">IPCA</option><option value="dolar">Dólar (variação % no mês)</option></select></label><label>Comparar com <select id="t3k"><option value="1">1 mês antes</option><option value="2">2 meses antes</option><option value="12">12 meses antes</option></select></label></div>
+  <div class="chartbox"><canvas id="ct3"></canvas></div><p class="resultado" id="t3res"></p>
+  ${quiz("l3","A variação do dólar tem autocorrelação perto de zero. O que isso significa?",["Que o dólar nunca muda","Que saber quanto o dólar variou no mês passado quase não ajuda a prever o mês que vem","Que o dólar sempre sobe depois de cair"],1,"Por isso câmbio é tão difícil de prever: em boa parte, cada mês é uma surpresa nova. Já a inflação tem “memória”: um mês alto costuma ser seguido de outro alto.")}
+  <details><summary>Como fazer em R e Python</summary><pre class="code">R:      acf(ipca)          # autocorrelação em todas as defasagens
+Python: from statsmodels.graphics.tsaplots import plot_acf; plot_acf(ipca)</pre></details></div>
+
+ <div class="card licao" id="lic_l4"><span class="num">Lição 4</span><h3>Nível ou variação?</h3>
+  <p class="txt">À esquerda, a ${juros?juros.nome:"Selic"} em <b>nível</b>: passa anos subindo ou descendo, sem voltar para uma média fixa. À direita, a mesma série em <b>variação</b> mês a mês: fica oscilando em torno de zero. Modelos estatísticos funcionam melhor com séries do segundo tipo, chamadas <b>estacionárias</b>, porque o comportamento do passado vale também para o futuro. Por isso os modelos da EconoIA usam a variação de juros, câmbio e índices.</p>
+  <div class="fgrid3" style="grid-template-columns:1fr 1fr"><div><div class="chartbox"><canvas id="ct4a"></canvas></div></div><div><div class="chartbox"><canvas id="ct4b"></canvas></div></div></div>
+  ${quiz("l4","Por que um modelo erraria ao usar a Selic em nível, sem transformar?",["Porque ele suporia que os juros sempre voltam para a média do período, o que não acontece","Porque a Selic é secreta","Porque o nível da Selic é sempre zero"],0,"Em nível, a média do passado depende muito do período escolhido. Em variação, o comportamento é parecido ao longo do tempo, e o modelo aprende algo que continua valendo.")}
+  <details><summary>Como fazer em R e Python</summary><pre class="code">R:      diff(selic)                  # variação mês a mês
+        tseries::adf.test(selic)      # teste formal de estacionariedade
+Python: selic.diff()
+        from statsmodels.tsa.stattools import adfuller; adfuller(selic)</pre></details></div>
+
+ <div class="card licao" id="lic_l5"><span class="num">Lição 5</span><h3>Monte seu modelo</h3>
+  <p class="txt">Um modelo AR(p) prevê a inflação do próximo mês usando os <i>p</i> meses anteriores. Escolha <i>p</i>. A primeira medida (R²) diz o quanto o modelo explica o passado que ele já viu. A segunda é o <b>erro fora da amostra</b>: o modelo é testado nos últimos 4 anos, mês a mês, sempre sem ver o futuro. Repare: usar mais meses sempre melhora o R², mas nem sempre melhora a previsão.</p>
+  <div class="ctrl"><label>Meses do passado (p) <input type="range" id="t5p" min="1" max="12" value="1"> <b id="t5v">1</b></label></div>
+  <div class="fgrid3" style="grid-template-columns:1fr 1fr"><div><div class="chartbox"><canvas id="ct5a"></canvas></div></div><div><div class="chartbox"><canvas id="ct5b"></canvas></div></div></div>
+  <p class="resultado" id="t5res"></p>
+  ${quiz("l5","Um modelo explica muito bem o passado (R² alto), mas erra mais nas previsões novas. O nome disso é:",["Sobreajuste: ele decorou o passado em vez de aprender o padrão","Sazonalidade","Inflação inercial"],0,"Sobreajuste (overfitting) é o erro clássico. Por isso todo modelo sério é avaliado fora da amostra, como no backtest da aba VAR e SARIMA.")}
+  <details><summary>Como fazer em R e Python</summary><pre class="code">R:      ar(ipca, order.max = 12, aic = TRUE)    # escolhe p pelo AIC
+Python: from statsmodels.tsa.ar_model import ar_select_order
+        ar_select_order(ipca, maxlag=12, ic="aic").ar_lags</pre></details></div>
+
+ <div class="card licao" id="lic_l6"><span class="num">Lição 6</span><h3>Desafie os modelos</h3>
+  <p class="txt">Agora é com você. Diga quanto acha que será o IPCA de cada um dos próximos meses. Sua aposta fica guardada neste navegador e, conforme o IBGE divulgar os números, o placar mostra quem errou menos: você, o SARIMA ou o VAR.</p>
+  <div class="desafio" id="t6in"></div>
+  <div class="ctrl"><button class="btn" id="t6ok">Registrar minha previsão</button><span class="note" id="t6msg"></span></div>
+  <div class="tbl"><table id="t6tab"></table></div>
+  <p class="txt" style="margin-top:12px">Pronto para ver os modelos completos, com intervalos de incerteza, impulso-resposta e backtest? <a href="#var-sarima">Abrir VAR e SARIMA →</a></p></div>`;
+ ligaQuiz();tNavRender();
+ [t1k,t2o,t2t,t2s,t2r,t3s,t3k,t5p].forEach(el=>el.oninput=el.onchange=desenhaTrilha);
+ desafioInit();setTimeout(desenhaTrilha,0);
+}
+function desenhaTrilha(){
+ if(!SR||!window.Chart||document.getElementById("p-learn").hidden)return;
+ const ac=css("--accent"),gd=css("--gold"),rd=css("--red"),mu=css("--muted");
+ const ip=tSerie(["ipca"]);if(!ip)return;
+ const lab=ip.dados.map(r=>rotM(r[0])),v=ip.dados.map(r=>r[1]);
+ // 1
+ const k=+t1k.value;t1v.textContent=k===1?"1 mês":k+" meses";
+ tChart("ct1",{type:"line",data:{labels:lab,datasets:[{label:"IPCA no mês",data:v,borderColor:gd+"66",borderWidth:1,pointRadius:0},{label:`Média de ${k} meses`,data:mediaMovel(v,k),borderColor:rd,borderWidth:2,pointRadius:0}]},options:{...tBase(),plugins:{legend:{display:true}}}});
+ // 2: decomposição clássica (média móvel 2x12)
+ const x=v.slice(-180),l2=lab.slice(-180),n=x.length,tr=x.map((_,t)=>t>=6&&t<n-6?(0.5*x[t-6]+x.slice(t-5,t+6).reduce((a,b)=>a+b,0)+0.5*x[t+6])/12:null);
+ const mes=ip.dados.slice(-180).map(r=>+r[0].slice(5)),idx=Array(13).fill(0),cnt=Array(13).fill(0);
+ x.forEach((val,t)=>{if(tr[t]!==null){idx[mes[t]]+=val-tr[t];cnt[mes[t]]++}});
+ const sm=idx.map((s,m)=>m?s/cnt[m]:0),mm=sm.slice(1).reduce((a,b)=>a+b,0)/12,saz=mes.map(m=>sm[m]-mm),ru=x.map((val,t)=>tr[t]===null?null:val-tr[t]-saz[t]);
+ const ds2=[];if(t2o.checked)ds2.push({label:"IPCA",data:x,borderColor:mu,borderWidth:1,pointRadius:0});if(t2t.checked)ds2.push({label:"Tendência",data:tr,borderColor:rd,borderWidth:2.5,pointRadius:0});
+ if(t2s.checked)ds2.push({label:"Sazonalidade",data:saz,borderColor:ac,borderWidth:1.5,pointRadius:0});if(t2r.checked)ds2.push({label:"Ruído",data:ru,borderColor:gd,borderWidth:1,pointRadius:0});
+ tChart("ct2",{type:"line",data:{labels:l2,datasets:ds2},options:{...tBase(),plugins:{legend:{display:true}}}});
+ const ordem=sm.slice(1).map((s,i)=>[s-mm,i]).sort((a,b)=>b[0]-a[0]),ML=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+ t2res.innerHTML=`Nos últimos 15 anos, <b>${ML[ordem[0][1]]}</b> tem a maior sazonalidade (+${br(ordem[0][0],2)} p.p. acima da tendência) e <b>${ML[ordem[11][1]]}</b> a menor (${br(ordem[11][0],2)} p.p.).`;
+ // 3: autocorrelação
+ const s3=t3s.value==="ipca"?ip:tSerie(["dolar"]),kk=+t3k.value;
+ let y3=s3.dados.slice(-181).map(r=>r[1]);if(t3s.value==="dolar")y3=y3.slice(1).map((c,i)=>(c/y3[i]-1)*100);
+ const pts=y3.slice(kk).map((c,i)=>({x:y3[i],y:c})),r3=correl(pts.map(p=>p.x),pts.map(p=>p.y));
+ tChart("ct3",{type:"scatter",data:{datasets:[{data:pts,backgroundColor:ac+"99",pointRadius:3}]},options:{...tBase(),interaction:{mode:"nearest"},scales:{x:{grid:{color:css("--line")},title:{display:true,text:`${kk} ${kk===1?"mês":"meses"} antes`}},y:{grid:{color:css("--line")},title:{display:true,text:"mês atual"}}}}});
+ const forca=Math.abs(r3)>0.6?"forte":Math.abs(r3)>0.3?"moderada":"fraca";
+ t3res.innerHTML=`Autocorrelação: <b>${br(r3,2)}</b> (${forca}). ${Math.abs(r3)>0.3?"O passado ajuda a prever.":"O passado ajuda pouco a prever."}`;
+ // 4: nível x variação
+ const ju=tSerie(["selic","selic_efetiva","cdi"]);
+ if(ju){const d4=ju.dados.slice(-180),dv=d4.slice(1).map((r,i)=>r[1]-d4[i][1]);
+  tChart("ct4a",{type:"line",data:{labels:d4.map(r=>rotM(r[0])),datasets:[{data:d4.map(r=>r[1]),borderColor:rd,pointRadius:0}]},options:{...tBase(),plugins:{legend:{display:false},title:{display:true,text:ju.nome+": nível (% ao ano)"}}}});
+  tChart("ct4b",{type:"bar",data:{labels:d4.slice(1).map(r=>rotM(r[0])),datasets:[{data:dv,backgroundColor:dv.map(z=>z>=0?gd:ac)}]},options:{...tBase(),plugins:{legend:{display:false},title:{display:true,text:"variação mês a mês (p.p.)"}}}})}
+ // 5: AR(p) dentro e fora da amostra
+ if(!desenhaTrilha.ar){const xs=v.slice(-180),res=[];for(let p=1;p<=12;p++){const r2=arFit(xs,p).r2;let se=0,nn=0;
+   for(let t=xs.length-48;t<xs.length;t++){const f=arFit(xs.slice(0,t),p).b,pr=f[0]+Array.from({length:p},(_,i)=>f[i+1]*xs[t-1-i]).reduce((a,b)=>a+b,0);se+=(pr-xs[t])**2;nn++}
+   res.push({p,r2,rmse:Math.sqrt(se/nn)})}desenhaTrilha.ar=res}
+ const A=desenhaTrilha.ar,pp=+t5p.value,melhor=A.reduce((m,r)=>r.rmse<m.rmse?r:m);t5v.textContent=pp;
+ tChart("ct5a",{type:"bar",data:{labels:A.map(r=>"p="+r.p),datasets:[{data:A.map(r=>r.r2*100),backgroundColor:A.map(r=>r.p===pp?gd:gd+"44")}]},options:{...tBase(),plugins:{legend:{display:false},title:{display:true,text:"Explica o passado (R², %)"}}}});
+ tChart("ct5b",{type:"bar",data:{labels:A.map(r=>"p="+r.p),datasets:[{data:A.map(r=>r.rmse),backgroundColor:A.map(r=>r.p===pp?ac:ac+"44")}]},options:{...tBase(),plugins:{legend:{display:false},title:{display:true,text:"Erro fora da amostra (p.p., menor é melhor)"}},scales:{x:{grid:{display:false}},y:{grid:{color:css("--line")},min:Math.min(...A.map(r=>r.rmse))*0.97}}}});
+ const cur=A[pp-1];t5res.innerHTML=`Com p = ${pp}, o modelo explica <b>${br(cur.r2*100,1)}%</b> do passado e erra em média <b>${br(cur.rmse,3)} p.p.</b> por mês fora da amostra. O menor erro fora da amostra está em <b>p = ${melhor.p}</b>${pp>melhor.p?": a partir daí, mais meses não ajudam a prever.":"."}`;
+ desafioPlacar();
+}
+// lição 6: desafio guardado no navegador
+function desafioInit(){
+ const ip=tSerie(["ipca"]),prox=ip.analise.previsao.slice(0,6),salvo=(()=>{try{return JSON.parse(localStorage.getItem("desafio")||"null")}catch(e){return null}})();
+ t6in.innerHTML=prox.map((r,i)=>`<label>${rotM(r[0])} (%)<input type="number" step="0.01" id="t6_${i}" value="${salvo&&salvo.v[r[0]]!==undefined?salvo.v[r[0]]:""}" placeholder="ex.: 0,35"></label>`).join("");
+ t6ok.onclick=()=>{const v={},mods={};prox.forEach((r,i)=>{const z=parseFloat(String(document.getElementById("t6_"+i).value).replace(",","."));if(!isNaN(z))v[r[0]]=z});
+  if(!Object.keys(v).length){t6msg.textContent="Preencha pelo menos um mês.";return}
+  const sar=Object.fromEntries(ip.analise.previsao.map(r=>[r[0],r[1]]));
+  const vr=M&&M.series&&M.series.ipca?Object.fromEntries(M.series.ipca.modelos.var.previsao.map((r,i)=>[ip.analise.previsao[i]?ip.analise.previsao[i][0]:"",r[1]])):{};
+  for(const m in v){mods[m]={sarima:sar[m],var:vr[m]}}
+  try{localStorage.setItem("desafio",JSON.stringify({quando:new Date().toISOString(),v,mods}))}catch(e){}
+  tDone.l6=1;tSave();tNavRender();t6msg.textContent="Previsão registrada! Volte quando o IBGE divulgar os próximos IPCAs.";desafioPlacar()};
+}
+function desafioPlacar(){
+ const salvo=(()=>{try{return JSON.parse(localStorage.getItem("desafio")||"null")}catch(e){return null}})(),ip=tSerie(["ipca"]);
+ if(!salvo||!ip){t6tab.innerHTML="";return}
+ const real=Object.fromEntries(ip.dados.map(r=>[r[0],r[1]])),meses=Object.keys(salvo.v).sort();
+ let err={voce:[],sarima:[],var:[]};
+ const linhas=meses.map(m=>{const rv=real[m],mo=salvo.mods[m]||{};if(rv!==undefined){err.voce.push(Math.abs(salvo.v[m]-rv));if(mo.sarima!==undefined)err.sarima.push(Math.abs(mo.sarima-rv));if(mo.var!==undefined)err.var.push(Math.abs(mo.var-rv))}
+  const f=z=>z===undefined?"—":br(z,2);return `<tr><td>${rotM(m)}</td><td>${f(salvo.v[m])}</td><td>${f(mo.sarima)}</td><td>${f(mo.var)}</td><td>${rv===undefined?'<span class="note">aguardando IBGE</span>':"<b>"+br(rv,2)+"</b>"}</td></tr>`}).join("");
+ const med=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null,mv=med(err.voce),ms=med(err.sarima),mr=med(err.var);
+ const placar=mv===null?"":`<tr><td><b>Erro médio</b></td><td><b>${br(mv,2)}</b></td><td>${ms===null?"—":br(ms,2)}</td><td>${mr===null?"—":br(mr,2)}</td><td>${[["Você",mv],["SARIMA",ms],["VAR",mr]].filter(z=>z[1]!==null).sort((a,b)=>a[1]-b[1])[0][0]} venceu até agora</td></tr>`;
+ t6tab.innerHTML=`<tr><th>Mês</th><th>Você</th><th>SARIMA</th><th>VAR</th><th>Real</th></tr>${linhas}${placar}`;
+}
+
 loadSeries();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>drawFuturo());
-new MutationObserver(()=>drawFuturo()).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+new MutationObserver(()=>{drawFuturo();desenhaTrilha()}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>drawPrev());
 new MutationObserver(()=>drawPrev()).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
@@ -1025,7 +1200,7 @@ document.getElementById("plRow").onclick=()=>plJ&&plJ.insertRow();
 document.getElementById("plCsv").onclick=()=>{if(!plJ)return;const csv=plAoa().map(r=>r.map(c=>{c=String(c??"");return/[";\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(";")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"}));a.download="econoia-"+document.getElementById("plSet").value+".csv";a.click()};
 document.getElementById("plXlsx").onclick=async()=>{if(!plJ)return;try{if(!window.XLSX)await loadJs("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js");const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(plAoa(true)),"EconoIA");XLSX.writeFile(wb,"econoia-"+document.getElementById("plSet").value+".xlsx")}catch(e){alert("Não consegui gerar o arquivo. Tente o .csv.")}};
 // Cada seção tem sua própria área: econoia.com.br/#r, /#graficos...
-const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],"var-sarima":["prev","VAR e SARIMA"],previsoes:["prev","VAR e SARIMA"],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"]};
+const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],"var-sarima":["prev","VAR e SARIMA"],aprender:["learn","Aprenda séries temporais"],previsoes:["prev","VAR e SARIMA"],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"]};
 const SLUG={};for(const k in AREAS)if(!SLUG[AREAS[k][0]])SLUG[AREAS[k][0]]=k;
 document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;if(SLUG[g])location.hash=SLUG[g]};
 document.querySelectorAll(".tn-links a[data-go]").forEach(a=>a.onclick=e=>{e.preventDefault();location.hash=SLUG[a.dataset.go]||""});
@@ -1034,9 +1209,9 @@ function route(){
  const a=AREAS[location.hash.slice(1)];
  document.querySelectorAll(".solo-on").forEach(x=>x.classList.remove("solo-on"));
  document.querySelectorAll(".quick button").forEach(b=>b.classList.toggle("on",!!a&&b.dataset.go===a[0]));
- if(!a){document.getElementById("p-plan").hidden=true;document.body.classList.remove("solo");document.title="EconoIA Brasil";return}
+ if(!a){document.getElementById("p-plan").hidden=true;document.getElementById("p-learn").hidden=true;document.body.classList.remove("solo");document.title="EconoIA Brasil";return}
  const g=a[0],el=document.getElementById("p-"+g);
- if(tabs.some(t=>t.dataset.p===g))show(g);document.getElementById("p-plan").hidden=g!=="plan";if(g==="plan")initPlan();
+ if(tabs.some(t=>t.dataset.p===g))show(g);document.getElementById("p-plan").hidden=g!=="plan";document.getElementById("p-learn").hidden=g!=="learn";if(g==="learn")initTrilha();if(g==="plan")initPlan();
  (g==="ia"?el.closest(".hrow"):el).classList.add("solo-on");
  document.getElementById("soloT").textContent=a[1];
  document.body.classList.add("solo");document.title=(a[1]||document.querySelector(".quick button.on").textContent)+" · EconoIA";

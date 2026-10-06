@@ -3,7 +3,7 @@
 // rápido e funcionar offline. Já os dados ao vivo e as chamadas de IA vão
 // SEMPRE à rede primeiro (nunca servir economia/IA desatualizada do cache).
 
-const CACHE = "econoia-v8";
+const CACHE = "econoia-v9";
 
 // Arquivos da casca do app que valem guardar para abrir offline.
 const SHELL = [
