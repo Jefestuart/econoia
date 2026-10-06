@@ -56,6 +56,13 @@ input,select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1
 .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px}
 .result{font-family:var(--mono);font-size:1.4rem;font-variant-numeric:tabular-nums}
 .note{font-size:.82rem;color:var(--muted)}
+.prev-res{display:flex;flex-wrap:wrap;gap:8px 20px;margin:10px 0 12px}
+.prev-res div{display:flex;flex-direction:column}
+.prev-res b{font-family:var(--display);font-size:1.5rem;font-variant-numeric:tabular-nums}
+.prev-res span{font-size:.78rem;color:var(--muted)}
+.prev-win{color:var(--accent)}.prev-lose{color:var(--red)}
+details.metodo{margin-top:12px;font-size:.88rem}details.metodo summary{cursor:pointer;font-weight:600}
+details.metodo p{color:var(--muted);margin:.5em 0}
 .btn{font:600 .95rem var(--body);background:var(--accent);color:var(--bg);border:0;border-radius:8px;padding:10px 16px;cursor:pointer}
 .btn:disabled{opacity:.5;cursor:default}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -208,6 +215,7 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
   <button data-go="cr">Ouro e Cripto</button>
   <button data-go="fund">Fundamentos</button>
   <button data-go="graf">Gráficos</button>
+  <button data-go="prev">Previsões</button>
   <button data-go="sim">Simuladores</button>
   <button data-go="plan">Planilha</button>
 </div>
@@ -294,6 +302,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   <button role="tab" id="t-sim" aria-selected="false" data-p="sim">Simuladores</button>
   <button role="tab" id="t-r" aria-selected="false" data-p="r">Laboratório R</button>
   <button role="tab" id="t-dados" aria-selected="false" data-p="dados">Tabelas</button>
+  <button role="tab" id="t-prev" aria-selected="false" data-p="prev">Previsões</button>
 </nav>
 
 <section id="p-graf" class="grid2">
@@ -409,6 +418,22 @@ summary(modelo)   # a Selic explica a inflação?</pre>
     <div class="msg a" id="rexpt" hidden style="max-width:100%;margin-top:10px"></div></div>
   <p class="note">Novo: o código roda aqui mesmo, no seu navegador (webR), e os pacotes como o ggplot2 são instalados sozinhos. Você pode editar o código antes de rodar. Na primeira vez o R leva alguns segundos para carregar.</p>
   <p class="note" id="rmsg">No Colab, se abrir em Python, vá em Ambiente de execução → Alterar tipo → R. Pacotes extras: o código instala o ggplot2 sozinho se faltar.</p>
+</section>
+<section id="p-prev" hidden>
+  <div class="card" style="margin-bottom:12px"><h3>Previsões de inflação</h3>
+   <p class="src">Modelo econométrico próprio da EconoIA, reestimado todo dia com o histórico completo do Banco Central. Abaixo de cada previsão, o <b>backtest</b>: quanto o modelo teria errado nos últimos anos, comparado com previsões ingênuas.</p>
+   <p class="note" id="prevInfo">Carregando modelos...</p>
+  </div>
+  <div class="grid2" id="prevGrid"></div>
+  <div class="card" style="margin-top:12px">
+   <details class="metodo"><summary>Como o modelo funciona</summary>
+    <p><b>Modelo.</b> AR(p) com sazonalidade: a inflação do mês depende das inflações dos p meses anteriores e de um efeito fixo de cada mês do ano (janeiro e fevereiro costumam ter reajustes de escola e transporte, por exemplo). A ordem p é escolhida pelo critério de Akaike (AIC), e os coeficientes são estimados por mínimos quadrados ordinários, com amostra desde jan/2003.</p>
+    <p><b>Intervalos.</b> A faixa escura cobre 80% dos cenários e a clara, 95%. Eles vêm de 2.000 simulações em que os choques futuros são sorteados entre os erros que o modelo já cometeu (bootstrap), sem supor distribuição normal.</p>
+    <p><b>Backtest.</b> Para cada um dos últimos 48 meses, o modelo é reestimado só com os dados que existiam naquela data e prevê os 12 meses seguintes. Os erros são comparados com dois concorrentes ingênuos: repetir o último mês e repetir o mesmo mês do ano anterior. "Ganho" positivo significa que o modelo errou menos que o melhor deles (raiz do erro quadrático médio). A cobertura mostra em quantos casos o valor real caiu dentro da faixa de 80%: perto de 80% indica intervalos bem calibrados.</p>
+    <p><b>Limites.</b> É um modelo só com o passado da própria série: não enxerga câmbio, juros, choques de commodities nem decisões de governo. Por isso a comparação com a mediana do mercado (Focus/BCB) é mostrada lado a lado. Não é recomendação de investimento.</p>
+    <p>Código aberto: <a href="https://github.com/Jefestuart/econoia/blob/main/scripts/modelos.py" target="_blank" rel="noopener">scripts/modelos.py</a>, com testes em <a href="https://github.com/Jefestuart/econoia/blob/main/tests/test_modelos.py" target="_blank" rel="noopener">tests/test_modelos.py</a>.</p>
+   </details>
+  </div>
 </section>
 <section id="p-dados" class="grid2" hidden>
   <div class="card"><h3>Selic · Copom</h3><div class="tbl"><table id="tbS"></table></div></div>
@@ -549,7 +574,7 @@ setInterval(boot,5*60*1000);
 function main(){
 // tabs
 const tabs=[...document.querySelectorAll("nav button")];
-function show(p){tabs.forEach(t=>{const on=t.dataset.p===p;t.setAttribute("aria-selected",on);document.getElementById("p-"+t.dataset.p).hidden=!on});try{localStorage.setItem("tab",p)}catch(e){}}
+function show(p){if(p==="prev")setTimeout(()=>window.drawPrev&&drawPrev(),0);tabs.forEach(t=>{const on=t.dataset.p===p;t.setAttribute("aria-selected",on);document.getElementById("p-"+t.dataset.p).hidden=!on});try{localStorage.setItem("tab",p)}catch(e){}}
 tabs.forEach(t=>t.onclick=()=>show(t.dataset.p));
 let saved=(()=>{try{return localStorage.getItem("tab")}catch(e){return null}})();if(saved&&tabs.some(t=>t.dataset.p===saved))show(saved);
 
@@ -569,6 +594,53 @@ function draw(){
  charts.push(new Chart(cPibA,{type:"bar",data:{labels:D.pibA.map(r=>r[0]),datasets:[{data:D.pibA.map(r=>r[1]),backgroundColor:gd}]},options:base}));
 }
 draw();
+// ---------- previsões econométricas (data/modelos.json, gerado por scripts/modelos.py) ----------
+let M=null,prevCharts=[];
+const sinal=v=>(v>0?"+":"")+br(v,1);
+async function loadModelos(){
+ try{const r=await fetch("data/modelos.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;M=await r.json()}
+ catch(e){prevInfo.textContent="Previsões indisponíveis no momento.";return}
+ const quando=new Date(M.atualizado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});
+ prevInfo.textContent="Modelos reestimados em "+quando+".";
+ prevGrid.innerHTML=M.series.map(s=>{const a=s.acumulado_12m,b=s.backtest,g=b.acumulado_12m.ganho_pct,h1=b.rmse_mensal["1"];
+  const foc=s.id==="ipca"&&M.focus_ipca_12m?`<div><b>${br(M.focus_ipca_12m.mediana,1)}%</b><span>mercado (Focus/BCB)</span></div>`:"";
+  return `<div class="card"><h3>${s.nome} · próximos 12 meses</h3>
+  <p class="src">${s.modelo} · ${s.observacoes} meses (${s.inicio_amostra} a ${s.ultimo_dado}) · ${s.fonte}</p>
+  <div class="prev-res"><div><b>${br(a.previsto,1)}%</b><span>acumulado previsto</span></div>
+   <div><b style="font-size:1.1rem">${br(a.lo80,1)} a ${br(a.hi80,1)}%</b><span>faixa de 80%</span></div>
+   <div><b style="font-size:1.1rem">${br(a.ultimos_12,1)}%</b><span>últimos 12 meses</span></div>${foc}</div>
+  <div class="chartbox"><canvas id="cPrev_${s.id}" aria-label="Histórico e previsão mensal do ${s.nome}"></canvas></div>
+  <div class="tbl" style="margin-top:10px"><table><tr><th>Backtest (${b.origens} previsões, ${b.periodo})</th><th>Modelo</th><th>Melhor ingênuo</th><th>Ganho</th></tr>
+   ${["1","3","12"].map(hz=>{const r=b.rmse_mensal[hz];return `<tr><td>Erro mensal, ${hz} ${hz==="1"?"mês":"meses"} à frente (p.p.)</td><td>${br(r.modelo,2)}</td><td>${br(Math.min(r.ingenuo,r.sazonal),2)}</td><td class="${r.ganho_pct>0?"prev-win":"prev-lose"}">${sinal(r.ganho_pct)}%</td></tr>`}).join("")}
+   <tr><td>Erro no acumulado de 12 meses (p.p.)</td><td>${br(b.acumulado_12m.modelo,2)}</td><td>${br(b.acumulado_12m.ingenuo,2)}</td><td class="${g>0?"prev-win":"prev-lose"}">${sinal(g)}%</td></tr>
+   <tr><td>Real dentro da faixa de 80% (mês seguinte / 12 meses)</td><td colspan="3">${br(b.cobertura_80.mes_seguinte,0)}% / ${br(b.cobertura_80.acumulado_12m,0)}%</td></tr>
+  </table></div></div>`}).join("");
+ if(!document.getElementById("p-prev").hidden)drawPrev();
+}
+window.drawPrev=function(){
+ prevCharts.forEach(c=>c.destroy());prevCharts=[];
+ if(!M||!window.Chart)return;
+ const ac=css("--accent"),gd=css("--gold"),ln=css("--line");
+ for(const s of M.series){
+  const el=document.getElementById("cPrev_"+s.id);if(!el)continue;
+  const hist=s.historico.slice(-24),pv=s.previsao,nH=hist.length;
+  const labels=[...hist.map(r=>r[0]),...pv.map(r=>r[0])];
+  const pad=a=>[...Array(nH-1).fill(null),hist[nH-1][1],...a];
+  const ds=[
+   {label:"95% (sup.)",data:pad(pv.map(r=>r[5])),borderWidth:0,pointRadius:0,backgroundColor:ac+"18",fill:"+1"},
+   {label:"95% (inf.)",data:pad(pv.map(r=>r[4])),borderWidth:0,pointRadius:0,fill:false},
+   {label:"80% (sup.)",data:pad(pv.map(r=>r[3])),borderWidth:0,pointRadius:0,backgroundColor:ac+"38",fill:"+1"},
+   {label:"80% (inf.)",data:pad(pv.map(r=>r[2])),borderWidth:0,pointRadius:0,fill:false},
+   {label:"Previsão",data:pad(pv.map(r=>r[1])),borderColor:ac,borderDash:[5,4],pointRadius:2,tension:.2,fill:false},
+   {label:"Realizado",data:[...hist.map(r=>r[1]),...pv.map(()=>null)],borderColor:gd,pointRadius:2,tension:.2,fill:false}];
+  prevCharts.push(new Chart(el,{type:"line",data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+   plugins:{legend:{display:true,labels:{filter:i=>i.text==="Previsão"||i.text==="Realizado"}},tooltip:{filter:i=>i.raw!==null,callbacks:{label:i=>`${i.dataset.label}: ${br(i.raw,2)}%`}}},
+   scales:{x:{grid:{display:false}},y:{grid:{color:ln},title:{display:true,text:"% ao mês"}}}}}));
+ }
+};
+loadModelos();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>drawPrev());
+new MutationObserver(()=>drawPrev()).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
@@ -727,7 +799,7 @@ document.getElementById("plRow").onclick=()=>plJ&&plJ.insertRow();
 document.getElementById("plCsv").onclick=()=>{if(!plJ)return;const csv=plAoa().map(r=>r.map(c=>{c=String(c??"");return/[";\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(";")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"}));a.download="econoia-"+document.getElementById("plSet").value+".csv";a.click()};
 document.getElementById("plXlsx").onclick=async()=>{if(!plJ)return;try{if(!window.XLSX)await loadJs("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js");const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(plAoa(true)),"EconoIA");XLSX.writeFile(wb,"econoia-"+document.getElementById("plSet").value+".xlsx")}catch(e){alert("Não consegui gerar o arquivo. Tente o .csv.")}};
 // Cada seção tem sua própria área: econoia.com.br/#r, /#graficos...
-const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"]};
+const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],previsoes:["prev","Previsões de inflação"],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"]};
 const SLUG={};for(const k in AREAS)SLUG[AREAS[k][0]]=k;
 document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;if(SLUG[g])location.hash=SLUG[g]};
 document.querySelectorAll(".tn-links a[data-go]").forEach(a=>a.onclick=e=>{e.preventDefault();location.hash=SLUG[a.dataset.go]||""});

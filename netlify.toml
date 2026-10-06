@@ -15,6 +15,12 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/data/modelos.json"
+  to = "https://raw.githubusercontent.com/Jefestuart/econoia/main/data/modelos.json"
+  status = 200
+  force = true
+
 [[headers]]
   for = "/*"
   [headers.values]
