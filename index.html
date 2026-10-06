@@ -275,7 +275,7 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
 .inst{max-width:78ch;margin-inline:auto;width:100%;padding:24px clamp(16px,4vw,36px)}
 .inst h2{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,5vw,2.2rem);margin:0 0 8px}
 .inst h3{font-family:var(--display);font-weight:600;font-size:1.2rem;margin:26px 0 6px;color:var(--accent)}
-.inst p{margin:0 0 10px}.inst .lead{font-size:1.1rem;color:var(--fg)}.inst dd{margin-bottom:6px}
+.inst p{margin:0 0 10px}.inst ul{margin:0 0 10px;padding-left:20px}.inst li{margin-bottom:6px}.inst .lead{font-size:1.1rem;color:var(--fg)}.inst dd{margin-bottom:6px}
 .bf-aviso a{color:inherit;text-decoration:underline}
 </style>
 </head><body>
@@ -657,8 +657,16 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   <h3>Como os modelos são desenvolvidos</h3>
   <p>Os modelos de previsão (SARIMA e VAR) são estimados com dados oficiais do Banco Central, escolhidos por critérios estatísticos objetivos e avaliados fora da amostra contra previsões ingênuas. Quando um modelo não supera uma regra simples, o site mostra isso. Os detalhes estão na <a class="mlink" href="#metodologia">Metodologia</a>.</p>
 
-  <h3>Quem revisa</h3>
-  <p>Hoje o EconoIA é mantido por uma só pessoa. Códigos, modelos e textos são escritos e revisados por mim, com auxílio de ferramentas de inteligência artificial no desenvolvimento do código. Não há revisão por pares externa. Por isso o site mostra as fórmulas, as fontes e os testes de cada modelo: qualquer pessoa pode conferir o que está sendo feito. Se encontrar um erro, a correção é bem-vinda.</p>
+  <h3>Quem revisa e como o projeto se mantém</h3>
+  <p>Hoje o EconoIA é mantido por uma só pessoa. Códigos, modelos e textos são escritos e revisados por mim, com auxílio de ferramentas de inteligência artificial no desenvolvimento do código. Não há revisão por pares externa, e por isso a transparência é parte do projeto:</p>
+  <ul>
+    <li><b>Gratuito.</b> Todo o site é de uso livre, sem cadastro, sem anúncios e sem venda de dados. Ele roda em serviços com planos gratuitos, inclusive a IA.</li>
+    <li><b>Código-fonte público.</b> O código do site, dos robôs que buscam os dados e dos modelos de previsão está publicado no <a class="mlink" href="https://github.com/Jefestuart/econoia" target="_blank" rel="noopener">GitHub</a>. Qualquer pessoa pode ler como cada número é calculado, conferir as fórmulas e apontar erros.</li>
+    <li><b>Contas à mostra.</b> As fórmulas, as fontes e os testes de cada modelo aparecem no próprio site, inclusive quando o modelo perde para uma previsão simples.</li>
+  </ul>
+
+  <h3>Contato</h3>
+  <p>Encontrou um erro, tem uma sugestão ou quer falar sobre o projeto? Escreva para <a class="mlink" href="mailto:contato@econoia.com.br">contato@econoia.com.br</a>.</p>
 
   <p class="note">© JesseCorp 2026 · EconoIA Brasil.</p>
 </section>
@@ -695,7 +703,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   <p>O código em R roda no seu próprio navegador (webR), sem passar por um servidor do EconoIA. Os resultados são os mesmos de uma instalação comum do R, com os pacotes disponíveis na versão para navegador.</p>
 
   <h3>7. Correções</h3>
-  <p>Quando um erro é identificado em dados, cálculos ou textos, ele é corrigido no código-fonte e a correção entra no ar na próxima atualização.</p>
+  <p>Quando um erro é identificado em dados, cálculos ou textos, ele é corrigido no código-fonte, que é público no <a class="mlink" href="https://github.com/Jefestuart/econoia" target="_blank" rel="noopener">GitHub</a>, e a correção entra no ar na próxima atualização. Para reportar um erro, escreva para <a class="mlink" href="mailto:contato@econoia.com.br">contato@econoia.com.br</a>.</p>
 </section>
 
 <section id="p-termos" class="card inst" hidden>
@@ -734,6 +742,9 @@ summary(modelo)   # a Selic explica a inflação?</pre>
 
   <h3>11. Lei aplicável</h3>
   <p>Estes termos são regidos pelas leis da República Federativa do Brasil, incluindo o Código de Defesa do Consumidor e a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), quando aplicáveis.</p>
+
+  <h3>12. Contato</h3>
+  <p>Dúvidas sobre estes termos podem ser enviadas para <a class="mlink" href="mailto:contato@econoia.com.br">contato@econoia.com.br</a>.</p>
 </section>
 
 <section id="p-legal" class="card inst" hidden>
@@ -762,7 +773,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   <p>Esta política explica quais dados são tratados quando você usa o EconoIA, de acordo com a Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018). Em resumo: <b>não pedimos cadastro, não usamos cookies de rastreamento, não exibimos anúncios e não vendemos dados.</b></p>
 
   <h3>1. Responsável</h3>
-  <p>O EconoIA é mantido por Jessé Santos, pessoa física, que é o responsável pelo tratamento dos dados descritos aqui.</p>
+  <p>O EconoIA é mantido por Jessé Santos, pessoa física, que é o responsável pelo tratamento dos dados descritos aqui. Contato: <a class="mlink" href="mailto:contato@econoia.com.br">contato@econoia.com.br</a>.</p>
 
   <h3>2. Dados que não coletamos</h3>
   <p>O site não tem login nem formulário de cadastro. Não pedimos nome, e-mail, CPF ou telefone, e não usamos ferramentas de análise de audiência nem publicidade que rastreiem você entre sites.</p>
@@ -783,7 +794,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   <p>Os dados descritos acima são compartilhados apenas com os prestadores necessários para o funcionamento do site (hospedagem e inteligência artificial). Não vendemos nem alugamos dados a ninguém.</p>
 
   <h3>8. Seus direitos</h3>
-  <p>A LGPD garante a você, entre outros, os direitos de confirmar se há tratamento de dados, acessar, corrigir e pedir a eliminação deles. Como o EconoIA não mantém cadastro nem histórico identificável, na maior parte dos casos não há dados pessoais guardados a seu respeito. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).</p>
+  <p>A LGPD garante a você, entre outros, os direitos de confirmar se há tratamento de dados, acessar, corrigir e pedir a eliminação deles. Como o EconoIA não mantém cadastro nem histórico identificável, na maior parte dos casos não há dados pessoais guardados a seu respeito. Para exercer qualquer desses direitos ou tirar dúvidas sobre privacidade, escreva para <a class="mlink" href="mailto:contato@econoia.com.br">contato@econoia.com.br</a>. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).</p>
 
   <h3>9. Alterações</h3>
   <p>Esta política pode mudar quando o site ganhar novos recursos. A data da última atualização aparece no início da página.</p>
@@ -816,7 +827,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   </div>
   <div class="bf-bot">
    <div class="bf-legal"><a href="#termos" id="avisoBtn">Termos de uso</a><a href="#aviso-legal">Aviso legal</a><a href="#metodologia">Metodologia</a><a href="#privacidade">Privacidade</a></div>
-   <div class="bf-right"><div class="bf-legal"><a href="#sobre">Sobre</a><a data-go="ia">Ajuda</a></div><p>© JesseCorp 2026 · EconoIA Brasil. Todos os direitos reservados.</p></div>
+   <div class="bf-right"><div class="bf-legal"><a href="#sobre">Sobre</a><a data-go="ia">Ajuda</a><a href="mailto:contato@econoia.com.br">Contato</a></div><p>© JesseCorp 2026 · EconoIA Brasil. Todos os direitos reservados.</p></div>
   </div>
   <p class="bf-aviso" id="aviso">As informações deste site têm caráter informativo e educacional e não constituem recomendação de investimento. Os dados vêm de fontes públicas e podem ter atraso. Veja o <a href="#aviso-legal">Aviso legal</a> e a <a href="#privacidade">Política de privacidade</a>.</p>
  </div>
