@@ -9,7 +9,7 @@ const FONTES = [
 const MAX_ITENS = 8;
 
 const ent = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
-function limpa(s = "") {
+export function limpa(s = "") {
   return s
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
     .replace(/<[^>]+>/g, "")
@@ -19,7 +19,7 @@ function limpa(s = "") {
     .replace(/\s+/g, " ")
     .trim();
 }
-const tag = (xml, t) => { const m = xml.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`, "i")); return m ? limpa(m[1]) : ""; };
+export const tag = (xml, t) => { const m = xml.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`, "i")); return m ? limpa(m[1]) : ""; };
 
 async function lerFonte({ nome, url }) {
   const ctl = new AbortController();

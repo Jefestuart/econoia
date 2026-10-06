@@ -1,10 +1,21 @@
 // Chat da EconoIA: recebe a conversa do site e pergunta ao Gemini.
 // A chave fica escondida aqui no servidor (variável GEMINI_API_KEY no Cloudflare).
 // Se um modelo estiver lotado ou aposentado, tenta o próximo da lista automaticamente.
+import { origemPermitida, ipDe, dentroDoLimite } from "../_lib/protecao.js";
+
 const MODELOS = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.8-flash-lite", "gemini-flash-lite-latest"];
 const PRAZO_TOTAL_MS = 22000;
 
 export async function onRequestPost({ request: req, env }) {
+  if (!origemPermitida(req)) return json({ error: "Pedido recusado: use o chat pelo site da EconoIA." }, 403);
+  const limite = await dentroDoLimite(ipDe(req));
+  if (!limite.ok) {
+    const msg = limite.limite === "minuto"
+      ? `Muitas perguntas seguidas. Espere ${limite.tenteEmSeg} segundos e tente de novo.`
+      : "Você atingiu o limite de perguntas de hoje. Volte amanhã!";
+    return json({ error: msg, retry: false }, 429, { "Retry-After": String(limite.tenteEmSeg) });
+  }
+
   const key = env.GEMINI_API_KEY;
   if (!key) return json({ error: "Chave do Gemini não configurada no Cloudflare (GEMINI_API_KEY)." }, 500);
   const models = [...new Set([env.GEMINI_MODEL, ...MODELOS].filter(Boolean))];
@@ -12,6 +23,8 @@ export async function onRequestPost({ request: req, env }) {
   let body;
   try { body = await req.json(); } catch { return json({ error: "Pedido inválido." }, 400); }
   const system = String(body.system || "").slice(0, 20000);
+  // O contexto precisa ser o da EconoIA: impede usar o chat como IA genérica por fora do site.
+  if (!system.startsWith("Você é a EconoIA")) return json({ error: "Pedido inválido." }, 400);
   const turns = (Array.isArray(body.turns) ? body.turns : []).slice(-12)
     .map(t => ({ role: t.role === "assistant" ? "model" : "user", parts: [{ text: String(t.content || "").slice(0, 4000) }] }));
   if (!turns.length || turns[turns.length - 1].role !== "user") return json({ error: "Faça uma pergunta." }, 400);
@@ -61,5 +74,6 @@ export async function onRequestPost({ request: req, env }) {
   return json({ error: amigavel, detalhe: ultimaMsg, retry: ultimoStatus === 429 || ultimoStatus >= 500 }, 503);
 }
 
-const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "Content-Type": "application/json" } });
+const json = (o, status = 200, extra = {}) =>
+  new Response(JSON.stringify(o), { status, headers: { "Content-Type": "application/json", ...extra } });
 

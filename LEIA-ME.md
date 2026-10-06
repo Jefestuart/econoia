@@ -1,5 +1,7 @@
 # EconoIA Brasil
 
+![Testes](https://github.com/Jefestuart/econoia/actions/workflows/testes.yml/badge.svg)
+
 Laboratório de Economia, Dados e IA do Brasil — https://econoia.com.br
 
 ## Como funciona
