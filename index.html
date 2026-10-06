@@ -1203,7 +1203,13 @@ document.getElementById("plXlsx").onclick=async()=>{if(!plJ)return;try{if(!windo
 // Cada seção tem sua própria área: econoia.com.br/#r, /#graficos...
 const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],"var-sarima":["prev","VAR e SARIMA"],aprender:["learn","Aprenda séries temporais"],"prever-o-futuro":["futuro","Prever o futuro"],previsoes:["prev","VAR e SARIMA"],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"]};
 const SLUG={};for(const k in AREAS)if(!SLUG[AREAS[k][0]])SLUG[AREAS[k][0]]=k;
-document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;if(SLUG[g])location.hash=SLUG[g]};
+// "Pergunte à IA" não abre página isolada: volta à página inicial e leva à caixa do chat
+function irParaChat(){
+ if(location.hash){history.pushState("",document.title,location.pathname);route()}
+ const q=document.getElementById("q");
+ requestAnimationFrame(()=>{q.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>q.focus({preventScroll:true}),350)});
+}
+document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;if(g==="ia"){irParaChat();return}if(SLUG[g])location.hash=SLUG[g]};
 document.querySelectorAll(".tn-links a[data-go]").forEach(a=>a.onclick=e=>{e.preventDefault();location.hash=SLUG[a.dataset.go]||""});
 document.getElementById("soloBack").onclick=e=>{e.preventDefault();history.pushState("",document.title,location.pathname);route()};
 function route(){
