@@ -171,6 +171,17 @@ body{margin:0}
 .rout{margin-top:14px}#rtxt{max-height:320px;white-space:pre-wrap}
 #rimg canvas{display:block;max-width:100%;height:auto;margin-top:10px;border-radius:8px;background:#fff}
 #rcode[contenteditable]:focus{outline:2px solid var(--accent)}
+
+/* Áreas próprias (#r, #graficos...) */
+.solobar{display:none;align-items:center;gap:14px;flex-wrap:wrap}
+.solobar a{color:var(--accent);font-weight:600;text-decoration:none}
+.solobar h2{margin:0;font-size:1.5rem}
+body.solo .solobar{display:flex}
+body.solo .wrap>*:not(.topnav):not(.quick):not(.solobar):not(.solo-on){display:none!important}
+body.solo .hrow.solo-on header,body.solo .hrow.solo-on .side{display:none!important}
+body.solo .hrow.solo-on .hleft{width:100%;max-width:none}
+.quick button.on{background:var(--accent);color:#000}
+body.solo .quick button:first-child:not(.on){background:var(--surface);color:var(--fg)}
 </style>
 </head><body>
 
@@ -195,6 +206,7 @@ body{margin:0}
   <button data-go="graf">Gráficos</button>
   <button data-go="sim">Simuladores</button>
 </div>
+<div class="solobar"><a href="#" id="soloBack">← Página inicial</a><h2 id="soloT"></h2></div>
 <div class="hrow">
 <div class="hleft">
 <header>
@@ -515,7 +527,7 @@ function main(){
 const tabs=[...document.querySelectorAll("nav button")];
 function show(p){tabs.forEach(t=>{const on=t.dataset.p===p;t.setAttribute("aria-selected",on);document.getElementById("p-"+t.dataset.p).hidden=!on});try{localStorage.setItem("tab",p)}catch(e){}}
 tabs.forEach(t=>t.onclick=()=>show(t.dataset.p));
-let saved=location.hash.slice(1)||(()=>{try{return localStorage.getItem("tab")}catch(e){return null}})();if(saved&&tabs.some(t=>t.dataset.p===saved))show(saved);
+let saved=(()=>{try{return localStorage.getItem("tab")}catch(e){return null}})();if(saved&&tabs.some(t=>t.dataset.p===saved))show(saved);
 
 // charts
 let charts=[];
@@ -660,12 +672,26 @@ function fxc(){const [c,n,,v]=FX[fxm.value];const unit=c==="JPY"?100:c==="ARS"?1
 // atalhos
 document.addEventListener("click",e=>{const b=e.target.closest("button.go");if(!b)return;document.querySelector(".quick").onclick({target:b})});
 document.querySelector(".bf").addEventListener("click",e=>{const a=e.target.closest("a[data-go]");if(!a)return;e.preventDefault();document.querySelector(".quick").onclick({target:document.querySelector(`.quick button[data-go="${a.dataset.go}"]`)||a})});
-document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;
- if(g==="fund"){document.getElementById("p-fund").scrollIntoView({behavior:"smooth"});return}
- if(g==="cr"){document.getElementById("p-cr").scrollIntoView({behavior:"smooth"});return}
- if(g==="fx"){document.getElementById("p-fx").scrollIntoView({behavior:"smooth"});return}
- if(g==="ia"){document.getElementById("p-ia").scrollIntoView({behavior:"smooth"});setTimeout(()=>q.focus({preventScroll:true}),400);return}
- show(g);const t=document.querySelector("nav[role=tablist]");scrollTo({top:t.getBoundingClientRect().top+scrollY-90,behavior:"smooth"})};
+// Cada seção tem sua própria área: econoia.com.br/#r, /#graficos...
+const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"]};
+const SLUG={};for(const k in AREAS)SLUG[AREAS[k][0]]=k;
+document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;if(SLUG[g])location.hash=SLUG[g]};
+document.querySelectorAll(".tn-links a[data-go]").forEach(a=>a.onclick=e=>{e.preventDefault();location.hash=SLUG[a.dataset.go]||""});
+document.getElementById("soloBack").onclick=e=>{e.preventDefault();history.pushState("",document.title,location.pathname);route()};
+function route(){
+ const a=AREAS[location.hash.slice(1)];
+ document.querySelectorAll(".solo-on").forEach(x=>x.classList.remove("solo-on"));
+ document.querySelectorAll(".quick button").forEach(b=>b.classList.toggle("on",!!a&&b.dataset.go===a[0]));
+ if(!a){document.body.classList.remove("solo");document.title="EconoIA Brasil";return}
+ const g=a[0],el=document.getElementById("p-"+g);
+ if(tabs.some(t=>t.dataset.p===g))show(g);
+ (g==="ia"?el.closest(".hrow"):el).classList.add("solo-on");
+ document.getElementById("soloT").textContent=a[1];
+ document.body.classList.add("solo");document.title=(a[1]||document.querySelector(".quick button.on").textContent)+" · EconoIA";
+ scrollTo({top:0});window.dispatchEvent(new Event("resize"));
+ if(g==="ia")setTimeout(()=>q.focus({preventScroll:true}),300);
+}
+addEventListener("hashchange",route);route();
 // IA
 let ctx;function mkctx(){ctx=`Você é a EconoIA, assistente de economia brasileira. Responda em português do Brasil, de forma clara e didática, em até 3 parágrafos curtos, sem markdown. Use os dados abaixo quando relevante e diga quando algo não está nos dados. Não dê recomendação de investimento personalizada. Se pedirem código, escreva em R (ou Python se pedirem), com os dados como vetores, e explique cada parte em poucas linhas.
 DADOS (atualizados em ${UPD}):
