@@ -76,8 +76,8 @@ CATALOGO = [
      "descricao": "Salário mínimo corrigido pela inflação, em reais de hoje (Ipea). Mostra o poder de compra ao longo do tempo.",
      "transf": "mensal", "modelar": "logdif", "prever": True},
     {"id": "gini", "nome": "Índice de Gini", "tema": "Trabalho e renda", "origem": "ipea",
-     "codigo": "auto:Gini", "unidade": "índice (0 a 1)", "freq": "anual",
-     "descricao": "Desigualdade de renda no Brasil: 0 seria todos com a mesma renda, 1 seria uma pessoa com toda a renda. Série anual (Ipea, com dados do IBGE).",
+     "codigo": "auto:Gini", "unidade": "índice (0 a 100)", "freq": "anual",
+     "descricao": "Desigualdade de renda no Brasil: 0 seria todos com a mesma renda, 100 seria uma pessoa com toda a renda. Série anual (Ipea, com dados do IBGE).",
      "transf": "anual", "modelar": "nivel", "prever": False},
     # ---------------- Contas públicas
     S("divida_bruta", "Dívida bruta", "Contas públicas", 13762, "% do PIB", "Dívida bruta do governo geral. Principal indicador de solvência acompanhado pelo mercado.", modelar="dif"),
