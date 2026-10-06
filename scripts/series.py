@@ -57,7 +57,7 @@ CATALOGO = [
     S("selic_efetiva", "Selic efetiva", "Juros", 4189, "% ao ano", "Taxa média de fato praticada nas operações entre bancos com títulos públicos.", modelar="dif"),
     S("cdi", "CDI", "Juros", 4389, "% ao ano", "Taxa dos empréstimos entre bancos. Referência de CDBs e fundos de renda fixa.", transf="media", modelar="dif"),
     S("tr", "TR", "Juros", 7811, "% no mês", "Taxa Referencial. Compõe o rendimento da poupança e do FGTS."),
-    S("poupanca", "Poupança", "Juros", 25, "% no mês", "Rendimento mensal da caderneta de poupança (regra atual, depósitos desde maio de 2012).", transf="media"),
+    S("poupanca", "Poupança", "Juros", 25, "% no mês", "Rendimento mensal da caderneta de poupança.", transf="media"),
     # ---------------- Câmbio e setor externo
     S("dolar", "Dólar", "Câmbio e setor externo", 3698, "R$", "Dólar comercial PTAX de venda, média do mês.", modelar="logdif"),
     S("euro", "Euro", "Câmbio e setor externo", 21620, "R$", "Euro PTAX de venda, média do mês.", transf="media", modelar="logdif"),
