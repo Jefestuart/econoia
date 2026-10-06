@@ -71,6 +71,14 @@ CATALOGO = [
     # ---------------- Trabalho e renda
     S("desemprego", "Desemprego", "Trabalho e renda", 24369, "% da força de trabalho", "Taxa de desocupação da PNAD Contínua (IBGE), em trimestres móveis.", modelar="dif"),
     S("salario_minimo", "Salário mínimo", "Trabalho e renda", 1619, "R$", "Valor nominal do salário mínimo nacional.", modelar="logdif", prever=False),
+    {"id": "salario_minimo_real", "nome": "Salário mínimo real", "tema": "Trabalho e renda", "origem": "ipea",
+     "codigo": "GAC12_SALMINRE12", "unidade": "R$ de hoje",
+     "descricao": "Salário mínimo corrigido pela inflação, em reais de hoje (Ipea). Mostra o poder de compra ao longo do tempo.",
+     "transf": "mensal", "modelar": "logdif", "prever": True},
+    {"id": "gini", "nome": "Índice de Gini", "tema": "Trabalho e renda", "origem": "ipea",
+     "codigo": "auto:Gini", "unidade": "índice (0 a 1)", "freq": "anual",
+     "descricao": "Desigualdade de renda no Brasil: 0 seria todos com a mesma renda, 1 seria uma pessoa com toda a renda. Série anual (Ipea, com dados do IBGE).",
+     "transf": "anual", "modelar": "nivel", "prever": False},
     # ---------------- Contas públicas
     S("divida_bruta", "Dívida bruta", "Contas públicas", 13762, "% do PIB", "Dívida bruta do governo geral. Principal indicador de solvência acompanhado pelo mercado.", modelar="dif"),
     S("dlsp", "Dívida líquida", "Contas públicas", 4513, "% do PIB", "Dívida líquida do setor público: a dívida bruta menos os créditos do governo.", modelar="dif"),
@@ -83,7 +91,8 @@ CATALOGO = [
     F("brent", "Petróleo Brent", "POILBREUSDM", "US$/barril", "Preço do petróleo de referência internacional (FMI).", modelar="logdif"),
 ]
 
-FONTES = {"sgs": "Banco Central (SGS {c})", "fred": "FRED/Fed de St. Louis ({c})"}
+FONTES = {"sgs": "Banco Central (SGS {c})", "fred": "FRED/Fed de St. Louis ({c})", "ipea": "Ipeadata/Ipea ({c})"}
+IPEA = "http://www.ipeadata.gov.br/api/odata4"
 
 
 # ======================================================================= download
@@ -148,11 +157,47 @@ def baixar_fred(codigo):
     return pontos
 
 
+def baixar_ipea(codigo):
+    """Valores de uma série do Ipeadata. Em séries regionais, fica só com o total do Brasil."""
+    dados = json.loads(_get(f"{IPEA}/ValoresSerie(SERCODIGO='{codigo}')"))["value"]
+    pontos = {}
+    for d in dados:
+        if d.get("NIVNOME") not in (None, "", "Brasil") or d.get("VALVALOR") is None:
+            continue
+        pontos[datetime.date.fromisoformat(d["VALDATA"][:10])] = float(d["VALVALOR"])
+    if not pontos:
+        raise ValueError("série vazia")
+    return pontos
+
+
+def ipea_descobrir(termo):
+    """Acha no catálogo do Ipeadata a série ativa e anual mais recente cujo nome contém o termo
+    (usado para o Gini, que tem várias versões ao longo das pesquisas do IBGE)."""
+    url = (f"{IPEA}/Metadados?$filter=contains(SERNOME,'{termo}')"
+           "&$select=SERCODIGO,SERNOME,PERNOME,SERSTATUS,SERMINDATA,SERMAXDATA,FNTSIGLA")
+    cands = [m for m in json.loads(_get(url.replace(" ", "%20")))["value"]
+             if (m.get("PERNOME") or "").lower().startswith("anual") and m.get("SERSTATUS") == "A"]
+    for m in sorted(cands, key=lambda m: (m.get("SERMAXDATA") or "", -len(m.get("SERNOME") or "")), reverse=True):
+        try:
+            pontos = baixar_ipea(m["SERCODIGO"])
+        except Exception:  # noqa: BLE001 - tenta a próxima candidata
+            continue
+        if len(pontos) >= 10:
+            print(f"     {termo}: usando {m['SERCODIGO']} ({m['SERNOME']}, {m.get('FNTSIGLA')})")
+            return m["SERCODIGO"], pontos
+    raise ValueError(f"nenhuma série anual ativa com '{termo}' no Ipeadata")
+
+
 def para_mensal(pontos, transf):
     """Converte pontos (data → valor) em lista ordenada [(mês, valor)]."""
     por_mes = {}
     for d, v in sorted(pontos.items()):
         por_mes.setdefault(d.replace(day=1), []).append(v)
+    if transf == "anual":  # séries anuais: um ponto por ano, histórico completo
+        por_ano = {}
+        for d, v in sorted(pontos.items()):
+            por_ano[d.year] = v
+        return [(datetime.date(a, 1, 1), v) for a, v in sorted(por_ano.items())]
     if transf == "media":
         serie = [(m, float(np.mean(v))) for m, v in sorted(por_mes.items())]
     else:
@@ -219,15 +264,25 @@ def prever_serie(datas, valores, modelar, rng):
 
 
 def processar(cfg, rng):
-    pontos = baixar_sgs(cfg["codigo"]) if cfg["origem"] == "sgs" else baixar_fred(cfg["codigo"])
+    codigo = cfg["codigo"]
+    if cfg["origem"] == "sgs":
+        pontos = baixar_sgs(codigo)
+    elif cfg["origem"] == "fred":
+        pontos = baixar_fred(codigo)
+    elif codigo.startswith("auto:"):
+        codigo, pontos = ipea_descobrir(codigo[5:])
+    else:
+        pontos = baixar_ipea(codigo)
     serie = para_mensal(pontos, cfg["transf"])
-    if len(serie) < 60:
-        raise ValueError(f"só {len(serie)} meses")
+    anual = cfg.get("freq") == "anual"
+    if len(serie) < (10 if anual else 60):
+        raise ValueError(f"só {len(serie)} pontos")
     datas = [m for m, _ in serie]
     valores = np.array([v for _, v in serie])
     saida = {k: cfg[k] for k in ("nome", "tema", "unidade", "descricao")}
-    saida["fonte"] = FONTES[cfg["origem"]].format(c=cfg["codigo"])
-    saida["dados"] = [[f"{d:%Y-%m}", round(float(v), 4)] for d, v in serie]
+    saida["fonte"] = FONTES[cfg["origem"]].format(c=codigo)
+    saida["freq"] = "anual" if anual else "mensal"
+    saida["dados"] = [[f"{d:%Y}" if anual else f"{d:%Y-%m}", round(float(v), 4)] for d, v in serie]
     if cfg["prever"]:
         saida["analise"] = prever_serie(datas, valores, cfg["modelar"], rng)
     return saida
@@ -254,8 +309,9 @@ def main(saida="data/series.json"):
                 series[cfg["id"]] = anterior[cfg["id"]]
             continue
         # série que parou de ser atualizada há mais de 8 meses não entra
-        ult = datetime.date.fromisoformat(series[cfg["id"]]["dados"][-1][0] + "-01")
-        if (datetime.date.today() - ult).days > 250:
+        chave = series[cfg["id"]]["dados"][-1][0]
+        ult = datetime.date.fromisoformat(chave + ("-01-01" if len(chave) == 4 else "-01"))
+        if (datetime.date.today() - ult).days > (1100 if len(chave) == 4 else 250):
             falhas[cfg["id"]] = f"desatualizada: último dado {ult:%Y-%m}"
             del series[cfg["id"]]
     temas = list(dict.fromkeys(c["tema"] for c in CATALOGO))

@@ -1,5 +1,6 @@
 """Testes do catálogo de indicadores (scripts/series.py), sem acessar a internet."""
 import datetime
+import json
 import os
 import sys
 import unittest
@@ -70,12 +71,30 @@ class TestProcessar(unittest.TestCase):
         self.assertTrue(all(v > 0 for _, v, *_ in a["previsao"]))  # dólar previsto positivo
         self.assertEqual(len(a["sazonal_efeito"]), 12)
 
+    def test_serie_anual_do_ipea(self):
+        rng = np.random.default_rng(3)
+        pontos = {D(1990 + i, 1, 1): 0.6 - i * 0.003 for i in range(30)}
+        S.ipea_descobrir = lambda termo: ("PNADC_GINI", pontos)
+        cfg = next(c for c in S.CATALOGO if c["id"] == "gini")
+        r = S.processar(cfg, rng)
+        self.assertEqual(r["freq"], "anual")
+        self.assertEqual(r["dados"][0], ["1990", 0.6])
+        self.assertNotIn("analise", r)
+        self.assertIn("PNADC_GINI", r["fonte"])
+
+    def test_ipea_fica_so_com_o_brasil(self):
+        S._get = lambda url, **k: json.dumps({"value": [
+            {"VALDATA": "2020-01-01T00:00:00-03:00", "VALVALOR": 0.52, "NIVNOME": "Brasil"},
+            {"VALDATA": "2020-01-01T00:00:00-03:00", "VALVALOR": 0.61, "NIVNOME": "Estados"},
+            {"VALDATA": "2021-01-01T00:00:00-03:00", "VALVALOR": 0.53, "NIVNOME": ""}]})
+        self.assertEqual(S.baixar_ipea("X"), {D(2020, 1, 1): 0.52, D(2021, 1, 1): 0.53})
+
     def test_catalogo_sem_ids_repetidos_e_com_campos(self):
         ids = [c["id"] for c in S.CATALOGO]
         self.assertEqual(len(ids), len(set(ids)))
         for c in S.CATALOGO:
             self.assertIn(c["modelar"], ("nivel", "dif", "logdif"))
-            self.assertIn(c["transf"], ("mensal", "media", "yoy"))
+            self.assertIn(c["transf"], ("mensal", "media", "yoy", "anual"))
             self.assertTrue(c["descricao"])
 
 

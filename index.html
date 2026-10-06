@@ -648,7 +648,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
    <div class="bf-col"><h4>Indicadores</h4><a data-go="graf">Selic</a><a data-go="graf">IPCA</a><a data-go="graf">IGP-M</a><a data-go="graf">PIB</a><a data-go="dados">Desemprego</a></div>
    <div class="bf-col"><h4>Mercados</h4><a data-go="fx">Câmbio</a><a data-go="cr">Ouro e commodities</a><a data-go="cr">Cripto</a><a data-go="graf">Juros</a><a data-go="fx">Bolsa</a></div>
    <div class="bf-col"><h4>Ferramentas</h4><a data-go="sim">Corrigir pela inflação</a><a data-go="sim">Selic × poupança</a><a data-go="sim">Equação de Fisher</a><a data-go="sim">Regra de Taylor</a><a data-go="r">Código em R</a><a data-go="fund">Fundamentos</a></div>
-   <div class="bf-col"><h4>Fontes</h4><a href="https://www.bcb.gov.br" target="_blank" rel="noopener">Banco Central</a><a href="https://www.ibge.gov.br" target="_blank" rel="noopener">IBGE</a><a href="https://portalibre.fgv.br" target="_blank" rel="noopener">FGV IBRE</a><a href="https://www.coingecko.com" target="_blank" rel="noopener">CoinGecko</a><a href="https://finance.yahoo.com" target="_blank" rel="noopener">Yahoo Finance</a></div>
+   <div class="bf-col"><h4>Fontes</h4><a href="https://www.bcb.gov.br" target="_blank" rel="noopener">Banco Central</a><a href="https://www.ibge.gov.br" target="_blank" rel="noopener">IBGE</a><a href="https://portalibre.fgv.br" target="_blank" rel="noopener">FGV IBRE</a><a href="https://www.ipeadata.gov.br" target="_blank" rel="noopener">Ipeadata</a><a href="https://www.coingecko.com" target="_blank" rel="noopener">CoinGecko</a><a href="https://finance.yahoo.com" target="_blank" rel="noopener">Yahoo Finance</a></div>
   </div>
   <div class="bf-bot">
    <div class="bf-legal"><a href="#aviso" id="avisoBtn">Termos de uso</a><a href="#aviso">Aviso legal</a><a data-go="dados">Metodologia</a><a href="#aviso">Privacidade</a></div>
@@ -841,12 +841,12 @@ loadModelos();
 // ---------- Prever o futuro (data/series.json, gerado por scripts/series.py) ----------
 let SR=null,fCharts=[],fLang="r",pyodide=null;
 const MESES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-const rotM=k=>{const[a,m]=k.split("-");return MESES[+m-1]+"/"+a.slice(2)};
+const rotM=k=>{const[a,m]=k.split("-");return m?MESES[+m-1]+"/"+a.slice(2):a};
 const fmtV=(v,u)=>{const d=Math.abs(v)>=1000?0:Math.abs(v)>=100?1:2,n=br(v,d);if(u.startsWith("%"))return n+"%";if(u==="R$")return "R$ "+n;const m=u.match(/^(US\$)(.*)$/);if(m)return "US$ "+n+(m[2]?" "+m[2].trim():"");return n+(u.startsWith("índice")?"":" "+u)};
 const unCurta=u=>u.startsWith("%")?"%":u;
 async function loadSeries(){
  try{const r=await fetch("data/series.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;SR=await r.json()}catch(e){return}
- const ids=SR.ordem.filter(id=>SR.series[id].analise);if(!ids.length)return;
+ const ids=SR.ordem.filter(id=>SR.series[id].analise||SR.series[id].freq==="anual");if(!ids.length)return;
  fInd.innerHTML=SR.temas.map(t=>{const op=ids.filter(id=>SR.series[id].tema===t);return op.length?`<optgroup label="${t}">${op.map(id=>`<option value="${id}">${SR.series[id].nome}</option>`).join("")}</optgroup>`:""}).join("");
  fInd.value=ids.includes("ipca")?"ipca":ids[0];fInd.onchange=()=>{fOut.hidden=true;drawFuturo()};
  document.getElementById("p-futuro").hidden=false;drawFuturo();
@@ -942,9 +942,18 @@ fRun.onclick=async()=>{
 window.drawFuturo=function(){
  fCharts.forEach(c=>c.destroy());fCharts=[];
  if(!SR||!window.Chart||document.getElementById("p-futuro").hidden)return;
- const id=fInd.value,s=SR.series[id],a=s.analise;if(!a)return;
+ const id=fInd.value,s=SR.series[id],a=s.analise;
  const ac=css("--accent"),gd=css("--gold"),ln=css("--line"),rd=css("--red"),u=s.unidade;
  fDesc.textContent=s.descricao;
+ // séries anuais (ex.: Gini): só o histórico, sem padrão mensal nem previsão
+ const soHist=!a;[cF2,cF3].forEach(c=>c.closest(".card").hidden=soHist);document.querySelector(".fcode").hidden=soHist;fLatex.parentNode.hidden=soHist;
+ if(soHist){const d=s.dados,v=d.map(r=>r[1]),mm=v.map((_,i)=>i>=2?(v[i]+v[i-1]+v[i-2])/3:null),ult=d[d.length-1],ini=d[0],var10=d.length>10?ult[1]-d[d.length-11][1]:null;
+  fSrc1.textContent=`${u} · ${ini[0]} a ${ult[0]} · série anual · linha vermelha: média de 3 anos`;
+  fCharts.push(new Chart(cF1,{type:"line",data:{labels:d.map(r=>r[0]),datasets:[{label:s.nome,data:v,borderColor:gd,borderWidth:1.5,pointRadius:2},{label:"Média de 3 anos",data:mm,borderColor:rd,borderWidth:2,pointRadius:0}]},
+   options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`${i.dataset.label}: ${br(i.raw,3)}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8}},y:{grid:{color:ln}}}}}));
+  fFrase.innerHTML=`<b>${s.nome}</b> foi de <b>${br(ult[1],3)}</b> em ${ult[0]}${var10!==null?`, ${var10<0?"abaixo":"acima"} do nível de dez anos antes (${br(d[d.length-11][1],3)} em ${d[d.length-11][0]})`:""}. Esta é uma série <b>anual</b>: com um ponto por ano não há padrão mensal para medir, e poucos pontos tornam uma previsão estatística pouco confiável. Por isso aqui aparece só a história.`;
+  return}
+ if(!a)return;
  const d=s.dados.slice(-180),mm=d.map((_,i)=>i>=11?d.slice(i-11,i+1).reduce((t,r)=>t+r[1],0)/12:null);
  const opt={responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:7}},y:{grid:{color:ln}}}};
  fSrc1.textContent=`${u} · ${rotM(d[0][0])} a ${rotM(d[d.length-1][0])} · linha vermelha: média dos últimos 12 meses`;
