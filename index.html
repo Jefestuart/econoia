@@ -665,7 +665,7 @@ document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");
  if(g==="cr"){document.getElementById("p-cr").scrollIntoView({behavior:"smooth"});return}
  if(g==="fx"){document.getElementById("p-fx").scrollIntoView({behavior:"smooth"});return}
  if(g==="ia"){document.getElementById("p-ia").scrollIntoView({behavior:"smooth"});setTimeout(()=>q.focus({preventScroll:true}),400);return}
- show(g);document.querySelector("nav").scrollIntoView({behavior:"smooth"})};
+ show(g);const t=document.querySelector("nav[role=tablist]");scrollTo({top:t.getBoundingClientRect().top+scrollY-90,behavior:"smooth"})};
 // IA
 let ctx;function mkctx(){ctx=`Você é a EconoIA, assistente de economia brasileira. Responda em português do Brasil, de forma clara e didática, em até 3 parágrafos curtos, sem markdown. Use os dados abaixo quando relevante e diga quando algo não está nos dados. Não dê recomendação de investimento personalizada. Se pedirem código, escreva em R (ou Python se pedirem), com os dados como vetores, e explique cada parte em poucas linhas.
 DADOS (atualizados em ${UPD}):
