@@ -56,11 +56,25 @@ input,select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1
 .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px}
 .result{font-family:var(--mono);font-size:1.4rem;font-variant-numeric:tabular-nums}
 .note{font-size:.82rem;color:var(--muted)}
+.prevbanner{display:grid;grid-template-columns:auto 1fr auto;gap:6px 22px;align-items:center;margin-top:12px;padding:14px 18px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;color:inherit;text-decoration:none}
+.prevbanner:hover{border-color:var(--accent)}
+.prevbanner .lb{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);grid-column:1/-1}
+.prevbanner .v{font-family:var(--mono);font-size:1.9rem;font-variant-numeric:tabular-nums}
+.prevbanner .s{font-size:.85rem;color:var(--muted)}.prevbanner .s b{color:var(--fg)}
+.prevbanner .go{color:var(--accent);font-size:.85rem;white-space:nowrap}
+@media(max-width:600px){.prevbanner{grid-template-columns:1fr}.prevbanner .go{justify-self:start}}
 .prev-res{display:flex;flex-wrap:wrap;gap:8px 20px;margin:10px 0 12px}
 .prev-res div{display:flex;flex-direction:column}
 .prev-res b{font-family:var(--display);font-size:1.5rem;font-variant-numeric:tabular-nums}
 .prev-res span{font-size:.78rem;color:var(--muted)}
 .prev-win{color:var(--accent)}.prev-lose{color:var(--red)}
+.selo{display:inline-block;white-space:nowrap;font-size:.7rem;font-weight:600;padding:1px 7px;border-radius:99px;background:var(--accent);color:var(--bg);vertical-align:middle;margin-left:4px}
+.segs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.segs button{font:inherit;font-size:.82rem;padding:4px 12px;border-radius:99px;border:1px solid var(--line);background:none;color:inherit;cursor:pointer}
+.segs button[aria-pressed=true]{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.irfsel{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0 8px;font-size:.88rem}
+.irfsel select{font:inherit;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:inherit}
+.leitura{font-size:.9rem;margin:8px 0 0}
 details.metodo{margin-top:12px;font-size:.88rem}details.metodo summary{cursor:pointer;font-weight:600}
 details.metodo p{color:var(--muted);margin:.5em 0}
 .btn{font:600 .95rem var(--body);background:var(--accent);color:var(--bg);border:0;border-radius:8px;padding:10px 16px;cursor:pointer}
@@ -215,7 +229,7 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
   <button data-go="cr">Ouro e Cripto</button>
   <button data-go="fund">Fundamentos</button>
   <button data-go="graf">Gráficos</button>
-  <button data-go="prev">Previsões</button>
+  <button data-go="prev">VAR e SARIMA</button>
   <button data-go="sim">Simuladores</button>
   <button data-go="plan">Planilha</button>
 </div>
@@ -251,6 +265,7 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
 </div>
 
 <section class="kpis" id="kpis" aria-label="Indicadores principais"></section>
+<a class="prevbanner" id="prevBanner" href="#var-sarima" hidden></a>
 
 <section class="card rdemo" aria-label="Laboratório R">
   <h2>Laboratório R</h2>
@@ -302,7 +317,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   <button role="tab" id="t-sim" aria-selected="false" data-p="sim">Simuladores</button>
   <button role="tab" id="t-r" aria-selected="false" data-p="r">Laboratório R</button>
   <button role="tab" id="t-dados" aria-selected="false" data-p="dados">Tabelas</button>
-  <button role="tab" id="t-prev" aria-selected="false" data-p="prev">Previsões</button>
+  <button role="tab" id="t-prev" aria-selected="false" data-p="prev">VAR e SARIMA</button>
 </nav>
 
 <section id="p-graf" class="grid2">
@@ -420,17 +435,27 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   <p class="note" id="rmsg">No Colab, se abrir em Python, vá em Ambiente de execução → Alterar tipo → R. Pacotes extras: o código instala o ggplot2 sozinho se faltar.</p>
 </section>
 <section id="p-prev" hidden>
-  <div class="card" style="margin-bottom:12px"><h3>Previsões de inflação</h3>
-   <p class="src">Modelo econométrico próprio da EconoIA, reestimado todo dia com o histórico completo do Banco Central. Abaixo de cada previsão, o <b>backtest</b>: quanto o modelo teria errado nos últimos anos, comparado com previsões ingênuas.</p>
+  <div class="card" style="margin-bottom:12px"><h3>VAR e SARIMA: previsões de inflação</h3>
+   <p class="src">Dois modelos econométricos próprios da EconoIA, reestimados todo dia com dados do Banco Central. Cada um passa por um <b>backtest</b>: quanto teria errado nos últimos anos, comparado com previsões ingênuas. O que errou menos ganha o selo de melhor histórico.</p>
    <p class="note" id="prevInfo">Carregando modelos...</p>
   </div>
   <div class="grid2" id="prevGrid"></div>
+  <div class="grid2" style="margin-top:12px">
+   <div class="card"><h3>O que acontece se...</h3><p class="src" id="irfSrc">Impulso-resposta do VAR: efeito acumulado, mês a mês, de um choque numa variável sobre outra. Faixa de 90% por bootstrap.</p>
+    <div class="irfsel"><label>Choque <select id="irfChoque"></select></label><label>Efeito em <select id="irfResp"></select></label></div>
+    <div class="chartbox"><canvas id="cIrf" aria-label="Função impulso-resposta"></canvas></div>
+    <p class="leitura" id="irfLeitura"></p></div>
+   <div class="card"><h3>Quem ajuda a prever quem</h3><p class="src">Causalidade de Granger no VAR: o passado da primeira variável melhora a previsão da segunda, além do passado da própria segunda? Teste F, nível de 5%.</p>
+    <div class="tbl"><table id="tbGranger"></table></div>
+    <p class="note" style="margin-top:8px">"Causar no sentido de Granger" quer dizer ajudar a prever, não necessariamente causar no sentido econômico.</p></div>
+  </div>
   <div class="card" style="margin-top:12px">
-   <details class="metodo"><summary>Como o modelo funciona</summary>
-    <p><b>Modelo.</b> AR(p) com sazonalidade: a inflação do mês depende das inflações dos p meses anteriores e de um efeito fixo de cada mês do ano (janeiro e fevereiro costumam ter reajustes de escola e transporte, por exemplo). A ordem p é escolhida pelo critério de Akaike (AIC), e os coeficientes são estimados por mínimos quadrados ordinários, com amostra desde jan/2003.</p>
-    <p><b>Intervalos.</b> A faixa escura cobre 80% dos cenários e a clara, 95%. Eles vêm de 2.000 simulações em que os choques futuros são sorteados entre os erros que o modelo já cometeu (bootstrap), sem supor distribuição normal.</p>
-    <p><b>Backtest.</b> Para cada um dos últimos 48 meses, o modelo é reestimado só com os dados que existiam naquela data e prevê os 12 meses seguintes. Os erros são comparados com dois concorrentes ingênuos: repetir o último mês e repetir o mesmo mês do ano anterior. "Ganho" positivo significa que o modelo errou menos que o melhor deles (raiz do erro quadrático médio). A cobertura mostra em quantos casos o valor real caiu dentro da faixa de 80%: perto de 80% indica intervalos bem calibrados.</p>
-    <p><b>Limites.</b> É um modelo só com o passado da própria série: não enxerga câmbio, juros, choques de commodities nem decisões de governo. Por isso a comparação com a mediana do mercado (Focus/BCB) é mostrada lado a lado. Não é recomendação de investimento.</p>
+   <details class="metodo"><summary>Como os modelos funcionam</summary>
+    <p><b>SARIMA.</b> Modelo de uma série só: a inflação do mês depende das inflações e dos erros de previsão dos meses anteriores (partes AR e MA) e do mesmo mês nos anos anteriores (parte sazonal, com período 12). As ordens são escolhidas pelo critério de Akaike (AIC) entre 23 combinações, e os parâmetros são estimados por soma condicional de quadrados, exigindo estacionariedade e invertibilidade.</p>
+    <p><b>VAR.</b> Modelo conjunto de quatro séries mensais: variação do dólar (PTAX), IGP-M, IPCA e variação da Selic. Cada uma é explicada pelo passado de todas, mais efeitos de calendário. O número de defasagens sai do AIC multivariado, e a estimação é por mínimos quadrados, equação a equação. Por enxergar câmbio e juros, o VAR captura efeitos que o SARIMA não vê.</p>
+    <p><b>Impulso-resposta.</b> Mostra a reação das variáveis a um choque isolado, usando a decomposição de Cholesky na ordem dólar → IGP-M → IPCA → Selic: no mês do choque, uma variável só pode afetar as que vêm depois dela. Essa ordem é uma hipótese (o Copom reage por último, o câmbio é o mais rápido) e muda o resultado. A faixa de 90% vem de 300 reestimações com resíduos sorteados. Um VAR simples pode mostrar o "price puzzle" (inflação subindo logo após alta de juros), um resultado conhecido na literatura, ligado ao fato de o Banco Central subir juros justamente quando espera mais inflação.</p>
+    <p><b>Intervalos e backtest.</b> As faixas de previsão (80% escura, 95% clara) vêm de 2.000 simulações com choques sorteados entre os erros já cometidos pelo modelo. No backtest, para cada um dos últimos 48 meses, o modelo é reestimado só com os dados que existiam naquela data (janela de 15 anos) e prevê os 12 meses seguintes. O erro é comparado com repetir o último mês ou o mesmo mês do ano anterior. A cobertura mostra em quantos casos o valor real caiu na faixa de 80%: perto de 80% indica intervalos bem calibrados.</p>
+    <p><b>Limites.</b> São modelos estatísticos do passado: não antecipam choques novos, mudanças de política ou eleições. Por isso a mediana do mercado (Focus/BCB) aparece ao lado. Não é recomendação de investimento.</p>
     <p>Código aberto: <a href="https://github.com/Jefestuart/econoia/blob/main/scripts/modelos.py" target="_blank" rel="noopener">scripts/modelos.py</a>, com testes em <a href="https://github.com/Jefestuart/econoia/blob/main/tests/test_modelos.py" target="_blank" rel="noopener">tests/test_modelos.py</a>.</p>
    </details>
   </div>
@@ -594,49 +619,81 @@ function draw(){
  charts.push(new Chart(cPibA,{type:"bar",data:{labels:D.pibA.map(r=>r[0]),datasets:[{data:D.pibA.map(r=>r[1]),backgroundColor:gd}]},options:base}));
 }
 draw();
-// ---------- previsões econométricas (data/modelos.json, gerado por scripts/modelos.py) ----------
-let M=null,prevCharts=[];
+// ---------- VAR e SARIMA (data/modelos.json, gerado por scripts/modelos.py) ----------
+let M=null,prevCharts=[],irfChart=null;const prevSel={};
 const sinal=v=>(v>0?"+":"")+br(v,1);
+const NOMEMOD={sarima:"SARIMA",var:"VAR"};
 async function loadModelos(){
- try{const r=await fetch("data/modelos.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;M=await r.json()}
+ try{const r=await fetch("data/modelos.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;M=await r.json();if(!M.series||!M.var)throw 0}
  catch(e){prevInfo.textContent="Previsões indisponíveis no momento.";return}
  const quando=new Date(M.atualizado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});
- prevInfo.textContent="Modelos reestimados em "+quando+".";
- prevGrid.innerHTML=M.series.map(s=>{const a=s.acumulado_12m,b=s.backtest,g=b.acumulado_12m.ganho_pct,h1=b.rmse_mensal["1"];
-  const foc=s.id==="ipca"&&M.focus_ipca_12m?`<div><b>${br(M.focus_ipca_12m.mediana,1)}%</b><span>mercado (Focus/BCB)</span></div>`:"";
+ prevInfo.textContent=`Modelos reestimados em ${quando}. Janela de estimação: últimos ${M.janela_meses/12} anos.`;
+ // banner da página inicial
+ const ip=M.series.ipca;if(ip){const mb=ip.modelos[ip.melhor],foc=ip.focus_12m;
+  prevBanner.innerHTML=`<span class="lb">Previsão EconoIA · IPCA nos próximos 12 meses</span><span class="v">${br(mb.acumulado_12m.previsto,1)}%</span>
+  <span class="s">Melhor modelo no backtest: <b>${NOMEMOD[ip.melhor]}</b> · faixa de 80%: ${br(mb.acumulado_12m.lo80,1)} a ${br(mb.acumulado_12m.hi80,1)}%<br>${foc?`Mercado (Focus): <b>${br(foc.mediana,1)}%</b> · `:""}Meta: <b>3,0%</b> · Últimos 12 meses: <b>${br(ip.ultimos_12,1)}%</b></span>
+  <span class="go">Ver VAR e SARIMA →</span>`;prevBanner.hidden=false}
+ prevGrid.innerHTML=Object.entries(M.series).map(([id,s])=>{prevSel[id]=prevSel[id]||s.melhor;
+  const linhas=Object.entries(s.modelos).map(([k,md])=>{const g=md.backtest.acumulado_12m.ganho_pct;return `<tr><td>${NOMEMOD[k]}${k===s.melhor?'<span class="selo">melhor histórico</span>':""}<br><span class="note">${md.nome}</span></td><td>${br(md.acumulado_12m.previsto,1)}%</td><td>${br(md.acumulado_12m.lo80,1)} a ${br(md.acumulado_12m.hi80,1)}</td><td>${br(md.backtest.acumulado_12m.modelo,2)}</td><td class="${g>0?"prev-win":"prev-lose"}">${sinal(g)}%</td><td>${br(md.backtest.cobertura_80.acumulado_12m,0)}%</td></tr>`}).join("");
+  const foc=s.focus_12m?`<tr><td>Mercado (Focus/BCB)</td><td>${br(s.focus_12m.mediana,1)}%</td><td colspan="4" class="note">mediana das expectativas, ${new Date(s.focus_12m.data+"T12:00").toLocaleDateString("pt-BR")}</td></tr>`:"";
+  const bt=s.modelos[s.melhor].backtest;
   return `<div class="card"><h3>${s.nome} · próximos 12 meses</h3>
-  <p class="src">${s.modelo} · ${s.observacoes} meses (${s.inicio_amostra} a ${s.ultimo_dado}) · ${s.fonte}</p>
-  <div class="prev-res"><div><b>${br(a.previsto,1)}%</b><span>acumulado previsto</span></div>
-   <div><b style="font-size:1.1rem">${br(a.lo80,1)} a ${br(a.hi80,1)}%</b><span>faixa de 80%</span></div>
-   <div><b style="font-size:1.1rem">${br(a.ultimos_12,1)}%</b><span>últimos 12 meses</span></div>${foc}</div>
-  <div class="chartbox"><canvas id="cPrev_${s.id}" aria-label="Histórico e previsão mensal do ${s.nome}"></canvas></div>
-  <div class="tbl" style="margin-top:10px"><table><tr><th>Backtest (${b.origens} previsões, ${b.periodo})</th><th>Modelo</th><th>Melhor ingênuo</th><th>Ganho</th></tr>
-   ${["1","3","12"].map(hz=>{const r=b.rmse_mensal[hz];return `<tr><td>Erro mensal, ${hz} ${hz==="1"?"mês":"meses"} à frente (p.p.)</td><td>${br(r.modelo,2)}</td><td>${br(Math.min(r.ingenuo,r.sazonal),2)}</td><td class="${r.ganho_pct>0?"prev-win":"prev-lose"}">${sinal(r.ganho_pct)}%</td></tr>`}).join("")}
-   <tr><td>Erro no acumulado de 12 meses (p.p.)</td><td>${br(b.acumulado_12m.modelo,2)}</td><td>${br(b.acumulado_12m.ingenuo,2)}</td><td class="${g>0?"prev-win":"prev-lose"}">${sinal(g)}%</td></tr>
-   <tr><td>Real dentro da faixa de 80% (mês seguinte / 12 meses)</td><td colspan="3">${br(b.cobertura_80.mes_seguinte,0)}% / ${br(b.cobertura_80.acumulado_12m,0)}%</td></tr>
-  </table></div></div>`}).join("");
+  <p class="src">${s.fonte} · último dado: ${s.ultimo_dado} · acumulado nos últimos 12 meses: ${br(s.ultimos_12,1)}%</p>
+  <div class="tbl"><table><tr><th>Modelo</th><th>Previsão</th><th>Faixa 80%</th><th>Erro no backtest (p.p.)</th><th>Ganho vs. ingênuo</th><th>Cobertura</th></tr>${linhas}${foc}</table></div>
+  <div class="segs" role="group" aria-label="Modelo no gráfico">${Object.keys(s.modelos).map(k=>`<button data-s="${id}" data-m="${k}" aria-pressed="${prevSel[id]===k}">${NOMEMOD[k]}</button>`).join("")}</div>
+  <div class="chartbox"><canvas id="cPrev_${id}" aria-label="Histórico e previsão mensal do ${s.nome}"></canvas></div>
+  <p class="note" style="margin-top:6px">Backtest: ${bt.origens} previsões de ${bt.periodo}. Ganho positivo = errou menos que o melhor concorrente ingênuo. Cobertura = vezes em que o acumulado real caiu na faixa de 80%.</p></div>`}).join("");
+ prevGrid.querySelectorAll(".segs button").forEach(b=>b.onclick=()=>{prevSel[b.dataset.s]=b.dataset.m;b.parentNode.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));drawPrev()});
+ // impulso-resposta: seletores
+ const pares=Object.entries(M.var.irf),choques=[...new Map(pares.map(([k,v])=>[k.split("->")[0],v.choque])).entries()];
+ irfChoque.innerHTML=choques.map(([k,t])=>`<option value="${k}">${t}</option>`).join("");irfChoque.value="selic";
+ const preencheResp=()=>{const c=irfChoque.value,op=pares.filter(([k])=>k.startsWith(c+"->"));const atual=irfResp.value;
+  irfResp.innerHTML=op.map(([k,v])=>`<option value="${k.split("->")[1]}">${v.resposta}</option>`).join("");
+  if(op.some(([k])=>k.endsWith("->"+atual)))irfResp.value=atual;else if(op.some(([k])=>k.endsWith("->ipca")))irfResp.value="ipca"};
+ preencheResp();irfChoque.onchange=()=>{preencheResp();drawIrf()};irfResp.onchange=drawIrf;
+ irfSrc.textContent=`Impulso-resposta do ${M.var.nome} (${M.var.amostra}, ${M.var.observacoes} meses): efeito acumulado de um choque isolado. Ordem de Cholesky: ${M.var.ordem_cholesky.join(" → ")}. Faixa de 90% por bootstrap.`;
+ // Granger
+ tbGranger.innerHTML="<tr><th>Ajuda a prever?</th><th>F</th><th>p-valor</th><th></th></tr>"+M.var.granger.slice().sort((a,b)=>a.p-b.p).map(g=>`<tr><td>${g.causa} → ${g.efeito}</td><td>${br(g.F,2)}</td><td>${g.p<0.001?"< 0,001":br(g.p,3)}</td><td class="${g.p<0.05?"prev-win":"note"}">${g.p<0.05?"Sim":"Não"}</td></tr>`).join("");
  if(!document.getElementById("p-prev").hidden)drawPrev();
+}
+function drawIrf(){
+ if(irfChart){irfChart.destroy();irfChart=null}
+ if(!M||!window.Chart)return;
+ const k=irfChoque.value+"->"+irfResp.value,r=M.var.irf[k];if(!r)return;
+ const ac=css("--accent"),ln=css("--line"),labels=r.ponto.map((_,i)=>i===0?"choque":i+"m");
+ irfChart=new Chart(cIrf,{type:"line",data:{labels,datasets:[
+  {label:"90% sup.",data:r.hi90,borderWidth:0,pointRadius:0,backgroundColor:ac+"30",fill:"+1"},
+  {label:"90% inf.",data:r.lo90,borderWidth:0,pointRadius:0,fill:false},
+  {label:"Efeito estimado",data:r.ponto,borderColor:ac,pointRadius:0,tension:.25,fill:false},
+  {label:"zero",data:r.ponto.map(()=>0),borderColor:ln,borderWidth:1,pointRadius:0,fill:false}]},
+  options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false},
+   tooltip:{filter:i=>i.dataset.label!=="zero",callbacks:{label:i=>`${i.dataset.label}: ${br(i.raw,2)} ${r.unidade}`}}},
+   scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9}},y:{grid:{color:ln},title:{display:true,text:r.unidade}}}}});
+ const p12=r.ponto[12],i12=r.lo90[12],s12=r.hi90[12],abs=r.ponto.map(Math.abs),pico=abs.indexOf(Math.max(...abs));
+ const sig=(i12>0||s12<0)?"estatisticamente diferente de zero":"não distinguível de zero (a faixa de 90% inclui o zero)";
+ irfLeitura.innerHTML=`<b>Leitura:</b> após ${r.choque[0].toLowerCase()+r.choque.slice(1)}, o efeito acumulado sobre ${r.resposta} em 12 meses é de <b>${sinal(p12).replace("%","")} ${r.unidade}</b>, ${sig}. O maior efeito aparece ${pico===0?"no próprio mês do choque":`após ${pico} ${pico===1?"mês":"meses"}`}.`;
 }
 window.drawPrev=function(){
  prevCharts.forEach(c=>c.destroy());prevCharts=[];
  if(!M||!window.Chart)return;
  const ac=css("--accent"),gd=css("--gold"),ln=css("--line");
- for(const s of M.series){
-  const el=document.getElementById("cPrev_"+s.id);if(!el)continue;
-  const hist=s.historico.slice(-24),pv=s.previsao,nH=hist.length;
+ for(const [id,s] of Object.entries(M.series)){
+  const el=document.getElementById("cPrev_"+id);if(!el)continue;
+  const pv=s.modelos[prevSel[id]||s.melhor].previsao,hist=s.historico.slice(-24),nH=hist.length;
   const labels=[...hist.map(r=>r[0]),...pv.map(r=>r[0])];
   const pad=a=>[...Array(nH-1).fill(null),hist[nH-1][1],...a];
   const ds=[
-   {label:"95% (sup.)",data:pad(pv.map(r=>r[5])),borderWidth:0,pointRadius:0,backgroundColor:ac+"18",fill:"+1"},
-   {label:"95% (inf.)",data:pad(pv.map(r=>r[4])),borderWidth:0,pointRadius:0,fill:false},
-   {label:"80% (sup.)",data:pad(pv.map(r=>r[3])),borderWidth:0,pointRadius:0,backgroundColor:ac+"38",fill:"+1"},
-   {label:"80% (inf.)",data:pad(pv.map(r=>r[2])),borderWidth:0,pointRadius:0,fill:false},
-   {label:"Previsão",data:pad(pv.map(r=>r[1])),borderColor:ac,borderDash:[5,4],pointRadius:2,tension:.2,fill:false},
+   {label:"95% sup.",data:pad(pv.map(r=>r[5])),borderWidth:0,pointRadius:0,backgroundColor:ac+"18",fill:"+1"},
+   {label:"95% inf.",data:pad(pv.map(r=>r[4])),borderWidth:0,pointRadius:0,fill:false},
+   {label:"80% sup.",data:pad(pv.map(r=>r[3])),borderWidth:0,pointRadius:0,backgroundColor:ac+"38",fill:"+1"},
+   {label:"80% inf.",data:pad(pv.map(r=>r[2])),borderWidth:0,pointRadius:0,fill:false},
+   {label:"Previsão "+NOMEMOD[prevSel[id]||s.melhor],data:pad(pv.map(r=>r[1])),borderColor:ac,borderDash:[5,4],pointRadius:2,tension:.2,fill:false},
    {label:"Realizado",data:[...hist.map(r=>r[1]),...pv.map(()=>null)],borderColor:gd,pointRadius:2,tension:.2,fill:false}];
   prevCharts.push(new Chart(el,{type:"line",data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
-   plugins:{legend:{display:true,labels:{filter:i=>i.text==="Previsão"||i.text==="Realizado"}},tooltip:{filter:i=>i.raw!==null,callbacks:{label:i=>`${i.dataset.label}: ${br(i.raw,2)}%`}}},
+   plugins:{legend:{display:true,labels:{filter:i=>!/sup\.|inf\./.test(i.text)}},tooltip:{filter:i=>i.raw!==null,callbacks:{label:i=>`${i.dataset.label}: ${br(i.raw,2)}%`}}},
    scales:{x:{grid:{display:false}},y:{grid:{color:ln},title:{display:true,text:"% ao mês"}}}}}));
  }
+ drawIrf();
 };
 loadModelos();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>drawPrev());
@@ -799,8 +856,8 @@ document.getElementById("plRow").onclick=()=>plJ&&plJ.insertRow();
 document.getElementById("plCsv").onclick=()=>{if(!plJ)return;const csv=plAoa().map(r=>r.map(c=>{c=String(c??"");return/[";\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(";")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"}));a.download="econoia-"+document.getElementById("plSet").value+".csv";a.click()};
 document.getElementById("plXlsx").onclick=async()=>{if(!plJ)return;try{if(!window.XLSX)await loadJs("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js");const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(plAoa(true)),"EconoIA");XLSX.writeFile(wb,"econoia-"+document.getElementById("plSet").value+".xlsx")}catch(e){alert("Não consegui gerar o arquivo. Tente o .csv.")}};
 // Cada seção tem sua própria área: econoia.com.br/#r, /#graficos...
-const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],previsoes:["prev","Previsões de inflação"],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"]};
-const SLUG={};for(const k in AREAS)SLUG[AREAS[k][0]]=k;
+const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],"var-sarima":["prev","VAR e SARIMA"],previsoes:["prev","VAR e SARIMA"],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"]};
+const SLUG={};for(const k in AREAS)if(!SLUG[AREAS[k][0]])SLUG[AREAS[k][0]]=k;
 document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;if(SLUG[g])location.hash=SLUG[g]};
 document.querySelectorAll(".tn-links a[data-go]").forEach(a=>a.onclick=e=>{e.preventDefault();location.hash=SLUG[a.dataset.go]||""});
 document.getElementById("soloBack").onclick=e=>{e.preventDefault();history.pushState("",document.title,location.pathname);route()};

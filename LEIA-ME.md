@@ -18,9 +18,14 @@ Laboratório de Economia, Dados e IA do Brasil — https://econoia.com.br
 - Se uma fonte de dados falhar, o site mantém o último valor bom.
 - A pasta `netlify/` e o `netlify.toml` são da hospedagem antiga e podem ser apagados depois da migração.
 
-## Modelos econométricos
-`scripts/modelos.py` estima, todo dia, um AR(p) com sazonalidade mensal para IPCA e IGP-M (amostra desde 2003, ordem por AIC, MQO só com numpy), prevê 12 meses com intervalos por bootstrap dos resíduos e faz um backtest de origem móvel (48 previsões fora da amostra) contra previsões ingênuas. Resultado em `data/modelos.json`, exibido na aba **Previsões**. Testes em `tests/test_modelos.py`.
+## Modelos econométricos (aba "VAR e SARIMA")
+`scripts/modelos.py` roda todo dia no GitHub Actions, com numpy e scipy:
+- **SARIMA(p,0,q)(P,0,Q)12** para IPCA e IGP-M, estimado por soma condicional de quadrados, ordens pelo AIC;
+- **VAR** com dólar, IGP-M, IPCA e Selic (MQO, defasagens pelo AIC), com impulso-resposta (Cholesky, faixa de 90% por bootstrap) e causalidade de Granger (teste F);
+- intervalos de previsão por bootstrap dos resíduos e **backtest** de origem móvel (48 previsões fora da amostra, janela de 15 anos) contra previsões ingênuas. O modelo com menor erro ganha o selo de melhor histórico e aparece no cartão da página inicial.
+
+Resultado em `data/modelos.json`. Testes com dados simulados em `tests/test_modelos.py`.
 
 ## Testes
 - `npm test`: chat (proteção e limites), notícias e entrega de dados
-- `python -m unittest discover -s tests -p "test_*.py"`: motor econométrico
+- `python -m unittest discover -s tests -p "test_*.py"`: SARIMA, VAR, impulso-resposta, Granger e backtest
