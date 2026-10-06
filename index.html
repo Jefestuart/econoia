@@ -272,6 +272,11 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
 .thm:hover{border-color:var(--accent);color:var(--accent)}
 .thm .i-sun{display:none}:root[data-theme="light"] .thm .i-sun{display:block}:root[data-theme="light"] .thm .i-moon{display:none}
 @media (max-width:760px){.thm{position:absolute;top:4px;right:0;z-index:6}.topnav{position:relative}}
+.inst{max-width:78ch;margin-inline:auto;width:100%;padding:24px clamp(16px,4vw,36px)}
+.inst h2{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,5vw,2.2rem);margin:0 0 8px}
+.inst h3{font-family:var(--display);font-weight:600;font-size:1.2rem;margin:26px 0 6px;color:var(--accent)}
+.inst p{margin:0 0 10px}.inst .lead{font-size:1.1rem;color:var(--fg)}.inst dd{margin-bottom:6px}
+.bf-aviso a{color:inherit;text-decoration:underline}
 </style>
 </head><body>
 
@@ -635,7 +640,156 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   <p class="note" style="margin:10px 0 0">Dica: clique com o botão direito numa célula para inserir ou apagar linhas e colunas. As mudanças ficam só no seu navegador; baixe o arquivo para guardar.</p>
 </section>
 
-<section class="card met" id="metodologia">
+<section id="p-sobre" class="card inst" hidden>
+  <h2>Sobre o EconoIA</h2>
+  <p class="lead">Criado por <b>Jessé Santos</b>, economista interessado em métodos quantitativos, análise de dados, modelagem econômica e séries temporais.</p>
+
+  <h3>Quem criou</h3>
+  <p>Sou economista formado pela Universidade Federal do Acre (UFAC). Minha área de interesse é a parte quantitativa da economia: estatística, econometria, previsão e programação aplicada a dados econômicos. O EconoIA é um projeto independente que eu idealizei, desenvolvo e mantenho.</p>
+
+  <h3>Por que o EconoIA existe</h3>
+  <p>Quando procurei uma ferramenta que juntasse <b>dados econômicos oficiais, inteligência artificial e programação</b> de forma didática e em português, não encontrei. O que existia ficava sempre pela metade: terminais financeiros caros e feitos para profissionais, bases de dados que entregam números sem explicar o que eles significam, ou cursos que ensinam teoria sem colocar a mão em dados reais do Brasil.</p>
+  <p>O EconoIA nasceu para preencher esse espaço: um lugar onde a pessoa consulta a Selic, o IPCA ou o câmbio, entende o que está por trás desses números, pergunta à IA quando tiver dúvida e roda a própria análise em R, tudo no navegador e sem instalar nada.</p>
+
+  <h3>Objetivo</h3>
+  <p>Tornar a economia quantitativa acessível. Estudantes, professores, jornalistas e curiosos devem conseguir sair do "o que é esse número?" e chegar ao "consigo analisar isso sozinho". O foco é <b>educação e transparência</b>, não recomendação de investimento.</p>
+
+  <h3>Como os modelos são desenvolvidos</h3>
+  <p>Os modelos de previsão (SARIMA e VAR) são estimados com dados oficiais do Banco Central, escolhidos por critérios estatísticos objetivos e avaliados fora da amostra contra previsões ingênuas. Quando um modelo não supera uma regra simples, o site mostra isso. Os detalhes estão na <a class="mlink" href="#metodologia">Metodologia</a>.</p>
+
+  <h3>Quem revisa</h3>
+  <p>Hoje o EconoIA é mantido por uma só pessoa. Códigos, modelos e textos são escritos e revisados por mim, com auxílio de ferramentas de inteligência artificial no desenvolvimento do código. Não há revisão por pares externa. Por isso o site mostra as fórmulas, as fontes e os testes de cada modelo: qualquer pessoa pode conferir o que está sendo feito. Se encontrar um erro, a correção é bem-vinda.</p>
+
+  <p class="note">© JesseCorp 2026 · EconoIA Brasil.</p>
+</section>
+
+<section id="p-metod" class="card inst" hidden>
+  <h2>Metodologia</h2>
+  <p class="lead">Como os dados são obtidos, como os modelos funcionam e quais são os limites de cada parte do site.</p>
+
+  <h3>1. Fontes dos dados</h3>
+  <p>Todos os indicadores vêm de fontes públicas: Banco Central do Brasil (Copom, sistema SGS e PTAX), IBGE (IPCA, PNAD Contínua e Contas Nacionais), FGV IBRE (IGP-M), Yahoo Finance (bolsa e commodities) e CoinGecko (criptoativos). A data exibida em cada número é a da própria fonte.</p>
+
+  <h3>2. Atualização</h3>
+  <p>Um robô automático consulta as fontes a cada 30 minutos e grava os valores em um arquivo público de dados. As séries históricas são atualizadas uma vez por dia, e os modelos de previsão são reestimados diariamente. Se uma fonte ficar fora do ar, o site mantém o último valor válido em vez de mostrar um número errado. Índices mensais, como IPCA e IGP-M, só mudam quando a instituição responsável divulga o novo dado.</p>
+
+  <h3>3. Cálculos dos indicadores</h3>
+  <dl class="met">
+    <dt>Acumulado em 12 meses</dt><dd>As variações mensais são multiplicadas, e não somadas: (1+m₁)×…×(1+m₁₂)−1.</dd>
+    <dt>Juro real ex-post</dt><dd>(1 + Selic) ÷ (1 + IPCA 12 meses) − 1. Usa a inflação passada, não a esperada.</dd>
+    <dt>Desocupação</dt><dd>Taxa da PNAD Contínua (IBGE), em média móvel de três meses.</dd>
+    <dt>PIB</dt><dd>Variação contra o trimestre anterior (com ajuste sazonal) e contra o mesmo trimestre do ano anterior.</dd>
+  </dl>
+
+  <h3>4. Modelos de previsão</h3>
+  <p><b>SARIMA.</b> Modela uma série por vez (IPCA, IGP-M, dólar e Selic), capturando a inércia e a sazonalidade de 12 meses. As ordens do modelo são escolhidas pelo critério de informação de Akaike (AIC).</p>
+  <p><b>VAR.</b> Modela as quatro séries em conjunto, para captar como uma afeta a outra. Dele saem as previsões conjuntas, as funções impulso-resposta (decomposição de Cholesky na ordem dólar → IGP-M → IPCA → Selic) e os testes de causalidade de Granger.</p>
+  <p><b>Incerteza.</b> As faixas de 80% e 95% são obtidas por simulação com reamostragem dos resíduos (bootstrap). Uma previsão sem faixa de incerteza esconde o quanto ela pode errar.</p>
+  <p><b>Avaliação honesta.</b> Cada modelo passa por um backtest de origem móvel: é reestimado usando só os dados disponíveis em cada data do passado (48 origens, cerca de 4 anos) e comparado com o que realmente aconteceu e com previsões ingênuas ("repetir o último valor" e "repetir o mesmo mês do ano anterior"). Os erros são medidos pela raiz do erro quadrático médio (RMSE) nos horizontes de 1, 3, 6 e 12 meses.</p>
+  <p><b>Limites.</b> São modelos estatísticos estimados com os últimos 15 anos de dados. Eles não antecipam choques (crises, mudanças de governo, pandemias) e funcionam pior quando a economia muda de regime. Servem para estudar e comparar cenários, não para decisões de investimento.</p>
+
+  <h3>5. Inteligência artificial</h3>
+  <p>O assistente "Pergunte à EconoIA" usa um modelo de linguagem do Google (Gemini). Junto com cada pergunta, ele recebe os dados atualizados do painel, para responder com números reais. Modelos de linguagem podem errar, inventar informações ou interpretar mal uma pergunta. Por isso, confira os números importantes na fonte oficial.</p>
+
+  <h3>6. Laboratório R</h3>
+  <p>O código em R roda no seu próprio navegador (webR), sem passar por um servidor do EconoIA. Os resultados são os mesmos de uma instalação comum do R, com os pacotes disponíveis na versão para navegador.</p>
+
+  <h3>7. Correções</h3>
+  <p>Quando um erro é identificado em dados, cálculos ou textos, ele é corrigido no código-fonte e a correção entra no ar na próxima atualização.</p>
+</section>
+
+<section id="p-termos" class="card inst" hidden>
+  <h2>Termos de uso</h2>
+  <p class="note">Última atualização: 6 de outubro de 2026.</p>
+
+  <h3>1. Aceitação</h3>
+  <p>Ao acessar ou usar o EconoIA Brasil (econoia.com.br), você concorda com estes Termos de uso, com o <a class="mlink" href="#aviso-legal">Aviso legal</a> e com a <a class="mlink" href="#privacidade">Política de privacidade</a>. Se não concordar, não utilize o site.</p>
+
+  <h3>2. O serviço</h3>
+  <p>O EconoIA é uma plataforma gratuita, independente e de caráter educacional. Reúne indicadores econômicos de fontes públicas, gráficos, simuladores, modelos estatísticos de previsão, conteúdo didático, um laboratório de programação em R e um assistente de inteligência artificial.</p>
+
+  <h3>3. Natureza informativa</h3>
+  <p>Todo o conteúdo tem finalidade exclusivamente informativa e educacional. Nada no site constitui recomendação de investimento, oferta de compra ou venda de ativos, consultoria financeira, jurídica, contábil ou tributária. As decisões tomadas com base no conteúdo são de responsabilidade exclusiva de quem as toma.</p>
+
+  <h3>4. Dados e disponibilidade</h3>
+  <p>Os dados são obtidos de terceiros e podem conter atrasos, revisões, falhas ou interrupções que não dependem do EconoIA. O site é oferecido "no estado em que se encontra", sem garantia de disponibilidade contínua, exatidão ou adequação a uma finalidade específica. Funcionalidades podem ser alteradas, suspensas ou removidas a qualquer momento.</p>
+
+  <h3>5. Inteligência artificial</h3>
+  <p>As respostas do assistente são geradas automaticamente por um modelo de IA de terceiros e podem conter erros. Elas não são revisadas por uma pessoa antes de serem exibidas. Não insira no chat dados pessoais, senhas, documentos ou informações sigilosas. O número de perguntas por pessoa é limitado para manter o serviço gratuito e protegido contra abuso.</p>
+
+  <h3>6. Uso permitido</h3>
+  <p>Você pode usar o site para fins pessoais, educacionais e de pesquisa. Não é permitido: tentar contornar os limites de uso ou as proteções técnicas; usar robôs para extrair conteúdo em massa ou sobrecarregar o serviço; usar o assistente para fins ilegais ou para gerar conteúdo ofensivo; apresentar o conteúdo do EconoIA como se fosse próprio.</p>
+
+  <h3>7. Propriedade intelectual</h3>
+  <p>A marca EconoIA, o logotipo, o design, os textos didáticos e o código do site pertencem a JesseCorp/Jessé Santos. Os dados públicos pertencem às respectivas fontes. É permitido citar e reproduzir trechos e gráficos para fins educacionais e não comerciais, desde que a fonte seja mencionada ("Fonte: EconoIA Brasil, econoia.com.br").</p>
+
+  <h3>8. Limitação de responsabilidade</h3>
+  <p>Na máxima extensão permitida pela lei, o EconoIA e seu mantenedor não se responsabilizam por perdas, danos ou prejuízos, diretos ou indiretos, decorrentes do uso ou da impossibilidade de uso do site, de erros ou atrasos nos dados, das respostas da inteligência artificial ou de decisões tomadas com base no conteúdo.</p>
+
+  <h3>9. Links externos</h3>
+  <p>O site contém links e notícias de sites de terceiros. O EconoIA não controla nem se responsabiliza pelo conteúdo, pelas políticas ou pela disponibilidade desses sites.</p>
+
+  <h3>10. Alterações</h3>
+  <p>Estes termos podem ser atualizados a qualquer momento. A data da última atualização aparece no início da página. O uso continuado do site após uma alteração significa concordância com a nova versão.</p>
+
+  <h3>11. Lei aplicável</h3>
+  <p>Estes termos são regidos pelas leis da República Federativa do Brasil, incluindo o Código de Defesa do Consumidor e a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), quando aplicáveis.</p>
+</section>
+
+<section id="p-legal" class="card inst" hidden>
+  <h2>Aviso legal</h2>
+  <p class="note">Última atualização: 6 de outubro de 2026.</p>
+
+  <h3>Não é recomendação de investimento</h3>
+  <p>As informações, os indicadores, os gráficos, as previsões e as respostas da inteligência artificial publicados no EconoIA têm caráter exclusivamente informativo e educacional. Não constituem recomendação de compra, venda ou manutenção de qualquer ativo, nem oferta de produtos ou serviços financeiros.</p>
+
+  <h3>Não é consultoria nem análise credenciada</h3>
+  <p>O EconoIA não é instituição financeira, corretora, consultor de valores mobiliários nem analista de valores mobiliários credenciado na Comissão de Valores Mobiliários (CVM). O conteúdo não considera seus objetivos, sua situação financeira ou seu perfil de risco. Antes de investir, procure um profissional habilitado.</p>
+
+  <h3>Previsões são estimativas</h3>
+  <p>As previsões são resultados de modelos estatísticos estimados com dados do passado e têm incerteza, mostrada nas faixas de cada gráfico. Desempenho passado não garante resultado futuro. Eventos inesperados podem tornar qualquer previsão errada.</p>
+
+  <h3>Dados de terceiros</h3>
+  <p>Os dados vêm de fontes públicas e de provedores de mercado e podem ter atraso, revisões ou erros. Cotações de bolsa, câmbio e criptoativos não são em tempo real e não devem ser usadas para operar. Sempre confirme na fonte oficial.</p>
+
+  <h3>Sem vínculo institucional</h3>
+  <p>O EconoIA é um projeto independente, sem vínculo com o Banco Central do Brasil, o IBGE, a FGV, o Google ou qualquer outra instituição citada. Os nomes e marcas dessas instituições são usados apenas para identificar a origem dos dados.</p>
+</section>
+
+<section id="p-priv" class="card inst" hidden>
+  <h2>Política de privacidade</h2>
+  <p class="note">Última atualização: 6 de outubro de 2026.</p>
+  <p>Esta política explica quais dados são tratados quando você usa o EconoIA, de acordo com a Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018). Em resumo: <b>não pedimos cadastro, não usamos cookies de rastreamento, não exibimos anúncios e não vendemos dados.</b></p>
+
+  <h3>1. Responsável</h3>
+  <p>O EconoIA é mantido por Jessé Santos, pessoa física, que é o responsável pelo tratamento dos dados descritos aqui.</p>
+
+  <h3>2. Dados que não coletamos</h3>
+  <p>O site não tem login nem formulário de cadastro. Não pedimos nome, e-mail, CPF ou telefone, e não usamos ferramentas de análise de audiência nem publicidade que rastreiem você entre sites.</p>
+
+  <h3>3. Perguntas feitas à IA</h3>
+  <p>Quando você usa "Pergunte à EconoIA", o texto da pergunta, as mensagens anteriores daquela conversa e os dados do painel são enviados à API Gemini, do Google, para gerar a resposta. O EconoIA não guarda o histórico das conversas em servidor. O Google trata esses dados conforme os próprios termos e pode utilizá-los para melhorar seus serviços. Por isso, <b>não escreva dados pessoais ou sigilosos no chat</b>. O mesmo vale para os recursos do Laboratório R que pedem ajuda à IA.</p>
+
+  <h3>4. Endereço IP e registros técnicos</h3>
+  <p>Para proteger o assistente contra uso abusivo, o endereço IP de quem faz perguntas é usado para contar quantas perguntas foram feitas por minuto e por dia. Essa contagem fica em memória temporária e expira em até 24 horas. Os provedores de hospedagem (Netlify e Cloudflare) também registram dados técnicos de acesso, como IP, navegador e horário, para segurança e funcionamento do serviço.</p>
+
+  <h3>5. Armazenamento no seu navegador</h3>
+  <p>Algumas preferências ficam salvas apenas no seu aparelho, no armazenamento local do navegador: o tema claro ou escuro, a última aba aberta, o progresso nas trilhas de estudo e as respostas dos desafios. Essas informações não são enviadas ao EconoIA e podem ser apagadas a qualquer momento limpando os dados do site no navegador. O código e os resultados do Laboratório R também ficam no seu navegador.</p>
+
+  <h3>6. Serviços de terceiros</h3>
+  <p>Para funcionar, o site carrega recursos de terceiros, como fontes tipográficas (Google Fonts), bibliotecas de gráficos e planilhas (cdnjs e jsDelivr) e o ambiente R para navegador (webR). Ao carregar esses recursos, o seu navegador se conecta a esses serviços, que podem registrar dados técnicos como o IP. As notícias exibidas levam a sites de terceiros, com políticas próprias.</p>
+
+  <h3>7. Compartilhamento</h3>
+  <p>Os dados descritos acima são compartilhados apenas com os prestadores necessários para o funcionamento do site (hospedagem e inteligência artificial). Não vendemos nem alugamos dados a ninguém.</p>
+
+  <h3>8. Seus direitos</h3>
+  <p>A LGPD garante a você, entre outros, os direitos de confirmar se há tratamento de dados, acessar, corrigir e pedir a eliminação deles. Como o EconoIA não mantém cadastro nem histórico identificável, na maior parte dos casos não há dados pessoais guardados a seu respeito. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).</p>
+
+  <h3>9. Alterações</h3>
+  <p>Esta política pode mudar quando o site ganhar novos recursos. A data da última atualização aparece no início da página.</p>
+</section>
+
+<section class="card met" id="metod-ind">
   <h3>Metodologia</h3>
   <p class="src">Como cada indicador da página inicial é obtido e calculado.</p>
   <dl>
@@ -661,10 +815,10 @@ summary(modelo)   # a Selic explica a inflação?</pre>
    <div class="bf-col"><h4>Fontes</h4><a href="https://www.bcb.gov.br" target="_blank" rel="noopener">Banco Central</a><a href="https://www.ibge.gov.br" target="_blank" rel="noopener">IBGE</a><a href="https://portalibre.fgv.br" target="_blank" rel="noopener">FGV IBRE</a><a href="https://www.ipeadata.gov.br" target="_blank" rel="noopener">Ipeadata</a><a href="https://www.coingecko.com" target="_blank" rel="noopener">CoinGecko</a><a href="https://finance.yahoo.com" target="_blank" rel="noopener">Yahoo Finance</a></div>
   </div>
   <div class="bf-bot">
-   <div class="bf-legal"><a href="#aviso" id="avisoBtn">Termos de uso</a><a href="#aviso">Aviso legal</a><a data-go="dados">Metodologia</a><a href="#aviso">Privacidade</a></div>
-   <div class="bf-right"><div class="bf-legal"><a data-go="ia">Sobre</a><a data-go="ia">Ajuda</a></div><p>© JesseCorp 2026 · EconoIA Brasil. Todos os direitos reservados.</p></div>
+   <div class="bf-legal"><a href="#termos" id="avisoBtn">Termos de uso</a><a href="#aviso-legal">Aviso legal</a><a href="#metodologia">Metodologia</a><a href="#privacidade">Privacidade</a></div>
+   <div class="bf-right"><div class="bf-legal"><a href="#sobre">Sobre</a><a data-go="ia">Ajuda</a></div><p>© JesseCorp 2026 · EconoIA Brasil. Todos os direitos reservados.</p></div>
   </div>
-  <p class="bf-aviso" id="aviso">As informações deste site têm caráter informativo e educacional e não constituem recomendação de investimento. Os dados vêm de fontes públicas e podem ter atraso. Este site não coleta dados pessoais.</p>
+  <p class="bf-aviso" id="aviso">As informações deste site têm caráter informativo e educacional e não constituem recomendação de investimento. Os dados vêm de fontes públicas e podem ter atraso. Veja o <a href="#aviso-legal">Aviso legal</a> e a <a href="#privacidade">Política de privacidade</a>.</p>
  </div>
 </footer>
 
@@ -1645,7 +1799,8 @@ document.getElementById("plRow").onclick=()=>plJ&&plJ.insertRow();
 document.getElementById("plCsv").onclick=()=>{if(!plJ)return;const csv=plAoa().map(r=>r.map(c=>{c=String(c??"");return/[";\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(";")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"}));a.download="econoia-"+document.getElementById("plSet").value+".csv";a.click()};
 document.getElementById("plXlsx").onclick=async()=>{if(!plJ)return;try{if(!window.XLSX)await loadJs("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js");const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(plAoa(true)),"EconoIA");XLSX.writeFile(wb,"econoia-"+document.getElementById("plSet").value+".xlsx")}catch(e){alert("Não consegui gerar o arquivo. Tente o .csv.")}};
 // Cada seção tem sua própria área: econoia.com.br/#r, /#graficos...
-const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],"var-sarima":["prev","VAR e SARIMA"],aprender:["learn","Aprenda séries temporais"],"prever-o-futuro":["futuro","Prever o futuro"],latex:["latex","Aprenda LaTeX"],previsoes:["prev","VAR e SARIMA"],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"]};
+const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],"var-sarima":["prev","VAR e SARIMA"],aprender:["learn","Aprenda séries temporais"],"prever-o-futuro":["futuro","Prever o futuro"],latex:["latex","Aprenda LaTeX"],previsoes:["prev","VAR e SARIMA"],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"],sobre:["sobre","Sobre"],metodologia:["metod","Metodologia"],termos:["termos","Termos de uso"],"aviso-legal":["legal","Aviso legal"],privacidade:["priv","Privacidade"],aviso:["legal","Aviso legal"]};
+const INST=["sobre","metod","termos","legal","priv"];
 const SLUG={};for(const k in AREAS)if(!SLUG[AREAS[k][0]])SLUG[AREAS[k][0]]=k;
 // "Pergunte à IA" não abre página isolada: volta à página inicial e leva à caixa do chat
 function irParaChat(){
@@ -1662,6 +1817,7 @@ function route(){
  const a=AREAS[location.hash.slice(1)];
  document.querySelectorAll(".solo-on").forEach(x=>x.classList.remove("solo-on"));
  document.querySelectorAll(".quick button").forEach(b=>b.classList.toggle("on",!!a&&b.dataset.go===a[0]));
+ INST.forEach(k=>document.getElementById("p-"+k).hidden=!a||a[0]!==k);
  if(!a){document.getElementById("p-plan").hidden=true;document.getElementById("p-learn").hidden=true;document.getElementById("p-latex").hidden=true;document.body.classList.remove("solo");document.title="EconoIA Brasil";return}
  const g=a[0],el=document.getElementById("p-"+g);
  if(tabs.some(t=>t.dataset.p===g))show(g);document.getElementById("p-plan").hidden=g!=="plan";document.getElementById("p-learn").hidden=g!=="learn";if(g==="learn")initTrilha();document.getElementById("p-latex").hidden=g!=="latex";if(g==="latex")initLatex();if(g==="plan")initPlan();
