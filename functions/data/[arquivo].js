@@ -1,6 +1,6 @@
 // Arquivos de dados vêm direto do GitHub, sempre a versão mais nova:
 // o robô atualiza sem republicar o site (commits com [skip ci]).
-const PERMITIDOS = new Set(["data.json", "modelos.json"]);
+const PERMITIDOS = new Set(["data.json", "modelos.json", "series.json"]);
 
 export async function onRequestGet({ params, request, env }) {
   const arquivo = String(params.arquivo || "");
