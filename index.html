@@ -862,7 +862,7 @@ valores <- c(${d.map(r=>r[1]).join(", ")})
 serie <- ts(valores, start = c(${ano}, ${mes}), frequency = 12)
 
 # 1. O passado: a série e a tendência (média móvel de 12 meses)
-plot(serie, main = "${s.nome}", ylab = "${s.unidade}", col = "grey40")
+plot(serie, main = "${s.nome}", xlab = "Ano", ylab = "${s.unidade}", col = "grey40")
 lines(stats::filter(serie, rep(1/12, 12), sides = 2), col = "red", lwd = 2)
 
 # 2. O padrão que se repete: quanto cada mês fica acima ou abaixo da média
@@ -895,7 +895,7 @@ valores = [${d.map(r=>r[1]).join(", ")}]
 serie = pd.Series(valores, index=pd.period_range("${d[0][0]}", periods=len(valores), freq="M"))
 
 # 1. O passado: a série e a tendência (média móvel de 12 meses)
-ax = serie.plot(color="grey", title="${s.nome}", ylabel="${s.unidade}")
+ax = serie.plot(color="grey", title="${s.nome}", xlabel="Ano", ylabel="${s.unidade}")
 serie.rolling(12, center=True).mean().plot(ax=ax, color="red", linewidth=2)
 plt.show()
 
