@@ -1209,7 +1209,9 @@ function irParaChat(){
  const q=document.getElementById("q");
  requestAnimationFrame(()=>{q.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>q.focus({preventScroll:true}),350)});
 }
-document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;if(g==="ia"){irParaChat();return}if(SLUG[g])location.hash=SLUG[g]};
+document.querySelector(".quick").onclick=e=>{const b=e.target.closest("button");if(!b)return;const g=b.dataset.go;if(SLUG[g])location.hash=SLUG[g]};
+// só o botão da barra de seções muda; os demais links "Pergunte à IA" seguem como antes
+document.querySelector('.quick button[data-go="ia"]').addEventListener("click",e=>{e.stopPropagation();irParaChat()});
 document.querySelectorAll(".tn-links a[data-go]").forEach(a=>a.onclick=e=>{e.preventDefault();location.hash=SLUG[a.dataset.go]||""});
 document.getElementById("soloBack").onclick=e=>{e.preventDefault();history.pushState("",document.title,location.pathname);route()};
 function route(){
