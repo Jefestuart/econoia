@@ -57,6 +57,29 @@ input,select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1
 .result{font-family:var(--mono);font-size:1.4rem;font-variant-numeric:tabular-nums}
 .note{font-size:.82rem;color:var(--muted)}
 .trilha{display:grid;gap:14px}
+.lx-ed{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+@media(max-width:760px){.lx-ed{grid-template-columns:1fr}}
+.lx-ed textarea,.lx-in{width:100%;box-sizing:border-box;font:13px/1.55 var(--mono);background:#05090d;color:#d6e6f2;border:1px solid var(--line);border-radius:8px;padding:12px;resize:vertical;min-height:220px}
+.lx-in{min-height:0;resize:none}
+.lx-prev{background:#fff;color:#111;border-radius:8px;padding:16px 20px;font-family:"Latin Modern Roman","Computer Modern",Georgia,serif;font-size:16px;line-height:1.5;overflow:auto;min-height:220px}
+.lx-prev h4{font-size:1.25em;margin:.6em 0 .3em}.lx-prev h5{font-size:1.08em;margin:.5em 0 .2em}
+.lx-prev .tit{text-align:center;margin-bottom:1em}.lx-prev .tit b{font-size:1.5em;display:block}
+.lx-prev table{border-collapse:collapse;margin:.6em auto;font-size:.95em}.lx-prev td,.lx-prev th{padding:3px 10px;border:0;color:#111}
+.lx-prev table.bk{border-top:1.5px solid #111;border-bottom:1.5px solid #111}.lx-prev tr.mid td{border-bottom:1px solid #111}
+.lx-prev .cap{text-align:center;font-size:.92em;margin:.3em 0}.lx-prev .eq{display:flex;align-items:center;gap:8px;margin:.5em 0}.lx-prev .eq>span:first-child{flex:1;text-align:center}
+.lx-prev .fig{border:1px dashed #999;padding:20px;text-align:center;color:#666;margin:.5em auto;max-width:300px}
+.lx-prev .erro{color:#b00;font-family:var(--mono);font-size:.8em}
+.lx-dica{font-size:.85rem;color:var(--muted)}
+.lx-pal{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+.lx-pal button{font:13px var(--mono);padding:4px 9px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:inherit;cursor:pointer;min-width:34px}
+.lx-pal button:hover{border-color:var(--accent)}
+.lx-pal .g{font-size:.72rem;color:var(--muted);width:100%;text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.lx-out{background:#fff;color:#111;border-radius:8px;padding:14px;text-align:center;font-size:20px;min-height:44px;overflow-x:auto}
+.lx-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+.lx-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.lx-form label{display:flex;flex-direction:column;font-size:.8rem;color:var(--muted);gap:2px}
+.lx-form input,.lx-form select{font:inherit;padding:7px 9px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.lx-err{margin-top:8px;padding:10px 12px;border-left:3px solid var(--accent);background:var(--surface);border-radius:0 8px 8px 0;font-size:.92rem}
 .trilha .tnav{display:flex;flex-wrap:wrap;gap:6px}
 .trilha .tnav a{font-size:.82rem;padding:4px 12px;border:1px solid var(--line);border-radius:99px;color:inherit;text-decoration:none}
 .trilha .tnav a.feita{border-color:var(--accent);color:var(--accent)}
@@ -266,6 +289,7 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
   <button data-go="graf">Gráficos</button>
   <button data-go="prev">VAR e SARIMA</button>
   <button data-go="sim">Simuladores</button>
+  <button data-go="latex">LaTeX</button>
   <button data-go="plan">Planilha</button>
 </div>
 <div class="solobar"><a href="#" id="soloBack">← Página inicial</a><h2 id="soloT"></h2></div>
@@ -312,6 +336,7 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
    <div class="card"><h3>3. O futuro provável</h3><p class="src" id="fSrc3"></p><div class="chartbox"><canvas id="cF3" aria-label="Previsão para os próximos 12 meses"></canvas></div></div>
   </div>
   <p class="frase" id="fFrase"></p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt" id="fLatex">Copiar em LaTeX (tabela e equação)</button><a class="btn alt" href="#latex" style="text-decoration:none">Como usar LaTeX?</a></div>
   <div class="card fcode"><h3>Faça você mesmo</h3><p class="src">O mesmo estudo em código, com os dados já carregados. Rode aqui no navegador, sem instalar nada, ou copie para o seu computador.</p>
    <div class="segs" role="group" aria-label="Linguagem"><button data-l="r" aria-pressed="true">R</button><button data-l="py" aria-pressed="false">Python</button></div>
    <pre class="code" id="fCode" tabindex="0" contenteditable="plaintext-only" spellcheck="false" autocapitalize="off" aria-label="Código (editável)"></pre>
@@ -483,7 +508,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
     <a class="chip" href="https://colab.research.google.com/#create=true&language=r" target="_blank" rel="noopener">Abrir Colab com R</a>
   </div>
   <div class="rout" id="rout" hidden><pre class="code" id="rtxt"></pre><div id="rimg"></div>
-    <div class="chips" style="margin-top:10px"><button class="btn" id="rexp">💡 Explique o resultado</button></div>
+    <div class="chips" style="margin-top:10px"><button class="btn" id="rexp">💡 Explique o resultado</button><button class="btn alt" id="rlatex">Converter resultado em LaTeX</button></div>
     <div class="msg a" id="rexpt" hidden style="max-width:100%;margin-top:10px"></div></div>
   <p class="note">Novo: o código roda aqui mesmo, no seu navegador (webR), e os pacotes como o ggplot2 são instalados sozinhos. Você pode editar o código antes de rodar. Na primeira vez o R leva alguns segundos para carregar.</p>
   <p class="note" id="rmsg">No Colab, se abrir em Python, vá em Ambiente de execução → Alterar tipo → R. Pacotes extras: o código instala o ggplot2 sozinho se faltar.</p>
@@ -513,6 +538,61 @@ summary(modelo)   # a Selic explica a inflação?</pre>
     <p>Código aberto: <a href="https://github.com/Jefestuart/econoia/blob/main/scripts/modelos.py" target="_blank" rel="noopener">scripts/modelos.py</a>, com testes em <a href="https://github.com/Jefestuart/econoia/blob/main/tests/test_modelos.py" target="_blank" rel="noopener">tests/test_modelos.py</a>.</p>
    </details>
   </div>
+</section>
+<section id="p-latex" class="trilha" hidden>
+  <div class="card"><h3 style="font-family:var(--display);font-size:1.4rem;margin:0">Aprenda LaTeX</h3>
+   <p class="txt" style="margin:.4em 0;max-width:75ch">LaTeX é como os artigos, TCCs e dissertações de economia são escritos. A parte difícil é decorar comandos e entender os erros. Aqui você não precisa: as ferramentas abaixo escrevem o código por você, e as lições mostram o resultado ao vivo enquanto você digita. Quando quiser o PDF final, um clique abre tudo no <b>Overleaf</b>, o editor online e gratuito.</p>
+   <nav class="tnav" aria-label="Seções"><a href="#lx-formulas">Montador de fórmulas</a><a href="#lx-tabela">Tabela do Excel</a><a href="#lx-erros">Tradutor de erros</a><a href="#lx-abnt">Trabalho ABNT</a><a href="#lx-l1">Lições passo a passo</a></nav></div>
+
+  <div class="lx-tools">
+   <div class="card" id="lx-formulas"><h3>Montador de fórmulas</h3>
+    <p class="src">Clique nos botões para montar a fórmula, ou descreva em português e deixe a IA escrever.</p>
+    <input class="lx-in" id="lxF" value="\pi_t = \alpha + \rho\,\pi_{t-1} + \varepsilon_t" aria-label="Fórmula em LaTeX">
+    <div class="lx-out" id="lxFo" style="margin-top:8px"></div>
+    <div class="lx-pal" id="lxPal"></div>
+    <div class="ctrl" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><input class="lx-in" id="lxFd" style="flex:1;min-width:200px;font-family:var(--body);font-size:.9rem" placeholder="Ou descreva: a inflação de hoje é alfa mais rô vezes a inflação passada"><button class="btn" id="lxFia">Escrever com IA</button></div>
+    <div class="acoes" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn alt" id="lxFc1">Copiar no texto ($...$)</button><button class="btn alt" id="lxFc2">Copiar como equação numerada</button></div>
+   </div>
+
+   <div class="card" id="lx-tabela"><h3>Tabela do Excel → LaTeX</h3>
+    <p class="src">Selecione as células no Excel ou no Google Sheets, copie (Cmd+C) e cole aqui. A tabela sai no padrão de artigo acadêmico.</p>
+    <textarea class="lx-in" id="lxT" rows="5" style="min-height:110px;resize:vertical" placeholder="Cole aqui as células copiadas">Ano	Selic (%)	IPCA (%)	Juro real (%)
+2023	11,75	4,62	6,82
+2024	12,25	4,83	7,08
+2025	15,00	4,26	10,30</textarea>
+    <div class="lx-form" style="margin-top:8px"><label>Legenda<input id="lxTc" value="Selic, inflação e juro real ex-post"></label><label>Fonte<input id="lxTf" value="Banco Central e IBGE"></label></div>
+    <label class="lx-dica" style="display:flex;gap:6px;align-items:center;margin-top:6px"><input type="checkbox" id="lxTh" checked> A primeira linha é o cabeçalho</label>
+    <div class="lx-prev" id="lxTp" style="min-height:0;margin-top:8px"></div>
+    <div class="acoes" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn alt" id="lxTcp">Copiar código LaTeX</button><button class="btn alt" id="lxTov">Abrir no Overleaf</button></div>
+   </div>
+
+   <div class="card" id="lx-erros"><h3>Tradutor de erros</h3>
+    <p class="src">O Overleaf mostrou um erro em inglês? Cole a mensagem aqui e veja o que significa e como resolver.</p>
+    <textarea class="lx-in" id="lxE" rows="3" style="min-height:80px;resize:vertical" placeholder="Ex.: ! Missing $ inserted."></textarea>
+    <div class="acoes" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" id="lxEb">Traduzir erro</button><button class="btn alt" id="lxEia" hidden>Perguntar à IA</button></div>
+    <div id="lxEo"></div>
+   </div>
+
+   <div class="card" id="lx-abnt"><h3>Gerador de trabalho ABNT</h3>
+    <p class="src">Preencha e abra no Overleaf um trabalho completo nas normas da ABNT (pacote abnTeX2), com capa, folha de rosto, resumo, sumário, capítulos e referências.</p>
+    <div class="lx-form">
+     <label>Tipo<select id="lxAt"><option value="tcc">TCC (graduação)</option><option value="diss">Dissertação (mestrado)</option><option value="tese">Tese (doutorado)</option></select></label>
+     <label>Título<input id="lxAti" value="Os efeitos da taxa Selic sobre a inflação no Brasil"></label>
+     <label>Autor<input id="lxAa" placeholder="Seu nome completo"></label>
+     <label>Orientador<input id="lxAo" placeholder="Prof. Dr. Nome do orientador"></label>
+     <label>Instituição<input id="lxAi" placeholder="Universidade Federal do Acre"></label>
+     <label>Curso ou programa<input id="lxAc" value="Ciências Econômicas"></label>
+     <label>Cidade<input id="lxAci" value="Rio Branco"></label>
+     <label>Ano<input id="lxAy" value="2026"></label>
+    </div>
+    <div class="acoes" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" id="lxAov">Abrir no Overleaf</button><button class="btn alt" id="lxAcp">Copiar código</button></div>
+    <p class="lx-dica" style="margin-top:8px">No Overleaf, se o menu pedir, escolha o compilador <b>pdfLaTeX</b>. O abnTeX2 já vem instalado lá.</p>
+   </div>
+  </div>
+
+  <div class="card" style="margin-top:4px"><h3 style="font-family:var(--display);font-size:1.25rem;margin:0">Lições passo a passo</h3>
+   <p class="txt" style="margin:.3em 0">Em cada lição, edite o código à esquerda e veja o resultado à direita na hora. A prévia é aproximada; o PDF final sai no Overleaf.</p></div>
+  <div id="lxLicoes" class="trilha"></div>
 </section>
 <section id="p-learn" class="trilha" hidden>
   <div class="card"><h3 style="font-family:var(--display);font-size:1.4rem;margin:0">Aprenda séries temporais</h3>
@@ -702,6 +782,7 @@ async function loadModelos(){
   <div class="tbl"><table><tr><th>Modelo</th><th>Previsão</th><th>Faixa 80%</th><th>Erro no backtest (p.p.)</th><th>Ganho vs. ingênuo</th><th>Cobertura</th></tr>${linhas}${foc}</table></div>
   <div class="segs" role="group" aria-label="Modelo no gráfico">${Object.keys(s.modelos).map(k=>`<button data-s="${id}" data-m="${k}" aria-pressed="${prevSel[id]===k}">${NOMEMOD[k]}</button>`).join("")}</div>
   <div class="chartbox"><canvas id="cPrev_${id}" aria-label="Histórico e previsão mensal do ${s.nome}"></canvas></div>
+  <div style="margin-top:8px"><button class="btn alt" data-texprev="${id}">Copiar em LaTeX</button></div>
   <p class="note" style="margin-top:6px">Backtest: ${bt.origens} previsões de ${bt.periodo}. Ganho positivo = errou menos que o melhor concorrente ingênuo. Cobertura = vezes em que o acumulado real caiu na faixa de 80%.</p></div>`}).join("");
  prevGrid.querySelectorAll(".segs button").forEach(b=>b.onclick=()=>{prevSel[b.dataset.s]=b.dataset.m;b.parentNode.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));drawPrev()});
  // impulso-resposta: seletores
@@ -1038,6 +1119,350 @@ function desafioPlacar(){
  t6tab.innerHTML=`<tr><th>Mês</th><th>Você</th><th>SARIMA</th><th>VAR</th><th>Real</th></tr>${linhas}${placar}`;
 }
 
+// ---------- Aprenda LaTeX: prévia ao vivo, ferramentas e lições ----------
+let lxOk=false,katexP=null;
+function loadKatex(){if(!katexP){loadCss("https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css");katexP=loadJs("https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js")}return katexP}
+const lxEsc=t=>t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function lxMath(tex,display){try{return katex.renderToString(tex,{displayMode:display,throwOnError:true,strict:false})}catch(e){return `<span class="erro">[erro na fórmula: ${lxEsc(String(e.message||e).replace(/^KaTeX parse error: /,""))}]</span>`}}
+const LX_PRE=String.raw`\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+`;
+function lxDoc(src){return /\\documentclass/.test(src)?src:LX_PRE+"\n\\begin{document}\n\n"+src.trim()+"\n\n\\end{document}\n"}
+function lxOverleaf(src){const f=document.createElement("form");f.method="POST";f.action="https://www.overleaf.com/docs";f.target="_blank";
+ const i=document.createElement("input");i.type="hidden";i.name="encoded_snip";i.value=encodeURIComponent(lxDoc(src));f.appendChild(i);
+ const e=document.createElement("input");e.type="hidden";e.name="engine";e.value="pdflatex";f.appendChild(e);
+ document.body.appendChild(f);f.submit();f.remove()}
+async function lxCopy(txt,btn){const o=btn.textContent;try{await navigator.clipboard.writeText(txt);btn.textContent="Copiado!"}catch(e){btn.textContent="Não consegui copiar"}setTimeout(()=>btn.textContent=o,1800)}
+function lxArg(s,i){if(s[i]!=="{")return null;let d=0;for(let j=i;j<s.length;j++){if(s[j]==="\\"){j++;continue}if(s[j]==="{")d++;else if(s[j]==="}"&&--d===0)return[s.slice(i+1,j),j+1]}return null}
+// troca \cmd{arg} por f(arg), respeitando chaves aninhadas
+function lxCmd(s,cmd,f){let out="",i=0;const re=new RegExp("\\\\"+cmd+"\\*?\\s*(?=\\{)","g");let m;while((m=re.exec(s))){const a=lxArg(s,m.index+m[0].length);if(!a)continue;out+=s.slice(i,m.index)+f(a[0]);i=a[1];re.lastIndex=a[1]}return out+s.slice(i)}
+// prévia aproximada de um documento LaTeX (o essencial para aprender)
+function lxRender(src){
+ let s=src.replace(/(^|[^\\])%.*$/gm,"$1");
+ const meta={};["title","author","date"].forEach(k=>{s=lxCmd(s,k,a=>{meta[k]=a;return""})});
+ const b=s.match(/\\begin\{document\}([\s\S]*?)(\\end\{document\}|$)/);if(b)s=b[1];
+ s=s.replace(/\\(documentclass|usepackage)(\[[^\]]*\])?\{[^}]*\}/g,"");
+ const lab={},math=[];let nEq=0,nSec=0,nSub=0,nTab=0,nFig=0;
+ const guarda=h=>{math.push(h);return `\u0000${math.length-1}\u0000`};
+ // rótulos: numera seções, equações, tabelas e figuras na ordem em que aparecem
+ s.replace(/\\(section|subsection)\*?\{|\\begin\{(equation|align|table|figure)\}|\\label\{([^}]*)\}/g,(m,sec,env,l)=>{
+  if(sec==="section"){nSec++;nSub=0;lab._u=String(nSec)}else if(sec==="subsection"){nSub++;lab._u=nSec+"."+nSub}
+  else if(env==="equation"||env==="align"){nEq++;lab._u=String(nEq)}else if(env==="table"){nTab++;lab._u=String(nTab)}else if(env==="figure"){nFig++;lab._u=String(nFig)}
+  else if(l)lab[l]=lab._u;return m});
+ nEq=0;nSec=0;nSub=0;nTab=0;nFig=0;
+ const tiraLabel=t=>{let l=null;t=t.replace(/\\label\{([^}]*)\}/g,(m,x)=>{l=x;return""});return[t,l]};
+ s=s.replace(/\\begin\{(equation|align)(\*?)\}([\s\S]*?)\\end\{\1\*?\}/g,(m,env,star,body)=>{let[t]=tiraLabel(body);if(env==="align")t="\\begin{aligned}"+t+"\\end{aligned}";
+  const num=star?"":`(${++nEq})`;return guarda(`<div class="eq"><span>${lxMath(t.trim(),true)}</span><span>${num}</span></div>`)});
+ s=s.replace(/\\\[([\s\S]*?)\\\]|\$\$([\s\S]*?)\$\$/g,(m,a,c)=>guarda(`<div class="eq"><span>${lxMath((a||c).trim(),true)}</span></div>`));
+ s=s.replace(/\\\(([\s\S]*?)\\\)|(?<!\\)\$([^$]+?)(?<!\\)\$/g,(m,a,c)=>guarda(lxMath(a||c,false)));
+ // tabelas
+ s=s.replace(/\\begin\{tabular\}\{[^}]*\}([\s\S]*?)\\end\{tabular\}/g,(m,body)=>{const bk=/\\toprule|\\hline/.test(body);
+  const linhas=body.split(/\\\\/).map(l=>l.trim()).filter(l=>l.replace(/\\(toprule|midrule|bottomrule|hline)/g,"").trim());
+  let html="";body.split(/\\\\/).forEach(l=>{const mid=/\\midrule|\\hline/.test(l)&&html;const lim=l.replace(/\\(toprule|midrule|bottomrule|hline)/g,"").trim();if(mid)html=html.replace(/<tr>(?![\s\S]*<tr>)/,'<tr class="mid">');
+   if(lim)html+="<tr>"+lim.split(/(?<!\\)&/).map(c=>`<td>${c.trim()}</td>`).join("")+"</tr>"});
+  return `<table class="${bk?"bk":""}">${html}</table>`});
+ s=s.replace(/\\begin\{table\}(\[[^\]]*\])?([\s\S]*?)\\end\{table\}/g,(m,o,body)=>{nTab++;let[t]=tiraLabel(body);let cap="";t=lxCmd(t,"caption",a=>{cap=a;return""});return `<div>${cap?`<div class="cap">Tabela ${nTab}: ${cap}</div>`:""}${t}</div>`});
+ s=s.replace(/\\begin\{figure\}(\[[^\]]*\])?([\s\S]*?)\\end\{figure\}/g,(m,o,body)=>{nFig++;let[t]=tiraLabel(body);let cap="",arq="";t=lxCmd(t,"caption",a=>{cap=a;return""});t.replace(/\\includegraphics(\[[^\]]*\])?\{([^}]*)\}/,(x,y,f)=>arq=f);
+  return `<div class="fig">[imagem: ${arq||"arquivo"}]</div>${cap?`<div class="cap">Figura ${nFig}: ${cap}</div>`:""}`});
+ s=s.replace(/\\begin\{center\}|\\end\{center\}|\\centering/g,"");
+ // listas
+ s=s.replace(/\\begin\{(itemize|enumerate)\}([\s\S]*?)\\end\{\1\}/g,(m,env,body)=>{const it=body.split(/\\item\s*/).slice(1);const tag=env==="itemize"?"ul":"ol";return `<${tag}>${it.map(i=>`<li>${i.trim()}</li>`).join("")}</${tag}>`});
+ // seções e formatação
+ {let out="",i=0;const re=/\\(section|subsection)\*?\s*(?=\{)/g;let m;   // seções na ordem do documento
+  while((m=re.exec(s))){const ar=lxArg(s,m.index+m[0].length);if(!ar)continue;
+   out+=s.slice(i,m.index)+(m[1]==="section"?(nSub=0,`<h4>${++nSec}&nbsp;&nbsp;${ar[0]}</h4>`):`<h5>${nSec}.${++nSub}&nbsp;&nbsp;${ar[0]}</h5>`);i=ar[1];re.lastIndex=ar[1]}
+  s=out+s.slice(i)}
+ s=lxCmd(s,"textbf",a=>`<b>${a}</b>`);s=lxCmd(s,"textit",a=>`<i>${a}</i>`);s=lxCmd(s,"emph",a=>`<i>${a}</i>`);s=lxCmd(s,"underline",a=>`<u>${a}</u>`);s=lxCmd(s,"texttt",a=>`<code>${a}</code>`);
+ s=lxCmd(s,"ref",a=>lab[a]||"??");s=lxCmd(s,"eqref",a=>`(${lab[a]||"??"})`);s=lxCmd(s,"cite",a=>`[${a}]`);s=lxCmd(s,"footnote",a=>`<sup title="${a.replace(/"/g,"'")}">*</sup>`);
+ s=s.replace(/\\label\{[^}]*\}/g,"").replace(/\\maketitle/g,()=>`<div class="tit">${meta.title?`<b>${meta.title}</b>`:""}${meta.author?`<div>${meta.author}</div>`:""}<div>${meta.date!==undefined?meta.date:new Date().toLocaleDateString("pt-BR",{month:"long",year:"numeric"})}</div></div>`);
+ s=s.replace(/\\LaTeX\b/g,"L<sup style=\"font-size:.7em;margin-left:-.3em\">A</sup>T<sub style=\"font-size:.9em\">E</sub>X").replace(/\\TeX\b/g,"T<sub>E</sub>X");
+ s=s.replace(/\\\\/g,"<br>").replace(/\\(%|&|_|\$|#)/g,"$1").replace(/~/g,"&nbsp;").replace(/``/g,"“").replace(/''/g,"”").replace(/\\(noindent|newpage|clearpage|tableofcontents|small|large|Large|footnotesize)\b/g,"");
+ s=s.replace(/\\([a-zA-Z]+)\*?(\{[^}]*\})?/g,(m,c)=>`<span class="erro" title="Comando sem prévia aqui; funciona no Overleaf">\\${c}</span>`);
+ s=s.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean).map(p=>/^<(h4|h5|div|table|ul|ol|\u0000)/.test(p)?p:`<p style="margin:.5em 0">${p}</p>`).join("");
+ return s.replace(/\u0000(\d+)\u0000/g,(m,i)=>math[i]);
+}
+// ---- ferramenta 1: montador de fórmulas
+const LX_PAL=[["Estrutura",[["a/b",String.raw`\frac{a}{b}`],["√x",String.raw`\sqrt{x}`],["xⁿ","^{n}"],["xₜ","_{t}"],["Σ",String.raw`\sum_{i=1}^{n}`],["Π",String.raw`\prod_{i=1}^{n}`],["∫",String.raw`\int_{a}^{b}`],["lim",String.raw`\lim_{x \to \infty}`],["∂",String.raw`\frac{\partial y}{\partial x}`],["x̂",String.raw`\hat{\beta}`],["x̄",String.raw`\bar{x}`],["E[ ]",String.raw`\mathbb{E}[x]`],["( )",String.raw`\left( x \right)`]]],
+ ["Símbolos",[["≤",String.raw`\leq`],["≥",String.raw`\geq`],["≠",String.raw`\neq`],["≈",String.raw`\approx`],["→",String.raw`\to`],["∞",String.raw`\infty`],["×",String.raw`\times`],["·",String.raw`\cdot`],["±",String.raw`\pm`],["Δ",String.raw`\Delta`],["∈",String.raw`\in`],["%",String.raw`\%`]]],
+ ["Gregas",[["α",String.raw`\alpha`],["β",String.raw`\beta`],["γ",String.raw`\gamma`],["δ",String.raw`\delta`],["ε",String.raw`\varepsilon`],["θ",String.raw`\theta`],["λ",String.raw`\lambda`],["μ",String.raw`\mu`],["π",String.raw`\pi`],["ρ",String.raw`\rho`],["σ",String.raw`\sigma`],["φ",String.raw`\phi`],["Σ",String.raw`\Sigma`],["Ω",String.raw`\Omega`]]],
+ ["Fórmulas de economia",[["Fisher",String.raw`(1+i) = (1+r)(1+\pi^e)`],["Taylor",String.raw`i_t = r^* + \pi_t + 0{,}5(\pi_t - \pi^*) + 0{,}5(y_t - y^*)`],["AR(1)",String.raw`\pi_t = \alpha + \rho\,\pi_{t-1} + \varepsilon_t`],["MQO",String.raw`\hat{\beta} = (X'X)^{-1}X'y`],["Cobb-Douglas",String.raw`Y = A K^{\alpha} L^{1-\alpha}`],["VPL",String.raw`\text{VPL} = \sum_{t=0}^{T} \frac{FC_t}{(1+r)^t}`],["Elasticidade",String.raw`\varepsilon = \frac{\partial Q}{\partial P}\cdot\frac{P}{Q}`],["Juros compostos",String.raw`M = C(1+i)^n`]]]];
+function lxFRender(){lxFo.innerHTML=lxMath(lxF.value,true)}
+function lxInsere(t){const a=lxF.selectionStart??lxF.value.length,b=lxF.selectionEnd??a;lxF.value=lxF.value.slice(0,a)+t+lxF.value.slice(b);lxF.focus();const p=a+t.length;lxF.setSelectionRange(p,p);lxFRender()}
+async function lxIA(pedido,saida){
+ const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system:"Você é a EconoIA, assistente de economia brasileira. Agora você ajuda com LaTeX. "+saida,turns:[{role:"user",content:pedido}]})});
+ const j=await r.json().catch(()=>({}));if(!r.ok||j.error)throw new Error(j.error||"A IA não respondeu agora.");return j.text.trim()}
+// ---- ferramenta 2: tabela do Excel
+function lxTabela(){const linhas=lxT.value.replace(/\r/g,"").split("\n").filter(l=>l.trim());if(!linhas.length)return"";
+ const cel=linhas.map(l=>l.split(/\t|;(?=\S)/).map(c=>c.trim()));const nc=Math.max(...cel.map(r=>r.length));
+ const num=c=>/^-?[\d.,]+%?$/.test(c);const al=Array.from({length:nc},(_,j)=>cel.slice(lxTh.checked?1:0).every(r=>!r[j]||num(r[j]))?"r":"l").join("");
+ const esc=c=>c.replace(/([%&_#$])/g,"\\$1");const lin=r=>"    "+Array.from({length:nc},(_,j)=>esc(r[j]||"")).join(" & ")+" \\\\";
+ let corpo=cel.map(lin);if(lxTh.checked)corpo=[corpo[0],"    \\midrule",...corpo.slice(1)];
+ return String.raw`\begin{table}[htbp]
+  \centering
+  \caption{${esc(lxTc.value)}}
+  \label{tab:minha-tabela}
+  \begin{tabular}{${al}}
+    \toprule
+`+corpo.join("\n")+String.raw`
+    \bottomrule
+  \end{tabular}
+`+(lxTf.value.trim()?`  \\par\\smallskip {\\footnotesize Fonte: ${esc(lxTf.value)}.}\n`:"")+String.raw`\end{table}`}
+function lxTRender(){const c=lxTabela();lxTp.innerHTML=c?lxRender(c.replace(/\\par\\smallskip \{\\footnotesize (.*)\}/,"<div class=\"cap\">$1</div>")):""}
+// ---- ferramenta 3: tradutor de erros
+const LX_ERROS=[
+ [/Undefined control sequence/i,"Comando desconhecido","O LaTeX não reconhece um comando (algo que começa com \\). Quase sempre é um erro de digitação (\\fraq em vez de \\frac) ou um comando que precisa de um pacote. Olhe o número da linha indicado no erro e confira o comando. Se estiver certo, procure qual \\usepackage{...} ele exige."],
+ [/Missing \$ inserted/i,"Símbolo de matemática fora de uma fórmula","Você usou um símbolo que só existe dentro de fórmulas (como _, ^, \\alpha ou \\frac) no meio do texto normal. Coloque a expressão entre cifrões: $x_t$. Se você queria o caractere sublinhado mesmo, escreva \\_."],
+ [/Misplaced alignment tab character &/i,"Caractere & fora de tabela","O & separa colunas de tabelas. No texto normal, escreva \\& para aparecer o símbolo \"&\"."],
+ [/Extra alignment tab has been changed/i,"Colunas a mais na tabela","Uma linha da tabela tem mais & do que colunas definidas em \\begin{tabular}{...}. Se a tabela tem 3 colunas ({lcr}), cada linha deve ter exatamente 2 símbolos &."],
+ [/Missing \} inserted|Extra \}|Too many \}'?s|Runaway argument|File ended while scanning/i,"Chaves desequilibradas","Alguma chave { ficou sem fechar } (ou o contrário). Conte as chaves perto da linha do erro. Editores como o Overleaf destacam o par de cada chave quando você clica nela."],
+ [/File [`'"]?([\w.-]+)\.sty'? not found/i,"Pacote não encontrado","O documento pede um pacote que não está instalado ou o nome está errado em \\usepackage{...}. Confira a grafia. No Overleaf quase todos os pacotes já vêm instalados."],
+ [/File [`'"]?([\w./-]+\.(png|jpg|jpeg|pdf))'? not found/i,"Imagem não encontrada","O arquivo da figura não está no projeto ou o nome está diferente. No Overleaf, envie a imagem pelo botão Upload e use exatamente o mesmo nome em \\includegraphics{...}, respeitando maiúsculas."],
+ [/Environment (\w+) undefined/i,"Ambiente desconhecido","Você usou \\begin{...} com um nome que o LaTeX não conhece. Pode ser erro de digitação ou falta de pacote (por exemplo, align precisa de \\usepackage{amsmath})."],
+ [/\\begin\{(\w+)\} on input line \d+ ended by \\end\{(\w+)\}/i,"Ambiente fechado errado","Um \\begin{...} foi fechado com um \\end{...} de nome diferente. Cada \\begin{equation} precisa do seu \\end{equation}, na ordem certa."],
+ [/Missing \\begin\{document\}/i,"Texto antes do início do documento","Há texto ou um comando de conteúdo antes de \\begin{document}. Antes dele só podem vir \\documentclass, \\usepackage e configurações."],
+ [/Citation [`'"]?([\w:-]+)'? .*undefined|There were undefined citations/i,"Citação não encontrada","A referência citada com \\cite{...} não existe no arquivo .bib ou a bibliografia ainda não foi processada. Confira a chave no .bib e mande compilar de novo (o Overleaf faz as etapas sozinho)."],
+ [/Reference [`'"]?([\w:-]+)'? .*undefined|There were undefined references/i,"Referência cruzada não encontrada","Um \\ref{...} aponta para um \\label{...} que não existe, ou o documento precisa ser compilado mais uma vez. Confira se o nome do label é igual."],
+ [/Overfull \\hbox/i,"Só um aviso: linha passou da margem","Não é erro, é aviso. Alguma linha ficou mais larga que a margem, geralmente por causa de uma palavra longa, URL ou tabela larga. Se não estiver visível no PDF, pode ignorar."],
+ [/Underfull \\hbox/i,"Só um aviso: espaçamento esticado","Não é erro. Uma linha ficou com espaços largos demais, quase sempre por um \\\\ desnecessário. Pode ignorar."],
+ [/Package inputenc Error|Invalid UTF-8|Unicode character/i,"Problema com acentos ou caractere especial","Algum caractere não foi reconhecido. Garanta \\usepackage[utf8]{inputenc} no preâmbulo. Se o caractere veio colado de outro programa (aspas curvas, travessão especial), digite-o de novo."],
+ [/Paragraph ended before/i,"Comando interrompido por linha em branco","Um comando que recebe texto entre chaves foi cortado por uma linha em branco antes de fechar a chave. Feche a chave antes de pular linha."],
+ [/Display math should end with \$\$|Bad math environment delimiter/i,"Fórmula mal fechada","Uma fórmula foi aberta e fechada com símbolos diferentes. Use $...$ no meio do texto ou \\[ ... \\] e \\begin{equation}...\\end{equation} para fórmulas destacadas."]];
+function lxTraduz(){const t=lxE.value.trim();lxEia.hidden=true;if(!t){lxEo.innerHTML="";return}
+ const achados=LX_ERROS.filter(([re])=>re.test(t));const linha=(t.match(/l\.(\d+)|line (\d+)/)||[]).slice(1).find(Boolean);
+ if(!achados.length){lxEo.innerHTML=`<div class="lx-err">Não reconheci esse erro na minha lista. Toque em <b>Perguntar à IA</b> para uma explicação.</div>`;lxEia.hidden=false;return}
+ lxEo.innerHTML=achados.map(([,tit,txt])=>`<div class="lx-err"><b>${tit}</b><br>${lxEsc(txt)}${linha?`<br><span class="lx-dica">O erro aponta para a <b>linha ${linha}</b> do seu arquivo.</span>`:""}</div>`).join("")}
+// ---- ferramenta 4: trabalho ABNT
+function lxAbnt(){const v=id=>document.getElementById(id).value.trim(),tipo=lxAt.value;
+ const nat={tcc:"Trabalho de Conclusão de Curso apresentado ao curso de "+(v("lxAc")||"Ciências Econômicas")+" como requisito parcial para obtenção do título de Bacharel.",diss:"Dissertação apresentada ao "+(v("lxAc")||"Programa de Pós-Graduação em Economia")+" como requisito parcial para obtenção do título de Mestre.",tese:"Tese apresentada ao "+(v("lxAc")||"Programa de Pós-Graduação em Economia")+" como requisito parcial para obtenção do título de Doutor."}[tipo];
+ const e=t=>t.replace(/([%&_#$])/g,"\\$1");
+ return String.raw`\documentclass[12pt,openright,oneside,a4paper,chapter=TITLE,english,brazil]{abntex2}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+% Para citações (AUTOR, ano) automáticas no padrão ABNT, use um arquivo .bib
+% com \usepackage[alf]{abntex2cite} e \bibliography{referencias}.
+
+\titulo{${e(v("lxAti")||"Título do trabalho")}}
+\autor{${e(v("lxAa")||"Nome do Autor")}}
+\local{${e(v("lxAci")||"Cidade")}}
+\data{${e(v("lxAy")||"2026")}}
+\orientador{${e(v("lxAo")||"Prof. Dr. Nome do Orientador")}}
+\instituicao{${e(v("lxAi")||"Nome da Universidade")}\par ${e(v("lxAc")||"Curso")}}
+\tipotrabalho{${tipo==="tcc"?"Trabalho de Conclusão de Curso":tipo==="diss"?"Dissertação (Mestrado)":"Tese (Doutorado)"}}
+\preambulo{${e(nat)}}
+\hypersetup{hidelinks}   % links clicáveis no PDF, sem caixas coloridas
+
+\begin{document}
+\pretextual
+\imprimircapa
+\imprimirfolhaderosto
+
+\begin{resumo}
+Escreva aqui o resumo do trabalho, com objetivo, método, resultados e conclusão em um único parágrafo.
+
+\textbf{Palavras-chave}: inflação. política monetária. séries temporais.
+\end{resumo}
+
+\tableofcontents*
+\textual
+
+\chapter{Introdução}
+Apresente o tema, a pergunta de pesquisa e a estrutura do trabalho. Exemplo de citação: \cite{sims1980}.
+
+\chapter{Revisão de literatura}
+Discuta os principais trabalhos sobre o tema.
+
+\chapter{Metodologia}
+O modelo estimado é:
+\begin{equation}
+  \pi_t = \alpha + \rho\,\pi_{t-1} + \beta\, i_{t-1} + \varepsilon_t
+  \label{eq:modelo}
+\end{equation}
+A equação \eqref{eq:modelo} é estimada por mínimos quadrados ordinários.
+
+\chapter{Resultados}
+Cole aqui as tabelas geradas pela EconoIA (botão \textit{Copiar em LaTeX}).
+
+\chapter{Conclusão}
+Retome a pergunta de pesquisa e os principais achados.
+
+\postextual
+\begin{thebibliography}{9}
+\bibitem[Sims 1980]{sims1980} SIMS, C. A. Macroeconomics and reality. \textbf{Econometrica}, v. 48, n. 1, p. 1--48, 1980.
+\end{thebibliography}
+\end{document}
+`}
+// ---- lições
+const LX_LICOES=[
+ ["O primeiro documento","Todo arquivo LaTeX tem duas partes. O <b>preâmbulo</b> (antes de \\begin{document}) diz que tipo de documento é e quais pacotes usar. O <b>corpo</b> (entre \\begin e \\end{document}) é o texto. Os acentos funcionam normalmente graças ao pacote inputenc. Mude o título e o seu nome e veja a prévia.",
+ String.raw`\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+
+\title{Minha primeira análise econômica}
+\author{Seu Nome}
+
+\begin{document}
+\maketitle
+
+Olá! Este é meu primeiro documento em \LaTeX.
+Uma linha em branco começa um novo parágrafo.
+
+Este já é o segundo parágrafo.
+\end{document}`,"Tente: troque o título e escreva um terceiro parágrafo."],
+ ["Texto: seções, destaques e listas","Organize o texto com \\section e \\subsection: o LaTeX numera tudo sozinho. Para destacar, use \\textbf{negrito} e \\textit{itálico}. Listas usam itemize (marcadores) ou enumerate (números), com cada item começando por \\item. Para escrever %, & ou _ no texto, coloque uma barra antes: \\%.",
+ String.raw`\section{Introdução}
+A taxa \textbf{Selic} é o principal instrumento do Banco Central.
+Em 2025 ela chegou a 15\% ao ano.
+
+\subsection{Objetivos}
+Este trabalho tem três objetivos:
+\begin{enumerate}
+  \item medir o efeito da Selic sobre a \textit{inflação};
+  \item comparar com outros países;
+  \item propor recomendações.
+\end{enumerate}
+
+\section{Dados}
+Usamos dados de:
+\begin{itemize}
+  \item Banco Central (SGS);
+  \item IBGE (IPCA).
+\end{itemize}`,"Tente: crie uma terceira seção chamada Conclusão e troque enumerate por itemize."],
+ ["Equações","Fórmulas no meio do texto ficam entre cifrões: $x^2$. Fórmulas destacadas e numeradas usam o ambiente equation. Índices usam _ (π_t vira \\pi_t) e potências usam ^. Letras gregas são o nome em inglês com barra: \\alpha, \\beta, \\rho. Para várias linhas alinhadas, use align e marque o ponto de alinhamento com &.",
+ String.raw`O modelo AR(1) diz que a inflação $\pi_t$ depende da inflação passada:
+\begin{equation}
+  \pi_t = \alpha + \rho\,\pi_{t-1} + \varepsilon_t
+\end{equation}
+em que $|\rho| < 1$ garante que o choque se dissipa.
+
+A equação de Fisher, em duas etapas:
+\begin{align}
+  1 + i &= (1 + r)(1 + \pi^e) \\
+  i &\approx r + \pi^e
+\end{align}
+
+O estimador de MQO é $\hat{\beta} = (X'X)^{-1}X'y$.`,"Tente: escreva a regra de Taylor. Dica: use o Montador de fórmulas acima e cole aqui."],
+ ["Tabelas","Tabelas usam o ambiente tabular. Em {lrr}, cada letra é uma coluna: l (esquerda), r (direita), c (centro). O & separa colunas e \\\\ termina a linha. O padrão acadêmico usa só três linhas horizontais: \\toprule, \\midrule e \\bottomrule (pacote booktabs). Para não montar na mão, use a ferramenta Tabela do Excel → LaTeX acima.",
+ String.raw`\begin{table}[htbp]
+  \centering
+  \caption{Indicadores selecionados}
+  \label{tab:indicadores}
+  \begin{tabular}{lrr}
+    \toprule
+    Ano & Selic (\%) & IPCA (\%) \\
+    \midrule
+    2023 & 11,75 & 4,62 \\
+    2024 & 12,25 & 4,83 \\
+    2025 & 15,00 & 4,26 \\
+    \bottomrule
+  \end{tabular}
+\end{table}`,"Tente: acrescente uma coluna com o juro real. Lembre de mudar {lrr} para {lrrr}."],
+ ["Figuras e referências cruzadas","Figuras entram com \\includegraphics dentro do ambiente figure, com legenda em \\caption. O segredo do LaTeX é o par \\label e \\ref: você dá um nome a uma equação, tabela ou figura e cita pelo nome. Se a ordem mudar, toda a numeração se ajusta sozinha. Na prévia, a imagem aparece como um quadro; no Overleaf, envie o arquivo pelo botão Upload.",
+ String.raw`\section{Resultados}
+A Figura~\ref{fig:ipca} mostra o IPCA, e a equação~\eqref{eq:ar} resume o modelo.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{grafico-ipca.png}
+  \caption{IPCA mensal, 2010 a 2026}
+  \label{fig:ipca}
+\end{figure}
+
+\begin{equation}
+  \pi_t = \alpha + \rho\,\pi_{t-1} + \varepsilon_t
+  \label{eq:ar}
+\end{equation}
+
+Como visto na Seção~\ref{sec:intro}, a inflação tem memória.`,"Tente: crie uma \\section{Introdução} no começo com \\label{sec:intro} e veja o ?? virar número."],
+ ["Bibliografia e normas ABNT","Citações usam \\cite{chave}, e o LaTeX monta a lista de referências sozinho a partir de um arquivo .bib. Para trabalhos acadêmicos brasileiros, o pacote <b>abnTeX2</b> já formata capa, folha de rosto, sumário, citações (AUTOR, ano) e referências na ABNT. O jeito mais fácil de começar é o <b>Gerador de trabalho ABNT</b>, mais acima: ele monta tudo isso para você.",
+ String.raw`\section{Literatura}
+O VAR foi popularizado por \cite{sims1980}, e a regra de Taylor
+foi proposta em \cite{taylor1993}.
+
+% No arquivo referencias.bib, cada obra fica assim:
+% @article{sims1980,
+%   author  = {Sims, Christopher A.},
+%   title   = {Macroeconomics and Reality},
+%   journal = {Econometrica},
+%   year    = {1980}
+% }`,"Tente: abra o Gerador de trabalho ABNT, preencha seu nome e abra no Overleaf."]];
+function initLatex(){
+ if(lxOk){return}lxOk=true;
+ lxLicoes.innerHTML=LX_LICOES.map(([t,txt,cod,tente],i)=>`<div class="card licao" id="lx-l${i+1}"><span class="num">Lição ${i+1}</span><h3>${t}</h3><p class="txt">${txt}</p>
+  <div class="lx-ed"><textarea spellcheck="false" aria-label="Código LaTeX da lição ${i+1}" data-i="${i}">${lxEsc(cod)}</textarea><div class="lx-prev" aria-live="polite"></div></div>
+  <p class="lx-dica">${tente}</p>
+  <div class="acoes" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt" data-ov="${i}">Abrir no Overleaf</button><button class="btn alt" data-cp="${i}">Copiar código</button><button class="btn alt" data-rs="${i}">Voltar ao exemplo</button></div></div>`).join("");
+ loadKatex().then(()=>{
+  lxPal.innerHTML=LX_PAL.map(([g,bs],gi)=>`<span class="g">${g}</span>`+bs.map(([r,t])=>`<button title="${lxEsc(t)}" data-t="${lxEsc(t)}"${gi===3?' data-todo="1"':""}>${r}</button>`).join("")).join("");
+  lxPal.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(b.dataset.todo){lxF.value=b.dataset.t;lxFRender()}else lxInsere(b.dataset.t)});
+  lxF.oninput=lxFRender;lxFRender();
+  lxFc1.onclick=()=>lxCopy("$"+lxF.value+"$",lxFc1);lxFc2.onclick=()=>lxCopy("\\begin{equation}\n  "+lxF.value+"\n\\end{equation}",lxFc2);
+  lxFia.onclick=async()=>{const d=lxFd.value.trim();if(!d)return;lxFia.disabled=true;const o=lxFia.textContent;lxFia.textContent="Escrevendo...";
+   try{let t=await lxIA(d,"Converta a descrição em UMA fórmula LaTeX para modo matemático. Responda somente com o código da fórmula, sem cifrões, sem crases, sem explicação.");t=t.replace(/^```\w*\s*|```$/g,"").replace(/^\$+|\$+$/g,"").replace(/^\\\[|\\\]$/g,"").trim();lxF.value=t;lxFRender()}
+   catch(e){lxFo.innerHTML=`<span class="erro">${lxEsc(e.message)}</span>`}lxFia.disabled=false;lxFia.textContent=o};
+  [lxT,lxTc,lxTf,lxTh].forEach(el=>el.oninput=el.onchange=lxTRender);lxTRender();
+  lxTcp.onclick=()=>lxCopy(lxTabela(),lxTcp);lxTov.onclick=()=>lxOverleaf(lxTabela());
+  lxEb.onclick=lxTraduz;lxEia.onclick=async()=>{lxEia.disabled=true;lxEo.innerHTML='<div class="lx-err">Perguntando à IA...</div>';
+   try{const t=await lxIA(lxE.value,"Explique em português simples, para um estudante, o que significa esta mensagem de erro do LaTeX e como corrigir, em no máximo 4 frases, sem markdown.");lxEo.innerHTML=`<div class="lx-err">${lxEsc(t)}</div>`}
+   catch(e){lxEo.innerHTML=`<div class="lx-err">${lxEsc(e.message)}</div>`}lxEia.disabled=false};
+  lxAov.onclick=()=>lxOverleaf(lxAbnt());lxAcp.onclick=()=>lxCopy(lxAbnt(),lxAcp);
+  lxLicoes.querySelectorAll("textarea").forEach(ta=>{const pv=ta.nextElementSibling,r=()=>{pv.innerHTML=lxRender(ta.value)};ta.oninput=r;r()});
+  lxLicoes.querySelectorAll("[data-ov]").forEach(b=>b.onclick=()=>lxOverleaf(lxLicoes.querySelector(`textarea[data-i="${b.dataset.ov}"]`).value));
+  lxLicoes.querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>lxCopy(lxLicoes.querySelector(`textarea[data-i="${b.dataset.cp}"]`).value,b));
+  lxLicoes.querySelectorAll("[data-rs]").forEach(b=>b.onclick=()=>{const ta=lxLicoes.querySelector(`textarea[data-i="${b.dataset.rs}"]`);ta.value=LX_LICOES[+b.dataset.rs][2];ta.dispatchEvent(new Event("input"))});
+ }).catch(()=>{lxLicoes.insertAdjacentHTML("afterbegin",'<div class="card note">Não consegui carregar o desenhista de fórmulas. Verifique a conexão e recarregue a página.</div>')});
+}
+
+// ---------- Copiar em LaTeX (resultados do site) ----------
+const texEsc=t=>String(t).replace(/([%&_#$])/g,"\\$1");
+const texNum=(v,d=2)=>br(v,d);
+const texCel=c=>{c=String(c);return /^-\d/.test(c)?"$-$"+texEsc(c.slice(1)):texEsc(c)};
+function texTabela(cap,cab,linhas,fonte,rot,nota){
+ const al="l"+"r".repeat(cab.length-1);
+ return ["\\begin{table}[htbp]","  \\centering",cab.length>=5?"  \\small\\setlength{\\tabcolsep}{4pt}":null,`  \\caption{${texEsc(cap)}}`,`  \\label{tab:${rot}}`,`  \\begin{tabular}{${al}}`,"    \\toprule",
+  "    "+cab.map(texEsc).join(" & ")+" \\\\","    \\midrule",...linhas.map(l=>"    "+l.map(texCel).join(" & ")+" \\\\"),"    \\bottomrule","  \\end{tabular}",
+  nota?`  \\par\\smallskip {\\footnotesize ${texEsc(nota)}}`:null,
+  fonte?`  \\par\\smallskip {\\footnotesize Fonte: ${texEsc(fonte)}.}`:null,"\\end{table}"].filter(x=>x!==null).join("\n")}
+function texSarima(nome){const o=nome.match(/\d+/g).map(Number),[p,,q,P,,Q]=o;
+ const poli=(n,l,s,sinal)=>n?"\\left(1"+Array.from({length:n},(_,i)=>` ${sinal} \\${l}_{${i+1}}B^{${s*(i+1)===1?"":s*(i+1)}}`.replace("B^{}","B")).join("")+"\\right)":"";
+ return `${poli(p,"phi",1,"-")}${poli(P,"Phi",12,"-")}\\left(x_t - \\mu\\right) = ${poli(q,"theta",1,"+")}${poli(Q,"Theta",12,"+")}\\varepsilon_t`}
+const MESLATEX=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+fLatex.onclick=()=>{if(!SR)return;const id=fInd.value,s=SR.series[id],a=s.analise;if(!a)return;
+ const d=v=>Math.abs(v)>=100?1:2;
+ const tab=texTabela(`Previsão de ${s.nome} (${s.unidade}) para os próximos 12 meses`,["Mês","Previsão","Limite inferior (80\u00a0%)","Limite superior (80\u00a0%)"].map(x=>x.replace("\u00a0","")),
+  a.previsao.map(r=>[rotM(r[0]),texNum(r[1],d(r[1])),texNum(r[2],d(r[2])),texNum(r[3],d(r[3]))]),`${s.fonte}; previsão EconoIA com modelo ${a.modelo}`,"previsao-"+id);
+ const eq=`% Modelo ${a.modelo}, estimado sobre ${a.modelado_como} (x_t). B é o operador de defasagem: B x_t = x_{t-1}.
+\\begin{equation}
+  ${texSarima(a.modelo)}
+  \\label{eq:sarima-${id}}
+\\end{equation}`;
+ lxCopy(tab+"\n\n"+eq+"\n",fLatex)};
+// VAR e SARIMA: botão em cada cartão
+document.addEventListener("click",e=>{const b=e.target.closest("[data-texprev]");if(!b||!M)return;const id=b.dataset.texprev,s=M.series[id];
+ const linhas=Object.entries(s.modelos).map(([k,m])=>[m.nome+(k===s.melhor?"*":""),texNum(m.acumulado_12m.previsto,1),`${texNum(m.acumulado_12m.lo80,1)} a ${texNum(m.acumulado_12m.hi80,1)}`,texNum(m.backtest.acumulado_12m.modelo,2),(m.backtest.acumulado_12m.ganho_pct>0?"+":"")+texNum(m.backtest.acumulado_12m.ganho_pct,1)]);
+ if(s.focus_12m)linhas.push(["Mercado (Focus/BCB)",texNum(s.focus_12m.mediana,1),"--","--","--"]);
+ const bt=s.modelos[s.melhor].backtest;
+ lxCopy(texTabela(`${s.nome}: previsão para os próximos 12 meses e desempenho no backtest`,["Modelo","Previsão","Faixa 80%","Erro","Ganho"],linhas,
+  `EconoIA, com dados de ${s.fonte}`,"modelos-"+id,`* Melhor histórico. Previsão e faixa: inflação acumulada em 12 meses, em %. Erro: raiz do erro quadrático médio dessa previsão, em p.p., em ${bt.origens} previsões fora da amostra (${bt.periodo}). Ganho: redução percentual do erro em relação à previsão ingênua.`)+"\n",b)});
+// Laboratório R: a IA converte a saída em tabela LaTeX
+rlatex.onclick=async()=>{if(!ultimoR.code){rexpt.hidden=false;rexpt.textContent="Rode um código primeiro.";return}
+ rlatex.disabled=true;rexpt.hidden=false;rexpt.textContent="Convertendo em LaTeX...";
+ try{const t=await lxIA(`Código R:\n${ultimoR.code.slice(-2500)}\n\nSaída:\n${ultimoR.out.slice(0,3500)}`,"Converta os principais resultados numéricos desta saída do R em uma tabela LaTeX no padrão acadêmico, com booktabs (\\toprule, \\midrule, \\bottomrule), ambiente table, \\caption e \\label. Use vírgula decimal. Para regressões, mostre coeficientes com erro-padrão entre parênteses abaixo e estrelas de significância, mais R² e número de observações. Responda somente com o código LaTeX, sem crases e sem explicação.");
+  const cod=t.replace(/^```\w*\s*|```$/g,"").trim();
+  rexpt.innerHTML=`<pre class="code" style="white-space:pre-wrap;max-height:300px">${lxEsc(cod)}</pre><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn alt" id="rlCp">Copiar código LaTeX</button><button class="btn alt" id="rlOv">Abrir no Overleaf</button></div>`;
+  rlCp.onclick=()=>lxCopy(cod,rlCp);rlOv.onclick=()=>lxOverleaf(cod)}
+ catch(e){rexpt.textContent=e.message||"Não consegui converter agora."}
+ rlatex.disabled=false};
+
 loadSeries();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>drawFuturo());
 new MutationObserver(()=>{drawFuturo();desenhaTrilha()}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
@@ -1201,7 +1626,7 @@ document.getElementById("plRow").onclick=()=>plJ&&plJ.insertRow();
 document.getElementById("plCsv").onclick=()=>{if(!plJ)return;const csv=plAoa().map(r=>r.map(c=>{c=String(c??"");return/[";\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(";")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"}));a.download="econoia-"+document.getElementById("plSet").value+".csv";a.click()};
 document.getElementById("plXlsx").onclick=async()=>{if(!plJ)return;try{if(!window.XLSX)await loadJs("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js");const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(plAoa(true)),"EconoIA");XLSX.writeFile(wb,"econoia-"+document.getElementById("plSet").value+".xlsx")}catch(e){alert("Não consegui gerar o arquivo. Tente o .csv.")}};
 // Cada seção tem sua própria área: econoia.com.br/#r, /#graficos...
-const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],"var-sarima":["prev","VAR e SARIMA"],aprender:["learn","Aprenda séries temporais"],"prever-o-futuro":["futuro","Prever o futuro"],previsoes:["prev","VAR e SARIMA"],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"]};
+const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],"var-sarima":["prev","VAR e SARIMA"],aprender:["learn","Aprenda séries temporais"],"prever-o-futuro":["futuro","Prever o futuro"],latex:["latex","Aprenda LaTeX"],previsoes:["prev","VAR e SARIMA"],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"]};
 const SLUG={};for(const k in AREAS)if(!SLUG[AREAS[k][0]])SLUG[AREAS[k][0]]=k;
 // "Pergunte à IA" não abre página isolada: volta à página inicial e leva à caixa do chat
 function irParaChat(){
@@ -1218,9 +1643,9 @@ function route(){
  const a=AREAS[location.hash.slice(1)];
  document.querySelectorAll(".solo-on").forEach(x=>x.classList.remove("solo-on"));
  document.querySelectorAll(".quick button").forEach(b=>b.classList.toggle("on",!!a&&b.dataset.go===a[0]));
- if(!a){document.getElementById("p-plan").hidden=true;document.getElementById("p-learn").hidden=true;document.body.classList.remove("solo");document.title="EconoIA Brasil";return}
+ if(!a){document.getElementById("p-plan").hidden=true;document.getElementById("p-learn").hidden=true;document.getElementById("p-latex").hidden=true;document.body.classList.remove("solo");document.title="EconoIA Brasil";return}
  const g=a[0],el=document.getElementById("p-"+g);
- if(tabs.some(t=>t.dataset.p===g))show(g);document.getElementById("p-plan").hidden=g!=="plan";document.getElementById("p-learn").hidden=g!=="learn";if(g==="learn")initTrilha();if(g==="plan")initPlan();
+ if(tabs.some(t=>t.dataset.p===g))show(g);document.getElementById("p-plan").hidden=g!=="plan";document.getElementById("p-learn").hidden=g!=="learn";if(g==="learn")initTrilha();document.getElementById("p-latex").hidden=g!=="latex";if(g==="latex")initLatex();if(g==="plan")initPlan();
  (g==="ia"?el.closest(".hrow"):el).classList.add("solo-on");
  document.getElementById("soloT").textContent=a[1];
  document.body.classList.add("solo");document.title=(a[1]||document.querySelector(".quick button.on").textContent)+" · EconoIA";

@@ -32,3 +32,6 @@ Resultado em `data/modelos.json`. Testes com dados simulados em `tests/test_mode
 
 ## Catálogo de indicadores e "Prever o futuro"
 `scripts/series.py` baixa cerca de 40 séries mensais (Banco Central/SGS e FRED) desde 2003 e, para cada uma, mede a sazonalidade (efeito médio de cada mês e teste F) e faz uma previsão SARIMA de 12 meses com faixa de 80%. O resultado (`data/series.json`) alimenta o módulo **Prever o futuro** da página inicial, que também gera o código equivalente em **R** e **Python**, executável no navegador (WebR e Pyodide). Testes em `tests/test_series.py`.
+
+## Aprenda LaTeX
+Área com quatro ferramentas (montador de fórmulas por cliques ou por descrição em português, tabela do Excel → LaTeX, tradutor de erros do LaTeX para o português e gerador de trabalho ABNT com abnTeX2) e seis lições com prévia ao vivo (KaTeX). Tudo abre no Overleaf com um clique. Os resultados de **Prever o futuro**, **VAR e SARIMA** e do **Laboratório R** têm botão **Copiar em LaTeX**. Os códigos gerados foram compilados com pdflatex.
