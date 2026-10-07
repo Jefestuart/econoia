@@ -272,6 +272,8 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
 .thm:hover{border-color:var(--accent);color:var(--accent)}
 .thm .i-sun{display:none}:root[data-theme="light"] .thm .i-sun{display:block}:root[data-theme="light"] .thm .i-moon{display:none}
 @media (max-width:760px){.thm{position:absolute;top:4px;right:0;z-index:6}.topnav{position:relative}}
+.cita{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:0 0 8px;font-size:.92rem;overflow-wrap:anywhere}
+.cita-bt{margin:0 0 14px}
 .inst{max-width:78ch;margin-inline:auto;width:100%;padding:24px clamp(16px,4vw,36px)}
 .inst h2{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,5vw,2.2rem);margin:0 0 8px}
 .inst h3{font-family:var(--display);font-weight:600;font-size:1.2rem;margin:26px 0 6px;color:var(--accent)}
@@ -329,6 +331,7 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
   </div>
   <div id="log" aria-live="polite"><div class="msg a">Olá! Sou a EconoIA. Pergunte sobre Selic, IPCA, PIB, desemprego ou conceitos de economia.</div></div>
   <form class="ask" id="askf"><textarea id="q" placeholder="Ex.: o que acontece com o câmbio se a Selic cair?"></textarea><button class="btn" id="send">Enviar</button></form>
+  <p class="note" id="iaAviso">A EconoIA usa inteligência artificial e pode errar. Confira números importantes na fonte oficial. Não é recomendação de investimento. <a class="mlink" href="#metodologia">Como funciona</a></p>
   
 </section>
 </div>
@@ -671,6 +674,34 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   <p class="note">© JesseCorp 2026 · EconoIA Brasil.</p>
 </section>
 
+<section id="p-citar" class="card inst" hidden>
+  <h2>Como citar o EconoIA</h2>
+  <p class="lead">Modelos prontos para trabalhos acadêmicos, aulas e reportagens. Sempre registre a data de acesso, porque os dados mudam.</p>
+
+  <h3>Citar o site</h3>
+  <p><b>ABNT (NBR 6023)</b></p>
+  <p class="cita" id="citaAbnt">SANTOS, Jessé. <b>EconoIA Brasil</b>: laboratório de economia, dados e IA do Brasil. [S. l.]: JesseCorp, 2026. Disponível em: https://econoia.com.br. Acesso em: <span class="acesso-abnt"></span>.</p>
+  <p class="cita-bt"><button class="btn alt" type="button" data-copia="citaAbnt">Copiar ABNT</button></p>
+  <p><b>APA (7ª edição)</b></p>
+  <p class="cita" id="citaApa">Santos, J. (2026). <i>EconoIA Brasil: laboratório de economia, dados e IA do Brasil</i> [Site]. JesseCorp. https://econoia.com.br</p>
+  <p class="cita-bt"><button class="btn alt" type="button" data-copia="citaApa">Copiar APA</button></p>
+
+  <h3>Citar um dado</h3>
+  <p>Os números de indicadores (Selic, IPCA, PIB, câmbio e outros) vêm de instituições públicas. <b>Cite a fonte original</b>, que aparece abaixo de cada número, por exemplo o Banco Central do Brasil (SGS) ou o IBGE. O EconoIA é o meio pelo qual você chegou ao dado, não o autor dele.</p>
+
+  <h3>Citar uma previsão ou um cálculo do EconoIA</h3>
+  <p>Previsões SARIMA e VAR, faixas de incerteza, sazonalidade, impulso-resposta e testes de Granger são cálculos feitos aqui. Nesse caso cite o EconoIA e informe <b>o modelo, a data de atualização dos dados e a data de acesso</b>. Exemplo em ABNT:</p>
+  <p class="cita" id="citaPrev">SANTOS, Jessé. Previsão do IPCA por modelo SARIMA, com dados do Banco Central do Brasil atualizados em <span class="upd-cita">(data de atualização exibida na página)</span>. <b>EconoIA Brasil</b>, 2026. Disponível em: https://econoia.com.br/#prever-o-futuro. Acesso em: <span class="acesso-abnt"></span>.</p>
+  <p class="cita-bt"><button class="btn alt" type="button" data-copia="citaPrev">Copiar exemplo</button></p>
+
+  <h3>Cuidados</h3>
+  <ul>
+    <li>As respostas do assistente de IA não devem ser citadas como fonte. Cite a fonte original do dado.</li>
+    <li>Previsões são estimativas com incerteza. Cite também a faixa (80% ou 95%), não só o valor central.</li>
+    <li>Metodologia e limites dos modelos: <a class="mlink" href="#metodologia">Metodologia</a>. Código-fonte: <a class="mlink" href="https://github.com/Jefestuart/econoia" target="_blank" rel="noopener">GitHub</a>.</li>
+  </ul>
+</section>
+
 <section id="p-metod" class="card inst" hidden>
   <h2>Metodologia</h2>
   <p class="lead">Como os dados são obtidos, como os modelos funcionam e quais são os limites de cada parte do site.</p>
@@ -698,11 +729,15 @@ summary(modelo)   # a Selic explica a inflação?</pre>
 
   <h3>5. Inteligência artificial</h3>
   <p>O assistente "Pergunte à EconoIA" usa um modelo de linguagem do Google (Gemini). Junto com cada pergunta, ele recebe os dados atualizados do painel, para responder com números reais. Modelos de linguagem podem errar, inventar informações ou interpretar mal uma pergunta. Por isso, confira os números importantes na fonte oficial.</p>
+  <p>O assistente responde apenas sobre economia, finanças, estatística e dados. Para isso ele também pode consultar as séries históricas, as previsões SARIMA e os resultados do VAR publicados neste site (os mesmos números das abas "Prever o futuro" e "VAR e SARIMA"), e deve citar a fonte e a data do dado. Nenhuma resposta é revisada por uma pessoa antes de aparecer.</p>
 
   <h3>6. Laboratório R</h3>
   <p>O código em R roda no seu próprio navegador (webR), sem passar por um servidor do EconoIA. Os resultados são os mesmos de uma instalação comum do R, com os pacotes disponíveis na versão para navegador.</p>
 
-  <h3>7. Correções</h3>
+  <h3>7. Como citar e versões dos dados</h3>
+  <p>Os dados são atualizados com frequência, então o mesmo número pode mudar de um dia para o outro. Para citar o site, uma série ou uma previsão, veja a página <a class="mlink" href="#como-citar">Como citar</a>, que traz os modelos de referência em ABNT e APA e o aviso de que se deve registrar a data de acesso.</p>
+
+  <h3>8. Correções</h3>
   <p>Quando um erro é identificado em dados, cálculos ou textos, ele é corrigido no código-fonte, que é público no <a class="mlink" href="https://github.com/Jefestuart/econoia" target="_blank" rel="noopener">GitHub</a>, e a correção entra no ar na próxima atualização. Para reportar um erro, escreva para <a class="mlink" href="mailto:contato@econoia.com.br">contato@econoia.com.br</a>.</p>
 </section>
 
@@ -723,7 +758,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   <p>Os dados são obtidos de terceiros e podem conter atrasos, revisões, falhas ou interrupções que não dependem do EconoIA. O site é oferecido "no estado em que se encontra", sem garantia de disponibilidade contínua, exatidão ou adequação a uma finalidade específica. Funcionalidades podem ser alteradas, suspensas ou removidas a qualquer momento.</p>
 
   <h3>5. Inteligência artificial</h3>
-  <p>As respostas do assistente são geradas automaticamente por um modelo de IA de terceiros e podem conter erros. Elas não são revisadas por uma pessoa antes de serem exibidas. Não insira no chat dados pessoais, senhas, documentos ou informações sigilosas. O número de perguntas por pessoa é limitado para manter o serviço gratuito e protegido contra abuso.</p>
+  <p>As respostas do assistente são geradas automaticamente por um modelo de IA de terceiros e podem conter erros. Elas não são revisadas por uma pessoa antes de serem exibidas. Não insira no chat dados pessoais, senhas, documentos ou informações sigilosas. O assistente é limitado a assuntos de economia e dados, e o número de perguntas por pessoa também é limitado, para manter o serviço gratuito e protegido contra abuso. Não use as respostas como fonte única em trabalhos acadêmicos, decisões financeiras ou documentos oficiais: confirme nas fontes originais.</p>
 
   <h3>6. Uso permitido</h3>
   <p>Você pode usar o site para fins pessoais, educacionais e de pesquisa. Não é permitido: tentar contornar os limites de uso ou as proteções técnicas; usar robôs para extrair conteúdo em massa ou sobrecarregar o serviço; usar o assistente para fins ilegais ou para gerar conteúdo ofensivo; apresentar o conteúdo do EconoIA como se fosse próprio.</p>
@@ -827,7 +862,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   </div>
   <div class="bf-bot">
    <div class="bf-legal"><a href="#termos" id="avisoBtn">Termos de uso</a><a href="#aviso-legal">Aviso legal</a><a href="#metodologia">Metodologia</a><a href="#privacidade">Privacidade</a></div>
-   <div class="bf-right"><div class="bf-legal"><a href="#sobre">Sobre</a><a data-go="ia">Ajuda</a><a href="mailto:contato@econoia.com.br">Contato</a></div><p>© EconoIA Brasil 2026. Todos os direitos reservados.</p></div>
+   <div class="bf-right"><div class="bf-legal"><a href="#sobre">Sobre</a><a href="#como-citar">Como citar</a><a data-go="ia">Ajuda</a><a href="mailto:contato@econoia.com.br">Contato</a></div><p>© EconoIA Brasil 2026. Todos os direitos reservados.</p></div>
   </div>
   <p class="bf-aviso" id="aviso">As informações deste site têm caráter informativo e educacional e não constituem recomendação de investimento. Os dados vêm de fontes públicas e podem ter atraso. Veja o <a href="#aviso-legal">Aviso legal</a> e a <a href="#privacidade">Política de privacidade</a>.</p>
  </div>
@@ -885,7 +920,7 @@ function renderTop(){
  const items=[...D.market.slice(0,1),...fx,...gold,...cry,...D.market.slice(1),["SELIC",br(s[1])+"%",null],["IPCA 12M",br(ip[2])+"%",null],["IGP-M 12M",br(ig[2])+"%",null]];
  const row=items.map(m=>`<span class="tk"><b>${m[0]}</b>${m[1]?" "+m[1]:""} ${sign(m[2])}</span>`).join("");
  track.innerHTML=row+row;
- UPD=new Date(D.updated).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});
+ UPD=new Date(D.updated).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});document.querySelectorAll(".upd-cita").forEach(e=>e.textContent=UPD);
  upd.textContent="Atualizado em "+UPD+".";upd2.textContent="Última atualização: "+UPD+".";
  fxdate.textContent="Cotação de "+D.fx_data+".";
  renderCr();
@@ -1810,8 +1845,8 @@ document.getElementById("plRow").onclick=()=>plJ&&plJ.insertRow();
 document.getElementById("plCsv").onclick=()=>{if(!plJ)return;const csv=plAoa().map(r=>r.map(c=>{c=String(c??"");return/[";\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(";")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"}));a.download="econoia-"+document.getElementById("plSet").value+".csv";a.click()};
 document.getElementById("plXlsx").onclick=async()=>{if(!plJ)return;try{if(!window.XLSX)await loadJs("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js");const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(plAoa(true)),"EconoIA");XLSX.writeFile(wb,"econoia-"+document.getElementById("plSet").value+".xlsx")}catch(e){alert("Não consegui gerar o arquivo. Tente o .csv.")}};
 // Cada seção tem sua própria área: econoia.com.br/#r, /#graficos...
-const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],"var-sarima":["prev","VAR e SARIMA"],aprender:["learn","Aprenda séries temporais"],"prever-o-futuro":["futuro","Prever o futuro"],latex:["latex","Aprenda LaTeX"],previsoes:["prev","VAR e SARIMA"],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"],sobre:["sobre","Sobre"],metodologia:["metod","Metodologia"],termos:["termos","Termos de uso"],"aviso-legal":["legal","Aviso legal"],privacidade:["priv","Privacidade"],aviso:["legal","Aviso legal"]};
-const INST=["sobre","metod","termos","legal","priv"];
+const AREAS={ia:["ia",""],r:["r",""],dados:["dados","Tabelas de dados"],cambio:["fx","Câmbio e mercados"],"ouro-cripto":["cr","Ouro e Cripto"],fundamentos:["fund",""],planilha:["plan",""],"var-sarima":["prev","VAR e SARIMA"],aprender:["learn","Aprenda séries temporais"],"prever-o-futuro":["futuro","Prever o futuro"],latex:["latex","Aprenda LaTeX"],previsoes:["prev","VAR e SARIMA"],graficos:["graf","Gráficos"],simuladores:["sim","Simuladores"],sobre:["sobre","Sobre"],metodologia:["metod","Metodologia"],"como-citar":["citar","Como citar"],termos:["termos","Termos de uso"],"aviso-legal":["legal","Aviso legal"],privacidade:["priv","Privacidade"],aviso:["legal","Aviso legal"]};
+const INST=["sobre","citar","metod","termos","legal","priv"];
 const SLUG={};for(const k in AREAS)if(!SLUG[AREAS[k][0]])SLUG[AREAS[k][0]]=k;
 // "Pergunte à IA" não abre página isolada: volta à página inicial e leva à caixa do chat
 function irParaChat(){
@@ -1839,6 +1874,13 @@ function route(){
  if(g==="ia")setTimeout(()=>q.focus({preventScroll:true}),300);
 }
 addEventListener("hashchange",route);route();
+// Página "Como citar": data de acesso de hoje e botões de copiar
+(function(){
+ const meses=["jan.","fev.","mar.","abr.","maio","jun.","jul.","ago.","set.","out.","nov.","dez."],d=new Date();
+ const acesso=d.getDate()+" "+meses[d.getMonth()]+" "+d.getFullYear();
+ document.querySelectorAll(".acesso-abnt").forEach(e=>e.textContent=acesso);
+ document.querySelectorAll("[data-copia]").forEach(b=>b.onclick=()=>lxCopy(document.getElementById(b.dataset.copia).textContent.replace(/\s+/g," ").trim(),b));
+})();
 // IA
 let ctx;function mkctx(){ctx=`DADOS (atualizados em ${UPD}):
 Selic meta (Copom): ${D.selic.map(r=>r[0]+" "+r[1]+"%").join("; ")}.
