@@ -1,22 +1,31 @@
-Copyright (c) 2026 JesseCorp · EconoIA Brasil (Jessé Santos). Todos os direitos reservados.
+Copyright (c) 2026 JesseCorp · EconoIA Brasil (Jessé Santos).
 
-Este repositório e todo o seu conteúdo (código-fonte, design, textos, logotipo,
-modelos e scripts) são protegidos pela Lei de Direitos Autorais (Lei nº 9.610/1998)
-e pela Lei de Software (Lei nº 9.609/1998).
+Este repositório tem dois regimes de uso.
 
-O código está publicado apenas para consulta e transparência, para que qualquer
-pessoa possa verificar como os dados são obtidos e os cálculos são feitos.
+1. CÓDIGO, DESIGN, MARCA E LOGOTIPO — Todos os direitos reservados.
+   O código-fonte (index.html, functions/, scripts/, tests/ e demais arquivos de programa),
+   o design, a marca EconoIA e o logotipo são protegidos pela Lei de Direitos Autorais
+   (Lei nº 9.610/1998) e pela Lei de Software (Lei nº 9.609/1998). O código está publicado
+   apenas para consulta e transparência, para que qualquer pessoa possa verificar como os
+   dados são obtidos e os cálculos são feitos.
+   Sem autorização prévia e por escrito do titular, é proibido copiar, modificar, criar obras
+   derivadas, redistribuir, hospedar, sublicenciar ou usar esse conteúdo para fins comerciais.
+   A publicação no GitHub não concede nenhuma licença além do direito de visualizá-lo na
+   própria plataforma.
 
-Sem autorização prévia e por escrito do titular, é proibido:
-  - copiar, total ou parcialmente, o código, o design ou os textos;
-  - modificar ou criar obras derivadas;
-  - redistribuir, publicar, hospedar ou sublicenciar este conteúdo;
-  - usar este conteúdo para fins comerciais.
+2. TEXTOS DIDÁTICOS E RESULTADOS PRÓPRIOS — Creative Commons Atribuição 4.0 Internacional (CC BY 4.0).
+   Os textos didáticos e de metodologia do site e os resultados calculados pelo EconoIA
+   (sazonalidade, previsões, intervalos, impulso-resposta, testes e as cópias diárias em
+   dados-arquivo que os contêm) podem ser copiados, redistribuídos e adaptados, inclusive para
+   fins comerciais, desde que se dê o crédito adequado ("Fonte: EconoIA Brasil,
+   econoia.com.br"), se informe a data de acesso e se indique se houve alterações.
+   Texto da licença: https://creativecommons.org/licenses/by/4.0/legalcode.pt
+   Esta licença NÃO cobre: o código, o design, a marca e o logotipo (item 1) nem os dados
+   originais de terceiros (item 3).
 
-A publicação deste repositório no GitHub não concede nenhuma licença, expressa ou
-implícita, além do direito de visualizá-lo na própria plataforma.
+3. DADOS DE TERCEIROS
+   Os dados econômicos de fontes públicas (Banco Central, IBGE, FGV, FRED e outras) pertencem às
+   respectivas instituições e seguem os termos de uso delas. A licença do item 2 cobre apenas o
+   que o EconoIA acrescenta (cálculos e textos), não os números originais.
 
-Os dados econômicos de fontes públicas (Banco Central, IBGE, FGV e outras)
-pertencem às respectivas instituições.
-
-Pedidos de autorização: contato@econoia.com.br
+Pedidos de autorização e dúvidas: contato@econoia.com.br

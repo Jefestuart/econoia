@@ -21,6 +21,9 @@ O robô `.github/workflows/arquivo.yml` roda todo dia e grava uma cópia de `ser
 ## Acessibilidade
 Resultado da auditoria (axe-core em navegador real, temas claro e escuro), correções e limites conhecidos: [ACESSIBILIDADE.md](ACESSIBILIDADE.md).
 
+## Licença
+Dois regimes (veja `LICENSE`): código, design e marca com todos os direitos reservados; textos didáticos e resultados calculados pelo EconoIA sob CC BY 4.0; dados originais de terceiros seguem as regras de cada fonte.
+
 ## Observações
 - Os commits do robô levam `[skip ci]`, para não republicar o site a cada atualização de dados (o plano grátis do Cloudflare tem 500 publicações por mês).
 - Se o modelo do Gemini sair do ar, crie no Cloudflare a variável `GEMINI_MODEL` com o nome do modelo novo.
