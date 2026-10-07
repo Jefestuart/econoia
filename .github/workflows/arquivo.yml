@@ -1,0 +1,44 @@
+name: Arquivo diário dos dados
+
+on:
+  schedule:
+    - cron: "37 13 * * *"   # todo dia, 10h37 de Brasília, depois das atualizações de séries e modelos
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: arquivo-dados
+  cancel-in-progress: false
+
+jobs:
+  arquivar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: principal
+      - name: Preparar o ramo dados-arquivo (cria na primeira vez)
+        run: |
+          if git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" dados-arquivo >/dev/null; then
+            git clone --quiet --branch dados-arquivo --single-branch "https://github.com/${GITHUB_REPOSITORY}.git" arquivo
+          else
+            mkdir arquivo && cd arquivo && git init --quiet -b dados-arquivo
+            git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          fi
+      - name: Guardar a cópia de hoje
+        run: python3 principal/scripts/arquivar.py principal/data arquivo
+      - name: Salvar
+        working-directory: arquivo
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "econoia-robo"
+          git config user.email "robo@users.noreply.github.com"
+          git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)"
+          git add -A
+          git diff --cached --quiet || git commit -m "Cópia dos dados de $(date -u +%F)"
+          git push origin dados-arquivo
