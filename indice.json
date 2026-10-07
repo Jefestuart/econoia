@@ -1,0 +1,18 @@
+{
+ "descricao": "Cópias diárias dos dados do EconoIA Brasil (econoia.com.br). Cada arquivo tem SHA-256 para conferência.",
+ "snapshots": [
+  {
+   "data": "2026-10-07",
+   "arquivos": {
+    "series.json": {
+     "bytes": 236414,
+     "sha256": "b850769f1c09eff413bb27a86482ad538ee4962807ee58398e1a29b547e75034"
+    },
+    "modelos.json": {
+     "bytes": 27121,
+     "sha256": "54214ad42e2d4f36525a859a699bc290a644cfc2e7eaf262b358b95bcff54320"
+    }
+   }
+  }
+ ]
+}
