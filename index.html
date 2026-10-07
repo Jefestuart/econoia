@@ -1860,12 +1860,23 @@ const sampler=async(turns,out)=>{
  }
 };
 function add(cls,t){const d=document.createElement("div");d.className="msg "+cls;d.textContent=t;log.appendChild(d);log.scrollTop=log.scrollHeight;return d}
+// Efeito cascata: a resposta vai aparecendo palavra por palavra (leva de 1 a 5 s, conforme o tamanho).
+// Quem prefere menos movimento no aparelho (e respostas muito curtas) vê o texto de uma vez.
+function digita(el,texto){
+ return new Promise(fim=>{
+  const partes=texto.match(/\S+\s*/g)||[];
+  if(partes.length<6||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){el.textContent=texto;log.scrollTop=log.scrollHeight;return fim()}
+  const quadros=Math.min(5000,Math.max(1200,partes.length*40))/30; // quadros de 30 ms
+  const passo=Math.max(1,Math.ceil(partes.length/quadros));
+  let i=0;el.textContent="";
+  const t=setInterval(()=>{i=Math.min(partes.length,i+passo);el.textContent=partes.slice(0,i).join("");log.scrollTop=log.scrollHeight;
+   if(i>=partes.length){clearInterval(t);el.textContent=texto;fim()}},30)})}
 async function ask(text){
  if(!text.trim()||busy)return;
  busy=true;send.disabled=true;add("u",text);const out=add("a","Pensando...");
  hist.push({role:"user",content:text});
  const turns=hist.slice(-12);
- try{const r=await sampler(turns,out);out.textContent=r.text;hist.push({role:"assistant",content:r.text,sig:r.sig})}
+ try{const r=await sampler(turns,out);hist.push({role:"assistant",content:r.text,sig:r.sig});await digita(out,r.text)}
  catch(e){hist.pop();out.textContent=e.text||"Não consegui responder agora. Tente de novo."}
  busy=false;send.disabled=false;
 }
