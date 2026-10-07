@@ -1377,8 +1377,8 @@ const LX_PAL=[["Estrutura",[["a/b",String.raw`\frac{a}{b}`],["√x",String.raw`\
  ["Fórmulas de economia",[["Fisher",String.raw`(1+i) = (1+r)(1+\pi^e)`],["Taylor",String.raw`i_t = r^* + \pi_t + 0{,}5(\pi_t - \pi^*) + 0{,}5(y_t - y^*)`],["AR(1)",String.raw`\pi_t = \alpha + \rho\,\pi_{t-1} + \varepsilon_t`],["MQO",String.raw`\hat{\beta} = (X'X)^{-1}X'y`],["Cobb-Douglas",String.raw`Y = A K^{\alpha} L^{1-\alpha}`],["VPL",String.raw`\text{VPL} = \sum_{t=0}^{T} \frac{FC_t}{(1+r)^t}`],["Elasticidade",String.raw`\varepsilon = \frac{\partial Q}{\partial P}\cdot\frac{P}{Q}`],["Juros compostos",String.raw`M = C(1+i)^n`]]]];
 function lxFRender(){lxFo.innerHTML=lxMath(lxF.value,true)}
 function lxInsere(t){const a=lxF.selectionStart??lxF.value.length,b=lxF.selectionEnd??a;lxF.value=lxF.value.slice(0,a)+t+lxF.value.slice(b);lxF.focus();const p=a+t.length;lxF.setSelectionRange(p,p);lxFRender()}
-async function lxIA(pedido,saida){
- const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system:"Você é a EconoIA, assistente de economia brasileira. Agora você ajuda com LaTeX. "+saida,turns:[{role:"user",content:pedido}]})});
+async function lxIA(pedido,tarefa){
+ const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({modo:"latex",tarefa,turns:[{role:"user",content:pedido}]})});
  const j=await r.json().catch(()=>({}));if(!r.ok||j.error)throw new Error(j.error||"A IA não respondeu agora.");return j.text.trim()}
 // ---- ferramenta 2: tabela do Excel
 function lxTabela(){const linhas=lxT.value.replace(/\r/g,"").split("\n").filter(l=>l.trim());if(!linhas.length)return"";
@@ -1591,12 +1591,12 @@ function initLatex(){
   lxF.oninput=lxFRender;lxFRender();
   lxFc1.onclick=()=>lxCopy("$"+lxF.value+"$",lxFc1);lxFc2.onclick=()=>lxCopy("\\begin{equation}\n  "+lxF.value+"\n\\end{equation}",lxFc2);
   lxFia.onclick=async()=>{const d=lxFd.value.trim();if(!d)return;lxFia.disabled=true;const o=lxFia.textContent;lxFia.textContent="Escrevendo...";
-   try{let t=await lxIA(d,"Converta a descrição em UMA fórmula LaTeX para modo matemático. Responda somente com o código da fórmula, sem cifrões, sem crases, sem explicação.");t=t.replace(/^```\w*\s*|```$/g,"").replace(/^\$+|\$+$/g,"").replace(/^\\\[|\\\]$/g,"").trim();lxF.value=t;lxFRender()}
+   try{let t=await lxIA(d,"formula");t=t.replace(/^```\w*\s*|```$/g,"").replace(/^\$+|\$+$/g,"").replace(/^\\\[|\\\]$/g,"").trim();lxF.value=t;lxFRender()}
    catch(e){lxFo.innerHTML=`<span class="erro">${lxEsc(e.message)}</span>`}lxFia.disabled=false;lxFia.textContent=o};
   [lxT,lxTc,lxTf,lxTh].forEach(el=>el.oninput=el.onchange=lxTRender);lxTRender();
   lxTcp.onclick=()=>lxCopy(lxTabela(),lxTcp);lxTov.onclick=()=>lxOverleaf(lxTabela());
   lxEb.onclick=lxTraduz;lxEia.onclick=async()=>{lxEia.disabled=true;lxEo.innerHTML='<div class="lx-err">Perguntando à IA...</div>';
-   try{const t=await lxIA(lxE.value,"Explique em português simples, para um estudante, o que significa esta mensagem de erro do LaTeX e como corrigir, em no máximo 4 frases, sem markdown.");lxEo.innerHTML=`<div class="lx-err">${lxEsc(t)}</div>`}
+   try{const t=await lxIA(lxE.value,"erro");lxEo.innerHTML=`<div class="lx-err">${lxEsc(t)}</div>`}
    catch(e){lxEo.innerHTML=`<div class="lx-err">${lxEsc(e.message)}</div>`}lxEia.disabled=false};
   lxAov.onclick=()=>lxOverleaf(lxAbnt());lxAcp.onclick=()=>lxCopy(lxAbnt(),lxAcp);
   lxLicoes.querySelectorAll("textarea").forEach(ta=>{const pv=ta.nextElementSibling,r=()=>{pv.innerHTML=lxRender(ta.value)};ta.oninput=r;r()});
@@ -1640,7 +1640,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-texprev]")
 // Laboratório R: a IA converte a saída em tabela LaTeX
 rlatex.onclick=async()=>{if(!ultimoR.code){rexpt.hidden=false;rexpt.textContent="Rode um código primeiro.";return}
  rlatex.disabled=true;rexpt.hidden=false;rexpt.textContent="Convertendo em LaTeX...";
- try{const t=await lxIA(`Código R:\n${ultimoR.code.slice(-2500)}\n\nSaída:\n${ultimoR.out.slice(0,3500)}`,"Converta os principais resultados numéricos desta saída do R em uma tabela LaTeX no padrão acadêmico, com booktabs (\\toprule, \\midrule, \\bottomrule), ambiente table, \\caption e \\label. Use vírgula decimal. Para regressões, mostre coeficientes com erro-padrão entre parênteses abaixo e estrelas de significância, mais R² e número de observações. Responda somente com o código LaTeX, sem crases e sem explicação.");
+ try{const t=await lxIA(`Código R:\n${ultimoR.code.slice(-2500)}\n\nSaída:\n${ultimoR.out.slice(0,3500)}`,"tabela");
   const cod=t.replace(/^```\w*\s*|```$/g,"").trim();
   rexpt.innerHTML=`<pre class="code" style="white-space:pre-wrap;max-height:300px">${lxEsc(cod)}</pre><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn alt" id="rlCp">Copiar código LaTeX</button><button class="btn alt" id="rlOv">Abrir no Overleaf</button></div>`;
   rlCp.onclick=()=>lxCopy(cod,rlCp);rlOv.onclick=()=>lxOverleaf(cod)}
@@ -1840,8 +1840,7 @@ function route(){
 }
 addEventListener("hashchange",route);route();
 // IA
-let ctx;function mkctx(){ctx=`Você é a EconoIA, assistente de economia brasileira. Responda em português do Brasil, de forma clara e didática, em até 3 parágrafos curtos, sem markdown. Use os dados abaixo quando relevante e diga quando algo não está nos dados. Não dê recomendação de investimento personalizada. Se pedirem código, escreva em R (ou Python se pedirem), com os dados como vetores, e explique cada parte em poucas linhas.
-DADOS (atualizados em ${UPD}):
+let ctx;function mkctx(){ctx=`DADOS (atualizados em ${UPD}):
 Selic meta (Copom): ${D.selic.map(r=>r[0]+" "+r[1]+"%").join("; ")}.
 IPCA mensal e 12m: ${D.ipca.map(r=>r[0]+" "+r[1]+"% (12m "+r[2]+"%)").join("; ")}.
 IGP-M (FGV) mensal e 12m: ${D.igpm.map(r=>r[0]+" "+r[1]+"% (12m "+r[2]+"%)").join("; ")}.
@@ -1853,7 +1852,7 @@ let hist=[],busy=false;
 const sampler=async(turns,out)=>{
  for(let t=0;t<3;t++){
   let j={},ok=false;
-  try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system:ctx,turns})});j=await r.json().catch(()=>({retry:true}));ok=r.ok&&!j.error}catch(e){j={retry:true}}
+  try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({modo:"chat",contexto:ctx,turns})});j=await r.json().catch(()=>({retry:true}));ok=r.ok&&!j.error}catch(e){j={retry:true}}
   if(ok)return j;
   if(!j.retry||t===2)throw{text:j.error||"Não consegui responder agora. Tente de novo."};
   out.textContent="Servidor da IA ocupado, tentando de novo...";
@@ -1865,8 +1864,8 @@ async function ask(text){
  if(!text.trim()||busy)return;
  busy=true;send.disabled=true;add("u",text);const out=add("a","Pensando...");
  hist.push({role:"user",content:text});
- const turns=hist.slice();
- try{const r=await sampler(turns,out);out.textContent=r.text;hist.push({role:"assistant",content:r.text})}
+ const turns=hist.slice(-12);
+ try{const r=await sampler(turns,out);out.textContent=r.text;hist.push({role:"assistant",content:r.text,sig:r.sig})}
  catch(e){hist.pop();out.textContent=e.text||"Não consegui responder agora. Tente de novo."}
  busy=false;send.disabled=false;
 }
