@@ -44,9 +44,11 @@ Resultado da auditoria (axe-core em navegador real, temas claro e escuro), corre
 
 Resultado em `data/modelos.json`. Testes com dados simulados em `tests/test_modelos.py`.
 
+**Validação contra o statsmodels** (`tests/test_validacao.py`): VAR, impulso-resposta, previsão e Granger saem iguais (tolerância de 1e-8); SARIMA sai próximo (estimador diferente: soma condicional de quadrados contra máxima verossimilhança exata). Inclui IPCA e IGP-M reais congelados em `tests/fixtures/`. Para rodar localmente: `pip install statsmodels`; sem ele esses testes são pulados. A comparação com o R ainda não foi feita.
+
 ## Testes
 - `npm test`: chat (proteção e limites), notícias e entrega de dados
-- `python -m unittest discover -s tests -p "test_*.py"`: SARIMA, VAR, impulso-resposta, Granger e backtest
+- `python -m unittest discover -s tests -p "test_*.py"`: SARIMA, VAR, impulso-resposta, Granger, backtest, arquivo diário e validação contra o statsmodels
 
 ## Catálogo de indicadores e "Prever o futuro"
 `scripts/series.py` baixa cerca de 40 séries mensais (Banco Central/SGS e FRED) desde 2003 e, para cada uma, mede a sazonalidade (efeito médio de cada mês e teste F) e faz uma previsão SARIMA de 12 meses com faixa de 80%. O resultado (`data/series.json`) alimenta o módulo **Prever o futuro** da página inicial, que também gera o código equivalente em **R** e **Python**, executável no navegador (WebR e Pyodide). Testes em `tests/test_series.py`.
