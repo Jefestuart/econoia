@@ -16,7 +16,16 @@ Laboratório de Economia, Dados e IA do Brasil — https://econoia.com.br
 - Os commits do robô levam `[skip ci]`, para não republicar o site a cada atualização de dados (o plano grátis do Cloudflare tem 500 publicações por mês).
 - Se o modelo do Gemini sair do ar, crie no Cloudflare a variável `GEMINI_MODEL` com o nome do modelo novo.
 - Se uma fonte de dados falhar, o site mantém o último valor bom.
-- A pasta `netlify/` e o `netlify.toml` são da hospedagem antiga e podem ser apagados depois da migração.
+- A pasta `netlify/` e o `netlify.toml` são da hospedagem antiga e podem ser apagados depois da migração. **Atenção:** apagar os arquivos aqui não desliga o que já está publicado no Netlify. A função antiga de lá (`/api/chat` em `econoia-br.netlify.app`) não tem as proteções do chat novo. Apague o site no Netlify, ou ao menos a variável `GEMINI_API_KEY` de lá.
+
+## Como o chat é protegido (`functions/api/chat.js`)
+- **As regras da IA ficam no servidor** (`functions/_lib/instrucoes.js`). O navegador só manda a pergunta, os dados de referência (tratados como texto, não como ordem) e, no LaTeX, o nome da tarefa. Ninguém consegue trocar as instruções para usar a chave do Gemini como IA genérica.
+- **Respostas assinadas** (`functions/_lib/assinatura.js`, HMAC-SHA256): cada resposta sai com uma assinatura, e o servidor descarta qualquer resposta "da IA" no histórico que ele não escreveu. A chave de assinatura é derivada da `GEMINI_API_KEY`, sem segredo novo.
+- **Limites:** só aceita pedidos vindos do próprio site, até 8 perguntas por minuto e 120 por dia por IP (`functions/_lib/protecao.js`), pedido de até 100 mil caracteres, histórico de até 12 mensagens, resposta de até 1.200 tokens.
+- **Erros técnicos não vão para o navegador**; ficam só nos logs do Cloudflare (`console.error`).
+- **Cache:** a primeira pergunta de uma conversa, se repetida, é respondida do cache por 10 minutos, sem gastar a cota do Gemini.
+- **Ferramentas de leitura** (`functions/_lib/ferramentas.js`): a IA pode consultar `data/series.json` e `data/modelos.json` (séries do catálogo, previsões SARIMA/VAR). Só lê arquivos fixos deste repositório e só ids do catálogo; no máximo 3 rodadas por pergunta. Se o Gemini recusar as ferramentas, o chat responde sem elas.
+- Os limites por IP usam o cache de cada data center do Cloudflare, então são uma barreira contra abuso, não uma contagem exata. Para um limite firme, crie uma regra em **Security → WAF → Rate limiting rules** para `/api/chat`.
 
 ## Modelos econométricos (aba "VAR e SARIMA")
 `scripts/modelos.py` roda todo dia no GitHub Actions, com numpy e scipy:
