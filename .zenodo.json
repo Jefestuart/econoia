@@ -1,0 +1,16 @@
+{
+  "title": "EconoIA Brasil: laboratório de economia, dados e IA do Brasil",
+  "upload_type": "software",
+  "license": "other-closed",
+  "access_right": "open",
+  "creators": [
+    { "name": "Santos, Jessé" }
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/Jefestuart/econoia",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ]
+}
