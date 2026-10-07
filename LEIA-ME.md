@@ -12,6 +12,9 @@ Laboratório de Economia, Dados e IA do Brasil — https://econoia.com.br
 | Notícias (`functions/api/news.js`) | RSS do InfoMoney, G1 e Agência Brasil, só títulos e links |
 | Dados (`data/data.json`) | Robô `scripts/update.py` no GitHub Actions, a cada 30 min. O site lê o arquivo direto do GitHub (`functions/data/data.json.js`) |
 
+## Como citar
+O site tem uma página **Como citar** (`econoia.com.br/#como-citar`) com modelos em ABNT e APA. O arquivo `CITATION.cff` alimenta o botão "Cite this repository" do GitHub. Cite sempre a fonte original dos dados (Banco Central, IBGE etc.) e, para previsões e cálculos, o EconoIA com modelo, data de atualização e data de acesso.
+
 ## Observações
 - Os commits do robô levam `[skip ci]`, para não republicar o site a cada atualização de dados (o plano grátis do Cloudflare tem 500 publicações por mês).
 - Se o modelo do Gemini sair do ar, crie no Cloudflare a variável `GEMINI_MODEL` com o nome do modelo novo.

@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "Se você usar o EconoIA em um trabalho acadêmico, aula ou reportagem, cite-o conforme abaixo e registre a data de acesso, porque os dados são atualizados com frequência."
+title: "EconoIA Brasil: laboratório de economia, dados e IA do Brasil"
+type: software
+authors:
+  - family-names: Santos
+    given-names: Jessé
+    affiliation: "JesseCorp"
+repository-code: "https://github.com/Jefestuart/econoia"
+url: "https://econoia.com.br"
+abstract: >-
+  Plataforma gratuita em português que reúne indicadores econômicos oficiais do Brasil
+  (Banco Central, IBGE, FGV IBRE, Ipea), modelos de previsão SARIMA e VAR com backtest e
+  faixas de incerteza, ferramentas didáticas em R e LaTeX e um assistente de inteligência
+  artificial limitado a assuntos de economia.
+keywords:
+  - economia brasileira
+  - séries temporais
+  - SARIMA
+  - VAR
+  - inflação
+  - Selic
+  - educação
+  - econometria
+date-released: 2026-10-06
+language: por
