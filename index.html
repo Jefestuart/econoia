@@ -1912,7 +1912,7 @@ window._refresh=()=>{draw();rgen();mkctx();fxRender();fxc();tbS.innerHTML="<tr><
 let hist=[],busy=false;
 const mdl=document.getElementById("mdl"),mdlInfo=document.getElementById("mdlInfo");
 const usaPro=()=>mdl.value==="pro";
-mdl.onchange=()=>{mdlInfo.textContent=usaPro()?"O Pro pensa mais e pode levar até 1 minuto.":""};
+mdl.onchange=()=>{mdlInfo.textContent=usaPro()?"O Pro pensa mais, pode responder matemática abstrata e levar até 1 minuto.":""};
 const sampler=async(turns,out)=>{
  const pro=usaPro();
  for(let t=0;t<3;t++){
