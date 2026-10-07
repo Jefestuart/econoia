@@ -142,6 +142,9 @@ details.metodo p{color:var(--muted);margin:.5em 0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{font:.85rem var(--body);background:var(--accent-soft);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
 #log{display:flex;flex-direction:column;gap:12px;min-height:120px;max-height:460px;overflow-y:auto;padding:4px}
+.modelosel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;font-size:.85rem}
+.modelosel select{font:inherit;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:inherit;max-width:100%}
+.modelosel .note{margin:0}
 .msg{padding:10px 14px;border-radius:10px;max-width:85%;white-space:pre-wrap;overflow-wrap:anywhere}
 .msg.u{align-self:flex-end;background:var(--accent-soft)}
 .msg.a{align-self:flex-start;background:var(--bg);border:1px solid var(--line)}
@@ -340,6 +343,7 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
   </div>
   <div id="log" aria-live="polite"><div class="msg a">Olá! Sou a EconoIA. Pergunte sobre Selic, IPCA, PIB, desemprego ou conceitos de economia.</div></div>
   <form class="ask" id="askf"><textarea id="q" placeholder="Ex.: o que acontece com o câmbio se a Selic cair?"></textarea><button class="btn" id="send">Enviar</button></form>
+  <div class="modelosel"><label for="mdl">Modelo</label><select id="mdl"><option value="padrao">Padrão (rápido)</option><option value="pro">Pro (raciocínio avançado, 5 por dia)</option></select><span class="note" id="mdlInfo" aria-live="polite"></span></div>
   <p class="note" id="iaAviso">A EconoIA usa inteligência artificial e pode errar. Confira números importantes na fonte oficial. Não é recomendação de investimento. <a class="mlink" href="#metodologia">Como funciona</a></p>
   
 </section>
@@ -1906,10 +1910,18 @@ Desocupação PNAD ${D.desemprego[0]}: ${D.desemprego[1]}%. Meta de inflação: 
 mkctx();
 window._refresh=()=>{draw();rgen();mkctx();fxRender();fxc();tbS.innerHTML="<tr><th>Reunião</th><th>Selic %</th></tr>"+D.selic.slice().reverse().map(r=>`<tr><td>${r[0]}</td><td>${br(r[1])}</td></tr>`).join("");};
 let hist=[],busy=false;
+const mdl=document.getElementById("mdl"),mdlInfo=document.getElementById("mdlInfo");
+const usaPro=()=>mdl.value==="pro";
+mdl.onchange=()=>{mdlInfo.textContent=usaPro()?"O Pro pensa mais e pode levar até 1 minuto.":""};
 const sampler=async(turns,out)=>{
+ const pro=usaPro();
  for(let t=0;t<3;t++){
   let j={},ok=false;
-  try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({modo:"chat",contexto:ctx,turns})});j=await r.json().catch(()=>({retry:true}));ok=r.ok&&!j.error}catch(e){j={retry:true}}
+  try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({modo:"chat",modelo:pro?"pro":"padrao",contexto:ctx,turns})});j=await r.json().catch(()=>({retry:true}));ok=r.ok&&!j.error}catch(e){j={retry:true}}
+  if(pro&&typeof j.proRestam==="number"){
+   mdlInfo.textContent=j.proRestam>0?`Restam ${j.proRestam} pergunta${j.proRestam>1?"s":""} no modo Pro hoje.`:"Você usou todas as perguntas do modo Pro de hoje.";
+   if(j.proRestam===0&&!ok)mdl.value="padrao";
+  }
   if(ok)return j;
   if(!j.retry||t===2)throw{text:j.error||"Não consegui responder agora. Tente de novo."};
   out.textContent="Servidor da IA ocupado, tentando de novo...";
@@ -1930,7 +1942,7 @@ function digita(el,texto){
    if(i>=partes.length){clearInterval(t);el.textContent=texto;fim()}},30)})}
 async function ask(text){
  if(!text.trim()||busy)return;
- busy=true;send.disabled=true;add("u",text);const out=add("a","Pensando...");
+ busy=true;send.disabled=true;add("u",text);const out=add("a",usaPro()?"Pensando com o modo Pro (pode levar até 1 minuto)...":"Pensando...");
  hist.push({role:"user",content:text});
  const turns=hist.slice(-12);
  try{const r=await sampler(turns,out);hist.push({role:"assistant",content:r.text,sig:r.sig});await digita(out,r.text)}

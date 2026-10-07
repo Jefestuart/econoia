@@ -288,3 +288,100 @@ test("erro do Gemini não revela detalhes técnicos ao navegador", async () => {
   assert.ok(!texto.includes("GEMINI"));
   assert.equal(r.headers.get("Cache-Control"), "no-store");
 });
+
+// ---------- modo Pro ----------
+
+const IP_PRO = "9.9.9.9";
+const chamaPro = (pergunta, { ip = IP_PRO, ambiente = env } = {}) =>
+  onRequestPost({
+    request: pedido("https://econoia.com.br/api/chat", { ip, body: { ...corpo, modelo: "pro", turns: [{ role: "user", content: pergunta }] } }),
+    env: ambiente,
+  });
+
+test("modo Pro usa o modelo Pro, sem temperatura fixa, com mais espaço e com as regras extras", async () => {
+  const r = await chamaPro("Derive a condição de primeira ordem de Cobb-Douglas.");
+  assert.equal(r.status, 200);
+  assert.equal(chamadas.length, 1);
+  assert.match(chamadas[0].url, /models\/gemini-3\.1-pro-preview:generateContent/);
+  assert.equal(chamadas[0].corpo.generationConfig.temperature, undefined);
+  assert.ok(chamadas[0].corpo.generationConfig.maxOutputTokens > 1200);
+  assert.ok(textoSistema().startsWith(REGRAS_CHAT));
+  assert.ok(textoSistema().includes("MODO PRO"));
+});
+
+test("modo padrão continua igual: sem Pro, sem contador na resposta", async () => {
+  const r = await chama();
+  const j = await r.json();
+  assert.ok(!/pro/i.test(chamadas[0].url));
+  assert.equal(chamadas[0].corpo.generationConfig.temperature, 0.4);
+  assert.ok(!textoSistema().includes("MODO PRO"));
+  assert.equal(j.proRestam, undefined);
+});
+
+test("valor desconhecido em 'modelo' vira modo padrão", async () => {
+  const r = await chama({ body: { ...corpo, modelo: "ultra" } });
+  assert.equal(r.status, 200);
+  assert.ok(!/pro/i.test(chamadas[0].url));
+  assert.equal((await r.json()).proRestam, undefined);
+});
+
+test("'modelo: pro' é ignorado no modo LaTeX", async () => {
+  const r = await chama({ body: { modo: "latex", tarefa: "formula", modelo: "pro", turns: [{ role: "user", content: "juros compostos" }] } });
+  assert.equal(r.status, 200);
+  assert.ok(!/pro/i.test(chamadas[0].url));
+});
+
+test("o Pro tem limite de 5 por IP por dia; a sexta é recusada sem chamar o Gemini", async () => {
+  for (let i = 1; i <= 5; i++) {
+    const r = await chamaPro(`Conta número ${i}`);
+    assert.equal(r.status, 200);
+    assert.equal((await r.json()).proRestam, 5 - i);
+  }
+  assert.equal(chamadas.length, 5);
+  const bloqueada = await chamaPro("Conta número 6");
+  assert.equal(bloqueada.status, 429);
+  const j = await bloqueada.json();
+  assert.equal(j.proRestam, 0);
+  assert.equal(j.retry, false);
+  assert.match(j.error, /modo Pro/);
+  assert.ok(bloqueada.headers.get("Retry-After"));
+  assert.equal(chamadas.length, 5);
+  // outro IP não é afetado, e o modo padrão do mesmo IP também não
+  assert.equal((await chamaPro("Conta de outra pessoa", { ip: "8.8.8.8" })).status, 200);
+  assert.equal((await chama({ ip: IP_PRO, body: { ...corpo, turns: [{ role: "user", content: "Pergunta no modo padrão" }] } })).status, 200);
+});
+
+test("falha do Pro não gasta o limite e não cai para o modelo padrão", async () => {
+  respostaGemini = () => new Response(JSON.stringify({ error: { message: "segredo técnico" } }), { status: 503 });
+  const falha = await chamaPro("Conta que vai falhar");
+  assert.equal(falha.status, 503);
+  const jf = await falha.json();
+  assert.equal(jf.retry, false);
+  assert.ok(!JSON.stringify(jf).includes("segredo técnico"));
+  assert.ok(chamadas.every((c) => /gemini-3\.1-pro-preview/.test(c.url)));
+  respostaGemini = () => ok("Resposta do Pro.");
+  const certo = await chamaPro("Conta que vai dar certo");
+  assert.equal((await certo.json()).proRestam, 4);
+});
+
+test("pergunta Pro repetida vem do cache e não gasta o limite", async () => {
+  const a = await (await chamaPro("A mesma conta")).json();
+  assert.equal(a.proRestam, 4);
+  const b = await (await chamaPro("A mesma conta")).json();
+  assert.equal(b.cache, true);
+  assert.equal(b.proRestam, 4);
+  assert.equal(chamadas.length, 1);
+});
+
+test("resposta do modo padrão em cache não é entregue a quem pediu o Pro (e vice-versa)", async () => {
+  const pergunta = "O que é a Selic?";
+  await chama({ body: { ...corpo, turns: [{ role: "user", content: pergunta }] } });
+  const pro = await (await chamaPro(pergunta)).json();
+  assert.equal(pro.cache, undefined);
+  assert.equal(chamadas.length, 2);
+});
+
+test("GEMINI_PRO_MODEL troca o modelo Pro sem mexer no código", async () => {
+  await chamaPro("Conta com modelo trocado", { ambiente: { ...env, GEMINI_PRO_MODEL: "gemini-pro-novo" } });
+  assert.match(chamadas[0].url, /models\/gemini-pro-novo:generateContent/);
+});

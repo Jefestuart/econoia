@@ -5,13 +5,19 @@
 // Camadas de proteção (nesta ordem): origem do pedido, limite por IP, tamanho e formato da entrada,
 // regras da IA fixas no servidor (o navegador não manda instruções), assinatura das respostas
 // antigas (histórico falso é descartado) e ferramentas só de leitura.
-import { origemPermitida, ipDe, dentroDoLimite } from "../_lib/protecao.js";
+import { origemPermitida, ipDe, dentroDoLimite, usoPro, registraUsoPro, LIMITE_PRO } from "../_lib/protecao.js";
 import { montaSistema, TAREFAS_LATEX, tarefaDeSistemaAntigo, dadosDeSistemaAntigo } from "../_lib/instrucoes.js";
 import { assina, confere } from "../_lib/assinatura.js";
 import { DECLARACOES, executaFerramenta, MAX_RODADAS } from "../_lib/ferramentas.js";
 
 const MODELOS = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.8-flash-lite", "gemini-flash-lite-latest"];
+// Modo Pro: o modelo Pro só existe na camada paga do Gemini. Para trocar de modelo sem mexer no código,
+// crie a variável GEMINI_PRO_MODEL no Cloudflare. O Pro nunca cai para o modelo padrão (seria outro custo e outra qualidade).
+const MODELOS_PRO = ["gemini-3.1-pro-preview"];
 const PRAZO_TOTAL_MS = 22000;
+const PRAZO_TOTAL_PRO_MS = 55000; // o Pro "pensa" mais antes de responder
+const TENTATIVA_MAX_MS = 15000;
+const TENTATIVA_MAX_PRO_MS = 50000;
 const MAX_CORPO = 100000;         // caracteres do pedido inteiro
 const MAX_TURNOS = 12;            // mensagens do histórico que seguem para a IA
 const MAX_TOTAL_CHARS = 30000;    // soma do histórico (corta as mais antigas)
@@ -34,7 +40,6 @@ export async function onRequestPost({ request: req, env }) {
     console.error("chat: GEMINI_API_KEY não configurada");
     return json({ error: "O chat está em manutenção. Tente de novo mais tarde." }, 500);
   }
-  const models = [...new Set([env.GEMINI_MODEL, ...MODELOS].filter(Boolean))];
 
   // ---- entrada: tamanho, formato e modo ----
   let raw;
@@ -48,10 +53,31 @@ export async function onRequestPost({ request: req, env }) {
   if (!pedidoModo) return json({ error: "Pedido inválido." }, 400);
   const { modo, tarefa, contexto } = pedidoModo;
 
+  // Modo Pro: só no chat, só se o navegador pedir "pro" (qualquer outro valor vira o modo padrão).
+  const pro = modo === "chat" && body.modelo === "pro";
+  const models = pro
+    ? [...new Set([env.GEMINI_PRO_MODEL, ...MODELOS_PRO].filter(Boolean))]
+    : [...new Set([env.GEMINI_MODEL, ...MODELOS].filter(Boolean))];
+
   const turns = await montaTurnos(body.turns, { modo, segredo: key });
   if (!turns.length || turns[turns.length - 1].role !== "user") return json({ error: "Faça uma pergunta." }, 400);
 
-  const sistema = montaSistema({ modo, tarefa, contexto });
+  const sistema = montaSistema({ modo, tarefa, contexto, pro });
+
+  // ---- limite diário do Pro (só consulta aqui; conta quando o Pro responde) ----
+  const ip = ipDe(req);
+  let proRestam = null;
+  if (pro) {
+    const uso = await usoPro(ip);
+    if (!uso.ok) {
+      return json(
+        { error: `Você usou as ${LIMITE_PRO.max} perguntas do modo Pro de hoje. Use o modo padrão ou volte amanhã.`, retry: false, proRestam: 0 },
+        429, { "Retry-After": String(uso.tenteEmSeg) },
+      );
+    }
+    proRestam = uso.restam;
+  }
+  const extra = () => (pro ? { proRestam } : {});
 
   // ---- cache de perguntas repetidas (só a primeira pergunta de uma conversa, sem histórico) ----
   const cache = globalThis.caches?.default;
@@ -63,7 +89,7 @@ export async function onRequestPost({ request: req, env }) {
       const guardada = await cache.match(chaveCache);
       if (guardada) {
         const { text, model } = await guardada.json();
-        if (text) return json({ text, sig: await assina(text, key), model, cache: true });
+        if (text) return json({ text, sig: await assina(text, key), model, cache: true, ...extra() });
       }
     } catch { /* cache indisponível: segue sem ele */ }
   }
@@ -72,7 +98,7 @@ export async function onRequestPost({ request: req, env }) {
   const inicio = Date.now();
   let ultimoStatus = 0, ultimaMsg = "";
   for (const model of models) {
-    const r = await perguntaAoModelo({ model, key, sistema, contents: turns, inicio, comFerramentas: modo === "chat" });
+    const r = await perguntaAoModelo({ model, key, sistema, contents: turns, inicio, comFerramentas: modo === "chat", pro });
     if (r.text) {
       if (chaveCache) {
         try {
@@ -81,7 +107,8 @@ export async function onRequestPost({ request: req, env }) {
           }));
         } catch { /* sem cache, sem problema */ }
       }
-      return json({ text: r.text, sig: await assina(r.text, key), model });
+      if (pro) proRestam = await registraUsoPro(ip); // só conta o que o Pro realmente respondeu
+      return json({ text: r.text, sig: await assina(r.text, key), model, ...extra() });
     }
     ultimoStatus = r.status; ultimaMsg = r.msg;
     if (r.status === 400 || r.status === 401 || r.status === 403) break; // problema na chave ou no pedido: trocar de modelo não ajuda
@@ -90,6 +117,10 @@ export async function onRequestPost({ request: req, env }) {
 
   // Detalhes técnicos só vão para o registro do Cloudflare, nunca para quem usa o site.
   console.error("chat: falha no Gemini", JSON.stringify({ status: ultimoStatus, msg: String(ultimaMsg).slice(0, 300) }));
+  if (pro) {
+    // Sem repetição automática no Pro (cada tentativa custa), e sem revelar o motivo técnico.
+    return json({ error: "O modo Pro não conseguiu responder agora. Tente o modo padrão ou repita daqui a pouco.", retry: false, proRestam }, 503);
+  }
   const amigavel =
     ultimoStatus === 429 ? "O limite gratuito do Gemini foi atingido. Tente de novo em 1 minuto." :
     ultimoStatus === 503 || ultimoStatus === 504 || ultimoStatus >= 500 ? "Os servidores do Gemini estão lotados agora. Tente de novo em alguns segundos." :
@@ -159,22 +190,24 @@ export async function montaTurnos(brutos, { modo, segredo }) {
  * Faz uma pergunta a UM modelo, atendendo pedidos de ferramenta da IA (no máximo MAX_RODADAS).
  * Devolve { text } ou { status, msg }.
  */
-async function perguntaAoModelo({ model, key, sistema, contents, inicio, comFerramentas }) {
+async function perguntaAoModelo({ model, key, sistema, contents, inicio, comFerramentas, pro = false }) {
   let conversa = contents;
   let ferramentas = comFerramentas;
   for (let rodada = 0; ; rodada++) {
-    const resta = PRAZO_TOTAL_MS - (Date.now() - inicio);
+    const resta = (pro ? PRAZO_TOTAL_PRO_MS : PRAZO_TOTAL_MS) - (Date.now() - inicio);
     if (resta < 3000) return { status: 504, msg: "prazo esgotado", prazoEsgotado: true };
     const usaFerramentas = ferramentas && rodada < MAX_RODADAS; // na última rodada a IA é obrigada a responder em texto
     const payload = {
       systemInstruction: { parts: [{ text: sistema }] },
       contents: conversa,
-      generationConfig: { temperature: 0.4, maxOutputTokens: 1200 },
+      // Pro: sem temperatura fixa (o Google recomenda a padrão para raciocínio e contas) e com mais espaço,
+      // porque o limite de saída também conta o "pensamento" do modelo.
+      generationConfig: pro ? { maxOutputTokens: 8192 } : { temperature: 0.4, maxOutputTokens: 1200 },
     };
     if (usaFerramentas) payload.tools = DECLARACOES;
 
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), Math.min(resta, 15000));
+    const timer = setTimeout(() => ctrl.abort(), Math.min(resta, pro ? TENTATIVA_MAX_PRO_MS : TENTATIVA_MAX_MS));
     let r, j;
     try {
       r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
