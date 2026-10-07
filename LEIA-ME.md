@@ -18,6 +18,9 @@ O site tem uma página **Como citar** (`econoia.com.br/#como-citar`) com modelos
 ## Arquivo diário dos dados
 O robô `.github/workflows/arquivo.yml` roda todo dia e grava uma cópia de `series.json` e `modelos.json` no ramo **`dados-arquivo`** (separado do `main`, para não pesar o código), em `AAAA-MM-DD/`, mais um `indice.json` com tamanho e SHA-256. O site serve isso em `/data/arquivo/...` (`functions/data/arquivo/[[caminho]].js`, só aceita esses caminhos). O ramo é criado sozinho na primeira execução, que pode ser disparada em **Actions → Arquivo diário dos dados → Run workflow**.
 
+## Acessibilidade
+Resultado da auditoria (axe-core em navegador real, temas claro e escuro), correções e limites conhecidos: [ACESSIBILIDADE.md](ACESSIBILIDADE.md).
+
 ## Observações
 - Os commits do robô levam `[skip ci]`, para não republicar o site a cada atualização de dados (o plano grátis do Cloudflare tem 500 publicações por mês).
 - Se o modelo do Gemini sair do ar, crie no Cloudflare a variável `GEMINI_MODEL` com o nome do modelo novo.
