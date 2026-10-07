@@ -15,11 +15,12 @@
 /* Layout: painel de bancada econômica — cabeçalho, faixa de indicadores, abas (Gráficos · Simuladores · Pergunte à IA) */
 :root{
   --bg:#000000; --surface:#0d1319; --fg:#e8eef3; --muted:#8fa3b3; --line:#1f2b36;
-  --accent:#6cc4f5; --accent-soft:#12324a; --gold:#e0b84a; --red:#ec7a6f; color-scheme:dark;
+  --accent:#6cc4f5; --on-accent:#000; --accent-soft:#12324a; --gold:#e0b84a; --red:#ec7a6f; color-scheme:dark;
   --display:"Fraunces",Georgia,serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
 }
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.55;padding-inline:16px;padding-block:24px 48px}
+main{display:contents}.alvo{position:absolute;width:1px;height:1px;overflow:hidden}
 .wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
 header h1{font-family:var(--display);font-weight:800;font-size:clamp(2rem,6vw,3.2rem);margin:0;letter-spacing:-.02em;text-wrap:balance}
 header h1 span{color:var(--accent)}
@@ -43,10 +44,11 @@ header .tag{font-family:var(--display);font-weight:700;font-size:clamp(1.05rem,3
 .pq b{display:block;color:var(--accent);margin-bottom:4px}
 .met dt{font-weight:700;margin-top:10px}.met dd{margin:2px 0 0;color:var(--muted)}
 .up{color:var(--red)}.dn{color:var(--accent)}
-nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
-nav button{font:600 .95rem var(--body);background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:10px 14px;cursor:pointer}
-nav button[aria-selected="true"]{color:var(--fg);border-color:var(--accent)}
-nav button:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+nav,[role=tablist]{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+[role=tablist] button{font:600 .95rem var(--body);background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:10px 14px;cursor:pointer}
+[role=tablist] button[aria-selected="true"]{color:var(--fg);border-color:var(--accent)}
+a.pular{position:absolute;left:8px;top:-60px;z-index:100;background:var(--accent);color:var(--on-accent);padding:10px 16px;border-radius:8px;font-weight:600;text-decoration:none}a.pular:focus{top:8px}
+[role=tablist] button:focus-visible,a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
 .card h3{font-family:var(--display);font-weight:600;font-size:1.15rem;margin:0 0 2px}
@@ -150,12 +152,14 @@ td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}td:fi
 footer{font-size:.8rem;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .ticker{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin-inline:-16px;margin-top:-24px;background:#000;color:#e8eef3;overflow:hidden;border-top:1px solid #1f2b36;font-family:var(--mono);font-size:.85rem;border-bottom:2px solid var(--accent)}
-.ticker .lab{position:absolute;left:0;top:0;bottom:0;z-index:1;display:flex;align-items:center;padding:0 12px;background:var(--accent);color:#000;font-weight:600;font-size:.72rem;letter-spacing:.08em}
+.ticker .lab{position:absolute;left:0;top:0;bottom:0;z-index:1;display:flex;align-items:center;padding:0 12px;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:.72rem;letter-spacing:.08em}
 .track{display:flex;width:max-content;animation:roll 60s linear infinite;padding:8px 0;padding-left:var(--labw,210px)}
 .ticker:hover .track{animation-play-state:paused}
 .tk{white-space:nowrap;padding:0 22px;border-right:1px solid #2a3743}
 .tk b{font-weight:600;margin-right:4px}
 .tu{color:#5fd68a}.td{color:#ff7b72}
+:root[data-theme="light"] .tu{color:#17703b}:root[data-theme="light"] .td{color:var(--red)}
+:root[data-theme="light"] .tk .tu{color:#5fd68a}:root[data-theme="light"] .tk .td{color:#ff7b72}:root[data-theme="light"] .bf-logo span{color:#6cc4f5}
 @keyframes roll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.track{animation:none}.ticker{overflow-x:auto}}
 .iahero{border:2px solid var(--accent);padding:20px;box-shadow:0 0 0 6px var(--accent-soft)}
@@ -167,8 +171,8 @@ footer{font-size:.8rem;color:var(--muted)}
 a.chip{text-decoration:none;display:inline-flex;align-items:center}
 .quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .quick button{font:600 .9rem var(--body);color:var(--fg);background:var(--surface);border:1px solid var(--accent);border-radius:999px;padding:9px 16px;cursor:pointer}
-.quick button:hover{background:var(--accent);color:#000}
-.quick button:first-child{background:var(--accent);color:#000}
+.quick button:hover{background:var(--accent);color:var(--on-accent)}
+.quick button:first-child{background:var(--accent);color:var(--on-accent)}
 .quick button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 section{scroll-margin-top:56px}
 .fxgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
@@ -198,7 +202,7 @@ section{scroll-margin-top:56px}
 .tn-logo{font:800 1.5rem var(--display);color:var(--fg);text-decoration:none;letter-spacing:-.02em}.tn-logo span{color:var(--accent)}
 .search{position:relative;flex:1 1 340px;display:flex;min-width:0}
 .search input{flex:1;min-width:0;border-radius:999px 0 0 999px;border:1px solid var(--line);background:var(--surface);padding:11px 18px;font-size:.95rem}
-.sbtn{border:0;border-radius:0 999px 999px 0;background:var(--accent);color:#000;padding:0 20px;cursor:pointer;display:flex;align-items:center}
+.sbtn{border:0;border-radius:0 999px 999px 0;background:var(--accent);color:var(--on-accent);padding:0 20px;cursor:pointer;display:flex;align-items:center}
 .sres{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:20;background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:6px;display:flex;flex-direction:column;max-height:70vh;overflow:auto;box-shadow:0 12px 40px #000a}
 .sr{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;text-align:left;background:none;border:0;color:var(--fg);padding:9px 10px;border-radius:8px;cursor:pointer;font:inherit}
 .sr:hover,.sr.act{background:var(--accent-soft)}
@@ -207,7 +211,7 @@ section{scroll-margin-top:56px}
 .tn-links{display:flex;gap:16px;flex-wrap:wrap}.tn-links a{color:var(--muted);text-decoration:none;font-weight:600;font-size:.92rem}.tn-links a:hover,.tn-links a.tn-on{color:var(--accent)}
 .fund{display:flex;flex-direction:column;gap:14px}
 .fund-head h2{font-family:var(--display);font-weight:800;font-size:clamp(1.5rem,4vw,2rem);margin:0;color:var(--accent)}
-.chip.on{background:var(--accent);color:#000;border-color:var(--accent)}
+.chip.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:14px;align-items:start}
 .topic{border-top:1px solid var(--line);padding:8px 0}
 .topic summary{cursor:pointer;font-weight:600;list-style-position:outside}
@@ -254,20 +258,22 @@ body{margin:0}
 /* Áreas próprias (#r, #graficos...) */
 .solobar{display:none;align-items:center;gap:14px;flex-wrap:wrap}
 .solobar a{color:var(--accent);font-weight:600;text-decoration:none}
-.solobar h2{margin:0;font-size:1.5rem}
+.solobar h1{margin:0;font-size:1.5rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 body.solo .solobar{display:flex}
-body.solo .wrap>*:not(.topnav):not(.quick):not(.solobar):not(.solo-on){display:none!important}
+body.solo .wrap>*:not(main):not(.topnav):not(.quick):not(.solobar):not(.solo-on),body.solo main>*:not(.alvo):not(.solobar):not(.solo-on){display:none!important}
 body.solo .hrow.solo-on header,body.solo .hrow.solo-on .side{display:none!important}
 body.solo .hrow.solo-on .hleft{width:100%;max-width:none}
-.quick button.on{background:var(--accent);color:#000}
+.quick button.on{background:var(--accent);color:var(--on-accent)}
 body.solo .quick button:first-child:not(.on){background:var(--surface);color:var(--fg)}
 #plWrap{overflow:auto;margin-top:12px;background:#fff;border-radius:8px;color:#111}
+#plWrap .src{color:#4a5560;padding:8px}
 .plbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.plbar select{flex:1 1 220px;min-width:0}
 .btn.alt{background:var(--surface);color:var(--fg);border:1px solid var(--accent)}
 #plWrap .jexcel_container{padding:0}
 
 /* Tema claro opcional (padrão é sempre escuro) */
-:root[data-theme="light"]{--bg:#ffffff;--surface:#f3f6f9;--fg:#0e1a24;--muted:#526472;--line:#d5dee6;--accent:#0f78b8;--accent-soft:#dcecf8;--gold:#9a7413;--red:#c2483c;color-scheme:light}
+:root[data-theme="light"]{--bg:#ffffff;--surface:#f3f6f9;--fg:#0e1a24;--muted:#526472;--line:#d5dee6;--accent:#0a649c;--accent-soft:#dcecf8;--gold:#7a5a08;--red:#b23a2f;--on-accent:#fff;color-scheme:light}
 .thm{margin-left:auto;flex:none;width:40px;height:40px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .thm:hover{border-color:var(--accent);color:var(--accent)}
 .thm .i-sun{display:none}:root[data-theme="light"] .thm .i-sun{display:block}:root[data-theme="light"] .thm .i-moon{display:none}
@@ -281,10 +287,11 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
 .bf-aviso a{color:inherit;text-decoration:underline}
 </style>
 </head><body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
 
-<div class="ticker" aria-label="Cotações"><span class="lab" id="clk">--</span><div class="track" id="track"></div></div>
+<div class="ticker" role="region" aria-label="Cotações"><span class="lab" id="clk">--</span><div class="track" id="track"></div></div>
 <div class="wrap">
-<div class="topnav">
+<div class="topnav" role="banner">
   <a class="tn-logo" href="https://econoia.com.br/" onclick="event.preventDefault();try{localStorage.removeItem('tab')}catch(e){};history.scrollRestoration='manual';location.replace(location.pathname)">Econo<span>IA</span></a>
   <form class="search" id="sform" role="search">
     <input id="sq" type="search" autocomplete="off" placeholder="Busque indicadores, moedas ou temas: regra de Taylor, IS-LM, Solow..." aria-label="Buscar no site">
@@ -295,7 +302,7 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
   <button type="button" class="thm" id="thmBtn" aria-label="Mudar para tema claro" title="Tema claro/escuro"><svg class="i-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="i-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
 <script>(function(){var b=document.getElementById("thmBtn"),r=document.documentElement,m=document.querySelector('meta[name="theme-color"]');function u(){var l=r.getAttribute("data-theme")==="light";b.setAttribute("aria-label",l?"Mudar para tema escuro":"Mudar para tema claro");if(m)m.setAttribute("content",l?"#ffffff":"#000000")}u();b.onclick=function(){var l=r.getAttribute("data-theme")!=="light";if(l)r.setAttribute("data-theme","light");else r.removeAttribute("data-theme");try{localStorage.setItem("tema",l?"light":"dark")}catch(e){}u()}})();</script>
 </div>
-<div class="quick" aria-label="Atalhos">
+<div class="quick" role="region" aria-label="Atalhos">
   <button data-go="ia">Pergunte à IA</button>
   <button data-go="r">Programação R</button>
   <button data-go="dados">Dados</button>
@@ -309,7 +316,9 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
   <button data-go="latex">Aprenda LaTeX</button>
   <button data-go="plan">Planilha</button>
 </div>
-<div class="solobar"><a href="#" id="soloBack">← Página inicial</a><h2 id="soloT"></h2></div>
+<main>
+<span id="conteudo" tabindex="-1" class="alvo"></span>
+<div class="solobar"><a href="#" id="soloBack">← Página inicial</a><h1 id="soloT"></h1></div>
 <div class="hrow">
 <div class="hleft">
 <header>
@@ -357,7 +366,7 @@ body.solo .quick button:first-child:not(.on){background:var(--surface);color:var
   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt" id="fLatex">Copiar em LaTeX (tabela e equação)</button><a class="btn alt" href="#latex" style="text-decoration:none">Como usar LaTeX?</a></div>
   <div class="card fcode"><h3>Faça você mesmo</h3><p class="src">O mesmo estudo em código, com os dados já carregados. Rode aqui no navegador, sem instalar nada, ou copie para o seu computador.</p>
    <div class="segs" role="group" aria-label="Linguagem"><button data-l="r" aria-pressed="true">R</button><button data-l="py" aria-pressed="false">Python</button></div>
-   <pre class="code" id="fCode" tabindex="0" contenteditable="plaintext-only" spellcheck="false" autocapitalize="off" aria-label="Código (editável)"></pre>
+   <pre class="code" id="fCode" role="textbox" aria-multiline="true" tabindex="0" contenteditable="plaintext-only" spellcheck="false" autocapitalize="off" aria-label="Código (editável)"></pre>
    <div class="acoes"><button class="btn" id="fRun">Rodar aqui</button><button class="btn alt" id="fCopy">Copiar código</button></div>
    <div class="fout" id="fOut" hidden><pre class="code" id="fTxt"></pre><div id="fImg"></div></div>
   </div>
@@ -409,24 +418,24 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   <div class="chips" id="fundChips"></div>
   <div class="fgrid" id="fundGrid"></div>
 </section>
-<nav role="tablist">
-  <button role="tab" id="t-graf" aria-selected="true" data-p="graf">Gráficos</button>
-  <button role="tab" id="t-sim" aria-selected="false" data-p="sim">Simuladores</button>
-  <button role="tab" id="t-r" aria-selected="false" data-p="r">Laboratório R</button>
-  <button role="tab" id="t-dados" aria-selected="false" data-p="dados">Tabelas</button>
-  <button role="tab" id="t-prev" aria-selected="false" data-p="prev">VAR e SARIMA</button>
-</nav>
+<div role="tablist" aria-label="Ferramentas de análise">
+  <button role="tab" id="t-graf" aria-controls="p-graf" aria-selected="true" data-p="graf">Gráficos</button>
+  <button role="tab" id="t-sim" aria-controls="p-sim" aria-selected="false" data-p="sim">Simuladores</button>
+  <button role="tab" id="t-r" aria-controls="p-r" aria-selected="false" data-p="r">Laboratório R</button>
+  <button role="tab" id="t-dados" aria-controls="p-dados" aria-selected="false" data-p="dados">Tabelas</button>
+  <button role="tab" id="t-prev" aria-controls="p-prev" aria-selected="false" data-p="prev">VAR e SARIMA</button>
+</div>
 
-<section id="p-graf" class="grid2">
-  <div class="card"><h3>Taxa Selic meta</h3><p class="src">% a.a. · decisões do Copom · Banco Central</p><div class="chartbox"><canvas id="cSelic"></canvas></div></div>
-  <div class="card"><h3>IPCA</h3><p class="src">variação mensal (barras) e acumulado 12 meses (linha), % · IBGE</p><div class="chartbox"><canvas id="cIpca"></canvas></div></div>
-  <div class="card"><h3>IGP-M</h3><p class="src">variação mensal (barras) e acumulado 12 meses (linha), % · FGV IBRE</p><div class="chartbox"><canvas id="cIgp"></canvas></div></div>
-  <div class="card"><h3>IPCA × IGP-M</h3><p class="src">acumulado 12 meses, % · IBGE e FGV</p><div class="chartbox"><canvas id="cCmp"></canvas></div></div>
-  <div class="card"><h3>PIB trimestral</h3><p class="src">% contra o trimestre anterior, com ajuste sazonal · IBGE/Contas Nacionais</p><div class="chartbox"><canvas id="cPib"></canvas></div></div>
-  <div class="card"><h3>PIB anual</h3><p class="src">crescimento real, % · IBGE</p><div class="chartbox"><canvas id="cPibA"></canvas></div></div>
+<section id="p-graf" role="tabpanel" aria-labelledby="t-graf" class="grid2">
+  <div class="card"><h3>Taxa Selic meta</h3><p class="src">% a.a. · decisões do Copom · Banco Central</p><div class="chartbox"><canvas id="cSelic" role="img" aria-label="Gráfico da taxa Selic meta, em % ao ano"></canvas></div></div>
+  <div class="card"><h3>IPCA</h3><p class="src">variação mensal (barras) e acumulado 12 meses (linha), % · IBGE</p><div class="chartbox"><canvas id="cIpca" role="img" aria-label="Gráfico do IPCA: variação mensal em barras e acumulado em 12 meses em linha"></canvas></div></div>
+  <div class="card"><h3>IGP-M</h3><p class="src">variação mensal (barras) e acumulado 12 meses (linha), % · FGV IBRE</p><div class="chartbox"><canvas id="cIgp" role="img" aria-label="Gráfico do IGP-M: variação mensal em barras e acumulado em 12 meses em linha"></canvas></div></div>
+  <div class="card"><h3>IPCA × IGP-M</h3><p class="src">acumulado 12 meses, % · IBGE e FGV</p><div class="chartbox"><canvas id="cCmp" role="img" aria-label="Gráfico comparando IPCA e IGP-M acumulados em 12 meses"></canvas></div></div>
+  <div class="card"><h3>PIB trimestral</h3><p class="src">% contra o trimestre anterior, com ajuste sazonal · IBGE/Contas Nacionais</p><div class="chartbox"><canvas id="cPib" role="img" aria-label="Gráfico do PIB trimestral, variação contra o trimestre anterior"></canvas></div></div>
+  <div class="card"><h3>PIB anual</h3><p class="src">crescimento real, % · IBGE</p><div class="chartbox"><canvas id="cPibA" role="img" aria-label="Gráfico do crescimento anual do PIB"></canvas></div></div>
 </section>
 
-<section id="p-sim" class="grid2" hidden>
+<section id="p-sim" role="tabpanel" aria-labelledby="t-sim" class="grid2" hidden>
   <div class="card">
     <h3>Corrigir valor pela inflação</h3><p class="src">IPCA ou IGP-M (o IGP-M é usado em aluguéis)</p>
     <div class="form">
@@ -503,7 +512,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
 </section>
 
 
-<section id="p-r" class="card" hidden>
+<section id="p-r" role="tabpanel" aria-labelledby="t-r" class="card" hidden>
   <h3>Laboratório R</h3>
   <p class="src">Escolha uma análise e copie o código R, já com os dados do painel. Cole no Posit Cloud ou no Google Colab (ambiente R) e rode, tudo no navegador.</p>
   <div class="form">
@@ -518,7 +527,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
     </select></label>
   </div>
   <form class="ask" id="rgenf" style="margin:0 0 12px"><textarea id="rq" placeholder="Ou peça em português: ex.: faça uma regressão do IPCA 12m contra a Selic e mostre um gráfico" aria-label="Pedir análise em português"></textarea><button class="btn" id="rgo">Gerar e rodar</button></form>
-  <pre class="code" id="rcode" tabindex="0" contenteditable="plaintext-only" spellcheck="false" autocapitalize="off" aria-label="Código R (editável)"></pre>
+  <pre class="code" id="rcode" role="textbox" aria-multiline="true" tabindex="0" contenteditable="plaintext-only" spellcheck="false" autocapitalize="off" aria-label="Código R (editável)"></pre>
   <div class="chips" style="margin-top:12px">
     <button class="btn" id="rrun">▶ Rodar aqui</button>
     <button class="chip" id="rcopy">Copiar código</button>
@@ -531,7 +540,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
   <p class="note">Novo: o código roda aqui mesmo, no seu navegador (webR), e os pacotes como o ggplot2 são instalados sozinhos. Você pode editar o código antes de rodar. Na primeira vez o R leva alguns segundos para carregar.</p>
   <p class="note" id="rmsg">No Colab, se abrir em Python, vá em Ambiente de execução → Alterar tipo → R. Pacotes extras: o código instala o ggplot2 sozinho se faltar.</p>
 </section>
-<section id="p-prev" hidden>
+<section id="p-prev" role="tabpanel" aria-labelledby="t-prev" hidden>
   <div class="card" style="margin-bottom:12px"><h3>VAR e SARIMA: previsões de inflação</h3>
    <p class="src">Dois modelos econométricos próprios da EconoIA, reestimados todo dia com dados do Banco Central. Cada um passa por um <b>backtest</b>: quanto teria errado nos últimos anos, comparado com previsões ingênuas. O que errou menos ganha o selo de melhor histórico.</p>
    <p class="note" id="prevInfo">Carregando modelos...</p>
@@ -618,7 +627,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
    <nav class="tnav" id="tNav" aria-label="Lições"></nav></div>
   <div id="tLicoes" class="trilha"></div>
 </section>
-<section id="p-dados" class="grid2" hidden>
+<section id="p-dados" role="tabpanel" aria-labelledby="t-dados" class="grid2" hidden>
   <div class="card"><h3>Selic · Copom</h3><div class="tbl"><table id="tbS"></table></div></div>
   <div class="card"><h3>IPCA mensal</h3><div class="tbl"><table id="tbI"></table></div></div>
   <div class="card"><h3>IGP-M mensal · FGV</h3><div class="tbl"><table id="tbG"></table></div></div>
@@ -853,6 +862,7 @@ summary(modelo)   # a Selic explica a inflação?</pre>
 </section>
 <p class="note" style="margin:0">Fontes: Banco Central do Brasil (Copom, SGS, PTAX), FGV IBRE (IGP-M), IBGE (IPCA, PNAD Contínua, Contas Nacionais), Yahoo Finance e CoinGecko. Atualização automática a cada 30 minutos. <span id="upd2"></span> Não é recomendação de investimento.</p>
 </div>
+</main>
 <footer class="bf">
  <div class="bf-in">
   <div class="bf-logo">Econo<span>IA</span></div>
@@ -951,9 +961,10 @@ setInterval(boot,5*60*1000);
 
 function main(){
 // tabs
-const tabs=[...document.querySelectorAll("nav button")];
+const tabs=[...document.querySelectorAll("[role=tablist] button")];
 function show(p){if(p==="prev")setTimeout(()=>window.drawPrev&&drawPrev(),0);tabs.forEach(t=>{const on=t.dataset.p===p;t.setAttribute("aria-selected",on);document.getElementById("p-"+t.dataset.p).hidden=!on});try{localStorage.setItem("tab",p)}catch(e){}}
 tabs.forEach(t=>t.onclick=()=>show(t.dataset.p));
+tabs.forEach((t,i)=>t.addEventListener("keydown",e=>{const k={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:tabs.length-1}[e.key];if(k===undefined)return;e.preventDefault();const n=tabs[(k+tabs.length)%tabs.length];n.focus();show(n.dataset.p)}));
 let saved=(()=>{try{return localStorage.getItem("tab")}catch(e){return null}})();if(saved&&tabs.some(t=>t.dataset.p===saved))show(saved);
 
 // charts
@@ -1007,7 +1018,7 @@ async function loadModelos(){
  preencheResp();irfChoque.onchange=()=>{preencheResp();drawIrf()};irfResp.onchange=drawIrf;
  irfSrc.textContent=`Impulso-resposta do ${M.var.nome} (${M.var.amostra}, ${M.var.observacoes} meses): efeito acumulado de um choque isolado. Ordem de Cholesky: ${M.var.ordem_cholesky.join(" → ")}. Faixa de 90% por bootstrap.`;
  // Granger
- tbGranger.innerHTML="<tr><th>Ajuda a prever?</th><th>F</th><th>p-valor</th><th></th></tr>"+M.var.granger.slice().sort((a,b)=>a.p-b.p).map(g=>`<tr><td>${g.causa} → ${g.efeito}</td><td>${br(g.F,2)}</td><td>${g.p<0.001?"< 0,001":br(g.p,3)}</td><td class="${g.p<0.05?"prev-win":"note"}">${g.p<0.05?"Sim":"Não"}</td></tr>`).join("");
+ tbGranger.innerHTML="<tr><th>Ajuda a prever?</th><th>F</th><th>p-valor</th><th><span class=sr>Resultado</span></th></tr>"+M.var.granger.slice().sort((a,b)=>a.p-b.p).map(g=>`<tr><td>${g.causa} → ${g.efeito}</td><td>${br(g.F,2)}</td><td>${g.p<0.001?"< 0,001":br(g.p,3)}</td><td class="${g.p<0.05?"prev-win":"note"}">${g.p<0.05?"Sim":"Não"}</td></tr>`).join("");
  if(!document.getElementById("p-prev").hidden)drawPrev();
 }
 function drawIrf(){
@@ -1871,7 +1882,7 @@ function route(){
  const g=a[0],el=document.getElementById("p-"+g);
  if(tabs.some(t=>t.dataset.p===g))show(g);document.getElementById("p-plan").hidden=g!=="plan";document.getElementById("p-learn").hidden=g!=="learn";if(g==="learn")initTrilha();document.getElementById("p-latex").hidden=g!=="latex";if(g==="latex")initLatex();if(g==="plan")initPlan();
  (g==="ia"?el.closest(".hrow"):el).classList.add("solo-on");
- document.getElementById("soloT").textContent=a[1];
+ {const st=document.getElementById("soloT");st.textContent=a[1]||(document.querySelector(".quick button.on")||{}).textContent||"EconoIA";st.className=a[1]?"":"sr"}
  document.body.classList.add("solo");document.title=(a[1]||document.querySelector(".quick button.on").textContent)+" · EconoIA";
  scrollTo({top:0});window.dispatchEvent(new Event("resize"));if(g==="futuro")setTimeout(()=>drawFuturo(),0);
  if(g==="ia")setTimeout(()=>q.focus({preventScroll:true}),300);
