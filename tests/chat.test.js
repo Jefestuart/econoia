@@ -385,3 +385,10 @@ test("GEMINI_PRO_MODEL troca o modelo Pro sem mexer no código", async () => {
   await chamaPro("Conta com modelo trocado", { ambiente: { ...env, GEMINI_PRO_MODEL: "gemini-pro-novo" } });
   assert.match(chamadas[0].url, /models\/gemini-pro-novo:generateContent/);
 });
+
+test("regras do chat limitam o escopo a economia, matemática e estatística", () => {
+  assert.match(REGRAS_CHAT, /economia/);
+  assert.match(REGRAS_CHAT, /matemática/);
+  assert.match(REGRAS_CHAT, /estatística/);
+  assert.match(REGRAS_CHAT, /Só posso ajudar com economia, matemática e estatística/);
+});
