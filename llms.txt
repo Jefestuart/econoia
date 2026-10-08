@@ -1,0 +1,32 @@
+# EconoIA Brasil
+
+> Laboratório gratuito de Economia, Dados e Inteligência Artificial do Brasil, em português. Reúne indicadores oficiais atualizados a cada 30 minutos (Selic, IPCA, IGP-M, PIB, desemprego, câmbio e bolsa), previsões com modelos SARIMA e VAR, simuladores, um laboratório de R no navegador e uma IA que explica os números. Sem cadastro e sem anúncios.
+
+Criado e mantido por Jessé Santos, economista (UFAC). Projeto independente, educacional, sem recomendação de investimento. Contato: contato@econoia.com.br
+
+## O que o site oferece
+
+- Painel de indicadores: Selic, IPCA, IGP-M, PIB, desemprego, câmbio e bolsa, com gráficos e fonte de cada número.
+- Pergunte à EconoIA: chat de IA restrito a economia, matemática e estatística, baseado nos dados do painel.
+- Prever o futuro: previsões de séries do Banco Central com SARIMA e VAR, avaliadas fora da amostra contra previsões ingênuas.
+- Simuladores e Fundamentos da Economia: temas de graduação com fórmula, explicação e cálculo.
+- Laboratório R: execução de análises em R direto no navegador.
+
+## Páginas
+
+- [Página inicial](https://econoia.com.br/): painel, IA, previsões e simuladores
+- [Sobre](https://econoia.com.br/#sobre): quem criou e por que o projeto existe
+- [Metodologia](https://econoia.com.br/#metodologia): como os modelos e os números são produzidos
+- [Como citar](https://econoia.com.br/#como-citar): modelos em ABNT e APA
+- [Termos de uso](https://econoia.com.br/#termos)
+- [Política de privacidade](https://econoia.com.br/#privacidade)
+
+## Dados e fontes
+
+- Fontes originais: Banco Central do Brasil (SGS e PTAX), IBGE, além de AwesomeAPI e ExchangeRate-API para algumas moedas.
+- Dados atualizados por robô a cada 30 minutos; confira sempre o número na fonte oficial.
+- Código-fonte público para consulta, todos os direitos reservados: https://github.com/Jefestuart/econoia
+
+## Como citar
+
+Cite a fonte original dos dados (Banco Central, IBGE etc.) e, para previsões e cálculos, o EconoIA com modelo, data de atualização e data de acesso.
