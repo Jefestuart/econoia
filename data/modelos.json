@@ -1,5 +1,5 @@
 {
- "atualizado": "2026-10-25T14:26+00:00",
+ "atualizado": "2026-10-29T17:00+00:00",
  "janela_meses": 180,
  "series": {
   "ipca": {
@@ -452,8 +452,8 @@
    },
    "melhor": "sarima",
    "focus_12m": {
-    "mediana": 4.51,
-    "data": "2026-10-16"
+    "mediana": 4.53,
+    "data": "2026-10-23"
    }
   },
   "igpm": {
@@ -906,8 +906,8 @@
    },
    "melhor": "var",
    "focus_12m": {
-    "mediana": 4.34,
-    "data": "2026-10-16"
+    "mediana": 4.28,
+    "data": "2026-10-23"
    }
   }
  },
