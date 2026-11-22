@@ -585,6 +585,19 @@
      "sha256": "b529456645fcfa2e344bccb77a5612eacd832ba6bc6961ea0556d3f38381494f"
     }
    }
+  },
+  {
+   "data": "2026-11-22",
+   "arquivos": {
+    "series.json": {
+     "bytes": 237522,
+     "sha256": "004c06b942dce0f4ca5acedcee1473f0d2d82f2c7b755b70562d62df4545d811"
+    },
+    "modelos.json": {
+     "bytes": 27094,
+     "sha256": "363df53109e0d0610510c7a137b84fa33f0ff4584c6d1b343b63bef1910b872b"
+    }
+   }
   }
  ]
 }
