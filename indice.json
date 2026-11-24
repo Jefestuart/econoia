@@ -604,11 +604,11 @@
    "arquivos": {
     "series.json": {
      "bytes": 237536,
-     "sha256": "fcb7ff0ef2946f3d9a77f9120001ba149bc0d710d9ed43a6239fc40ab801c1d7"
+     "sha256": "39642418903ba88561fc16e7c4588e3c895b1a5cee03b173147f4bd3338d17d3"
     },
     "modelos.json": {
      "bytes": 27103,
-     "sha256": "4182cb22e50426379cad339f4260aba99799f8190875ad250cd2434aa4a85a47"
+     "sha256": "db1c1c9f9ff84daf408018442a7965e3645926cf0eddf2c3f774cb889de634d8"
     }
    }
   }
